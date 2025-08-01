@@ -25,9 +25,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(cors({ // Para permitir solicitudes CORS desde el frontend
-  origin: 'http://localhost:5173',
-  credentials: true,              
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'https://pruebas-concepto.vercel.app/', '*'];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
 }));
 
 
