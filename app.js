@@ -1,15 +1,20 @@
-var createError = require('http-errors');
+
+// ============================================
+// app.js (CORREGIDO)
+// ============================================
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
+var createError = require('http-errors');
 
+// Importar rutas
 var indexRouter = require('./routes/index');
+var authRouter = require('./routes/auth');
 var usersRouter = require('./routes/users');
-var auth = require('./routes/auth');
-var protected = require('./routes/protected');
-var swaggerDocs = require('./swagger');
+var rolesRouter = require('./routes/roles');
+var swaggerDocs = require('./swagger/swagger');
 
 var app = express();
 
@@ -17,28 +22,27 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-
-
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(cors({ // Para permitir solicitudes CORS desde el frontend
-  origin: 'http://localhost:5173',
-  credentials: true,              
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
 }));
 
-
+// Rutas principales
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/api', auth);
-app.use('/api', protected);
-app.use(cookieParser());
 
+// Rutas de API
+app.use('/api/auth', authRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/roles', rolesRouter);
+
+// Configurar Swagger
 swaggerDocs(app);
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -47,13 +51,17 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  
+  // Si es una petición API, responder con JSON
+  if (req.path.startsWith('/api/')) {
+    res.json({ error: err.message });
+  } else {
+    res.render('error');
+  }
 });
 
 module.exports = app;

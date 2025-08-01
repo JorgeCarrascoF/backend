@@ -1,9 +1,21 @@
-var express = require('express');
-var router = express.Router();
+// ============================================
+// routes/index.js (SIMPLIFICADO)
+// ============================================
+const express = require('express');
+const router = express.Router();
 
-/* GET home page. */
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Página principal
+ *     tags: [General]
+ *     responses:
+ *       200:
+ *         description: Página principal
+ */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+  res.render('index', { title: 'API Equipo 2 Tarde' });
 });
 
 module.exports = router;
