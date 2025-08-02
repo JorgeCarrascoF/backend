@@ -1,4 +1,4 @@
-const User = require('../models/User'); // Asegúrate de que el nombre del archivo sea correcto
+const User = require('../models/user'); // Asegúrate de que el nombre del archivo sea correcto
 
 /**
  * @swagger
