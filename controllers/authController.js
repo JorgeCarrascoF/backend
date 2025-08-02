@@ -1,8 +1,9 @@
 // ============================================
-// controllers/authController.js (NUEVO)
+// controllers/authController.js (con Boom)
 // ============================================
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const boom = require('@hapi/boom');
 const User = require('../models/User');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'clave_secreta';
@@ -45,60 +46,55 @@ const JWT_SECRET = process.env.JWT_SECRET || 'clave_secreta';
  *       400:
  *         description: Error en los datos
  */
-const register = async (req, res) => {
+const register = async (req, res, next) => {
     const { username, email, password, role, roleId } = req.body;
-    
+
     try {
-        // Verificar si el usuario ya existe (por username o email)
         const existingUser = await User.findOne({
             $or: [
-                { username }, 
-                { userName: username }, // Compatibilidad
+                { username },
+                { userName: username },
                 { email }
             ]
         });
-        
+
         if (existingUser) {
             if (existingUser.username === username || existingUser.userName === username) {
-                return res.status(400).json({ message: 'El nombre de usuario ya existe' });
+                return next(boom.conflict('El nombre de usuario ya existe'));
             }
             if (existingUser.email === email) {
-                return res.status(400).json({ message: 'El email ya está registrado' });
+                return next(boom.conflict('El email ya está registrado'));
             }
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        
-        // Si se proporciona roleId, verificar que el rol existe
+
         let finalRoleId = roleId;
         let finalRole = role || 'user';
-        
+
         if (roleId) {
             const Role = require('../models/role');
             const roleExists = await Role.findById(roleId);
             if (!roleExists) {
-                return res.status(400).json({ message: 'El rol especificado no existe' });
+                return next(boom.badRequest('El rol especificado no existe'));
             }
-            // Si el rol es "Administrador", establecer role como "admin"
             if (roleExists.name === 'Administrador') {
                 finalRole = 'admin';
             }
         }
-        
-        const user = new User({ 
-            username, 
+
+        const user = new User({
+            username,
             email,
-            password: hashedPassword, 
+            password: hashedPassword,
             role: finalRole,
             roleId: finalRoleId
         });
-        
+
         await user.save();
-        
-        // Poblar el rol para la respuesta
         await user.populate('roleId', 'name permission');
-        
-        res.status(201).json({ 
+
+        res.status(201).json({
             message: 'Usuario registrado exitosamente',
             user: {
                 id: user._id,
@@ -109,7 +105,7 @@ const register = async (req, res) => {
             }
         });
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        next(boom.badRequest(err.message));
     }
 };
 
@@ -142,47 +138,40 @@ const register = async (req, res) => {
  *       400:
  *         description: Credenciales inválidas
  */
-const login = async (req, res) => {
+const login = async (req, res, next) => {
     const { login, password } = req.body;
-    
+
     try {
-        // Buscar por username, userName o email (compatibilidad)
         const user = await User.findOne({
             $or: [
-                { username: login }, 
+                { username: login },
                 { userName: login },
                 { email: login }
             ]
         });
-        
-        if (!user) return res.status(400).json({ message: 'Credenciales inválidas' });
+
+        if (!user) return next(boom.unauthorized('Credenciales inválidas'));
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: 'Credenciales inválidas' });
+        if (!isMatch) return next(boom.unauthorized('Credenciales inválidas'));
 
-        // Poblar la información del rol
         await user.populate('roleId', 'name permission');
 
-        const token = jwt.sign(
-            { 
-                id: user._id, 
-                username: user.username || user.userName,
-                email: user.email, 
-                role: user.role || 'user',
-                roleId: user.roleId?._id
-            },
-            JWT_SECRET,
-            { expiresIn: '1h' }
-        );
+        const token = jwt.sign({
+            id: user._id,
+            username: user.username || user.userName,
+            email: user.email,
+            role: user.role || 'user',
+            roleId: user.roleId?._id
+        }, JWT_SECRET, { expiresIn: '1h' });
 
-        // Configurar cookie
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 3600000 // 1 hora
+            maxAge: 3600000
         });
 
-        res.json({ 
+        res.json({
             message: 'Login exitoso',
             token,
             user: {
@@ -198,7 +187,7 @@ const login = async (req, res) => {
             }
         });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        next(boom.internal(err.message));
     }
 };
 
@@ -231,12 +220,13 @@ const logout = (req, res) => {
  *       401:
  *         description: No autorizado
  */
-const getProfile = async (req, res) => {
+const getProfile = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
+        if (!user) return next(boom.notFound('Usuario no encontrado'));
         res.json(user);
     } catch (err) {
-        res.status(500).json({ error: 'Error del servidor' });
+        next(boom.internal('Error del servidor'));
     }
 };
 

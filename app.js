@@ -8,6 +8,9 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var cors = require('cors');
 var createError = require('http-errors');
+const errorHandler = require('./middleware/errorHandler');
+const Boom = require('@hapi/boom');
+
 
 // Importar rutas
 var indexRouter = require('./routes/index');
@@ -27,6 +30,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(errorHandler);
 
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:3000'],
@@ -50,18 +54,36 @@ app.use(function(req, res, next) {
 });
 
 // error handler
-app.use(function(err, req, res, next) {
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+// app.use(function(err, req, res, next) {
+//   res.locals.message = err.message;
+//   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  res.status(err.status || 500);
+//   res.status(err.status || 500);
   
-  // Si es una petición API, responder con JSON
-  if (req.path.startsWith('/api/')) {
-    res.json({ error: err.message });
-  } else {
-    res.render('error');
-  }
+//   // Si es una petición API, responder con JSON
+//   if (req.path.startsWith('/api/')) {
+//     res.json({ error: err.message });
+//   } else {
+//     res.render('error');
+//   }
+// });
+
+app.use((err, req, res, next) => {
+    if (Boom.isBoom(err)) {
+        return res.status(err.output.statusCode).json({
+            statusCode: err.output.statusCode,
+            error: err.output.payload.error,
+            message: err.message,
+            details: err.data?.details || null
+        });
+    }
+
+    res.status(500).json({
+        statusCode: 500,
+        error: 'Internal Server Error',
+        message: err.message
+    });
 });
+
 
 module.exports = app;
