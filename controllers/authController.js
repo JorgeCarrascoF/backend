@@ -73,7 +73,7 @@ const register = async (req, res, next) => {
         let finalRole = role || 'user';
 
         if (roleId) {
-            const Role = require('../models/Role');
+            const Role = require('../models/role');
             const roleExists = await Role.findById(roleId);
             if (!roleExists) {
                 return next(boom.badRequest('El rol especificado no existe'));

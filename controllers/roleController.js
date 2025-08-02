@@ -1,7 +1,7 @@
 // ============================================
 // controllers/roleController.js (CORREGIDO)
 // ============================================
-const Role = require('../models/Role');
+const Role = require('../models/role');
 
 /**
  * @swagger
