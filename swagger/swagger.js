@@ -18,7 +18,7 @@ const options = {
     },
     servers: [
       {
-        url: "https://backend-llwm.onrender.com/",
+        url: "https://backend-llwm.onrender.com/api",
         description: 'Servidor de producción'
       },
       {
