@@ -1,5 +1,5 @@
 // ============================================
-// controllers/authController.js (con Boom)
+// controllers/authController.js (CORREGIDO)
 // ============================================
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -73,7 +73,7 @@ const register = async (req, res, next) => {
         let finalRole = role || 'user';
 
         if (roleId) {
-            const Role = require('../models/role');
+            const Role = require('../models/Role');
             const roleExists = await Role.findById(roleId);
             if (!roleExists) {
                 return next(boom.badRequest('El rol especificado no existe'));
@@ -122,31 +122,59 @@ const register = async (req, res, next) => {
  *           schema:
  *             type: object
  *             required:
- *               - login
+ *               - email
  *               - password
  *             properties:
- *               login:
+ *               email:
  *                 type: string
- *                 description: "Username o email"
+ *                 description: "Puede ser username o email (el campo acepta ambos)"
  *                 example: "usuario123"
+ *                 x-examples:
+ *                   - "usuario123"
+ *                   - "usuario@example.com"
  *               password:
  *                 type: string
  *                 example: "123456"
  *     responses:
  *       200:
  *         description: Login exitoso
- *       400:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Login exitoso"
+ *                 token:
+ *                   type: string
+ *                   description: "JWT token"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     roleInfo:
+ *                       type: object
+ *       401:
  *         description: Credenciales inválidas
  */
 const login = async (req, res, next) => {
-    const { login, password } = req.body;
+    // Mantener el nombre 'email' pero aceptar username o email
+    const { email: identifier, password } = req.body;
 
     try {
         const user = await User.findOne({
             $or: [
-                { username: login },
-                { userName: login },
-                { email: login }
+                { username: identifier },
+                { userName: identifier },
+                { email: identifier }
             ]
         });
 

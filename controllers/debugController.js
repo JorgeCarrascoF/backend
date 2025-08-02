@@ -1,7 +1,7 @@
 // // ============================================
 // // controllers/debugController.js (TEMPORAL PARA DEBUG)
 // // ============================================
-// const User = require('../models/User');
+// const User = require('../models/user');
 
 // /**
 //  * @swagger
