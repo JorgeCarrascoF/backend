@@ -2,87 +2,12 @@ const User = require('../models/user'); // Asegúrate de que el nombre del archi
 
 /**
  * @swagger
- * components:
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *       description: Token JWT obtenido del endpoint de login
- *   schemas:
- *     User:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *           description: ID único del usuario
- *         username:
- *           type: string
- *           description: Nombre de usuario
- *         email:
- *           type: string
- *           format: email
- *           description: Correo electrónico
- *         role:
- *           type: string
- *           enum: [admin, user]
- *           description: Rol del usuario
- *         roleId:
- *           type: string
- *           description: ID del rol asignado
- *         roleInfo:
- *           type: object
- *           properties:
- *             id:
- *               type: string
- *             name:
- *               type: string
- *             permission:
- *               type: array
- *               items:
- *                 type: string
- *         active:
- *           type: boolean
- *           description: Estado del usuario
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
- *     UserUpdate:
- *       type: object
- *       properties:
- *         username:
- *           type: string
- *           example: "nuevo_nombre"
- *         email:
- *           type: string
- *           format: email
- *           example: "nuevo_correo@example.com"
- *         roleId:
- *           type: string
- *           example: "688abe5c6ad4e846fbdb0189"
- *         active:
- *           type: boolean
- *           example: true
- *     Error:
- *       type: object
- *       properties:
- *         msg:
- *           type: string
- *           description: Mensaje de error
- *         error:
- *           type: string
- *           description: Detalle del error
- */
-
-/**
- * @swagger
  * /users:
  *   get:
- *     summary: Obtener todos los usuarios
- *     description: Retorna todos los usuarios. Solo accesible para administradores.
+ *     summary: Obtener usuarios con filtros
+ *     description: >
+ *       Retorna usuarios filtrados por rol, email o estado.  
+ *       Solo accesible para roles distintos de `user` (admin, dev, qa).
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -94,9 +19,29 @@ const User = require('../models/user'); // Asegúrate de que el nombre del archi
  *           type: string
  *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *         description: Token JWT en formato "Bearer {token}"
+ *       - in: query
+ *         name: role
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [admin, dev, qa, user]
+ *         description: Filtrar por rol de usuario
+ *       - in: query
+ *         name: email
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: email
+ *         description: Filtrar por correo electrónico
+ *       - in: query
+ *         name: active
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar por estado de actividad (true/false)
  *     responses:
  *       200:
- *         description: Lista de usuarios obtenida correctamente
+ *         description: Usuarios filtrados obtenidos correctamente
  *         content:
  *           application/json:
  *             schema:
@@ -106,8 +51,8 @@ const User = require('../models/user'); // Asegúrate de que el nombre del archi
  *                   type: boolean
  *                   example: true
  *                 count:
- *                   type: number
- *                   example: 5
+ *                   type: integer
+ *                   example: 3
  *                 data:
  *                   type: array
  *                   items:
@@ -118,16 +63,12 @@ const User = require('../models/user'); // Asegúrate de que el nombre del archi
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *             example:
- *               msg: "Token no proporcionado"
  *       403:
- *         description: Acceso denegado - Se requiere rol de administrador
+ *         description: Acceso denegado – solo roles admin, dev o qa
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *             example:
- *               msg: "Acceso denegado. Se requiere rol de administrador."
  *       500:
  *         description: Error del servidor
  *         content:
@@ -135,53 +76,58 @@ const User = require('../models/user'); // Asegúrate de que el nombre del archi
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-const getAllUsers = async (req, res) => {
+const getUsersByFilter = async (req, res) => {
     try {
-        console.log('🔍 DEBUG getAllUsers:');
-        console.log('- Usuario en req:', req.user);
-        console.log('- Rol del usuario:', req.user?.role);
-        
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ 
-                msg: 'Acceso denegado. Se requiere rol de administrador.',
-                userRole: req.user.role,
-                required: 'admin'
+        // Sólo roles distintos de 'user' pueden acceder
+        const allowed = ['admin', 'dev', 'qa'];
+        if (!allowed.includes(req.user.role)) {
+            return res.status(403).json({
+                msg: 'Acceso denegado. Solo roles admin, dev o qa pueden listar usuarios.',
+                yourRole: req.user.role,
+                allowedRoles: allowed
             });
         }
 
-        const users = await User.find()
+        // Construir filtro desde query params
+        const { role, email, active } = req.query;
+        const filter = {};
+        if (role) filter.role = role;
+        if (email) filter.email = email;
+        if (active !== undefined) filter.active = active === 'true';
+
+        const users = await User.find(filter)
             .populate('roleId', 'name permission')
             .select('-password');
-            
-        // Formatear la respuesta para mostrar información completa
-        const formattedUsers = users.map(user => ({
-            id: user._id,
-            username: user.username || user.userName,
-            email: user.email,
-            role: user.role || 'user',
-            roleInfo: user.roleId ? {
-                id: user.roleId._id,
-                name: user.roleId.name,
-                permission: user.roleId.permission
+
+        const formatted = users.map(u => ({
+            id: u._id,
+            username: u.username || u.userName,
+            email: u.email,
+            role: u.role || 'user',
+            roleInfo: u.roleId ? {
+                id: u.roleId._id,
+                name: u.roleId.name,
+                permission: u.roleId.permission
             } : null,
-            active: user.active !== undefined ? user.active : true,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
+            active: u.active,
+            createdAt: u.createdAt,
+            updatedAt: u.updatedAt
         }));
 
         res.status(200).json({
             success: true,
-            count: formattedUsers.length,
-            data: formattedUsers
+            count: formatted.length,
+            data: formatted
         });
     } catch (err) {
-        console.error('Error en getAllUsers:', err);
-        res.status(500).json({ 
-            msg: 'Error del servidor al obtener usuarios', 
-            error: err.message 
+        console.error('Error en getUsersByFilter:', err);
+        res.status(500).json({
+            msg: 'Error del servidor al filtrar usuarios',
+            error: err.message
         });
     }
 };
+
 
 /**
  * @swagger
@@ -486,7 +432,8 @@ const deleteUser = async (req, res) => {
 };
 
 module.exports = {
-    getAllUsers,
+    // getAllUsers,
+    getUsersByFilter,
     getUserById,
     updateUser,
     deleteUser
