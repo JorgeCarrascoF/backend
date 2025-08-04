@@ -1,0 +1,567 @@
+const Log = require('../models/log');
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *       description: Token JWT obtenido del endpoint de login
+ *   schemas:
+ *     Log:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: ID único del Log
+ *         Logname:
+ *           type: string
+ *           description: Nombre de Log
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: Correo electrónico
+ *         role:
+ *           type: string
+ *           enum: [admin, Log]
+ *           description: Rol del Log
+ *         roleId:
+ *           type: string
+ *           description: ID del rol asignado
+ *         roleInfo:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *             name:
+ *               type: string
+ *             permission:
+ *               type: array
+ *               items:
+ *                 type: string
+ *         active:
+ *           type: boolean
+ *           description: Estado del Log
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *     LogUpdate:
+ *       type: object
+ *       properties:
+ *         Logname:
+ *           type: string
+ *           example: "nuevo_nombre"
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: "nuevo_correo@example.com"
+ *         roleId:
+ *           type: string
+ *           example: "688abe5c6ad4e846fbdb0189"
+ *         active:
+ *           type: boolean
+ *           example: true
+ *     Error:
+ *       type: object
+ *       properties:
+ *         msg:
+ *           type: string
+ *           description: Mensaje de error
+ *         error:
+ *           type: string
+ *           description: Detalle del error
+ */
+
+/**
+ * @swagger
+ * /logs:
+ *   get:
+ *     summary: "Obtener todos los Logs"
+ *     description: Retorna todos los Logs. Solo accesible para administradores.
+ *     tags: [Logs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *         description: Token JWT en formato "Bearer {token}"
+ *     responses:
+ *       200:
+ *         description: Lista de Logs obtenida correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: number
+ *                   example: 5
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/log'
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "Token no proporcionado"
+ *       403:
+ *         description: Acceso denegado - Se requiere rol de administrador
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "Acceso denegado. Se requiere rol de administrador."
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+const getAllLogs = async (req, res) => {
+    try {
+        console.log('🔍 DEBUG getAllLogs:');
+        console.log('- Usuario en req:', req.user);
+        console.log('- Rol del usuario:', req.user?.role);
+        
+         if (req.user.role !== 'admin') {
+            return res.status(403).json({ 
+                msg: 'Acceso denegado. Se requiere rol de administrador.',
+                userRole: req.user.role,
+                required: 'admin'
+            });
+        }
+
+        const logs = await Log.find()
+            .populate('userId', 'username email');
+            
+        // Formatear la respuesta para mostrar información completa
+        const formattedLogs = logs.map(log => ({
+            id: log._id,
+            linkSentry: log.linkSentry,
+            project: log.project,
+            type: log.type,
+            status: log.status,
+            platform: log.status,
+            filename: log.filename,
+            function: log.function,
+            priority: log.priority,
+            count: log.count,
+            firstSeen: log.firstSeen,
+            lastSeen: log.lastSeen,
+            //user: log.userId,
+        }));
+
+        res.status(200).json({
+            success: true,
+            count: formattedLogs.length,
+            data: formattedLogs
+        });
+    } catch (err) {
+        console.error('Error en getAllLogs:', err);
+        res.status(500).json({ 
+            msg: 'Error del servidor al obtener Logs', 
+            error: err.message 
+        });
+    }
+};
+
+/**
+ * @swagger
+ * /logs/{id}:
+ *   get:
+ *     summary: "Obtener un Log por ID"
+ *     description: Obtiene un Log específico. Los administradores pueden ver cualquier Log, los Logs normales solo pueden ver su propio perfil.
+ *     tags: [Logs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *         description: Token JWT en formato "Bearer {token}"
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del Log
+ *         example: "688abe5d6ad4e846fbdb018c"
+ *     responses:
+ *       200:
+ *         description: Datos del Log obtenidos correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/log'
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *       403:
+ *         description: Acceso denegado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "Acceso denegado."
+ *       404:
+ *         description: Log no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "Log no encontrado."
+ *       500:
+ *         description: Error del servidor
+ */
+const getLogById = async (req, res) => {
+    try {
+        console.log('🔍 DEBUG getLogById:');
+        console.log('- Usuario solicitante:', req.user);
+        console.log('- ID solicitado:', req.params.id);
+        
+        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
+            return res.status(403).json({ 
+                msg: 'Acceso denegado.',
+                detail: 'Solo los administradores pueden ver los logs por ID'
+            });
+        }
+
+        const log = await Log.findById(req.params.id)
+            .populate('userId', 'username email')
+            .select('-password');
+            
+        if (!log) {
+            return res.status(404).json({ msg: 'Log no encontrado.' });
+        }
+
+        // Formatear respuesta
+        const formattedLogs = {
+            id: log._id,
+            linkSentry: log.linkSentry,
+            project: log.project,
+            type: log.type,
+            status: log.status,
+            platform: log.status,
+            filename: log.filename,
+            function: log.function,
+            priority: log.priority,
+            count: log.count,
+            firstSeen: log.firstSeen,
+            lastSeen: log.lastSeen
+        };
+
+        res.status(200).json(formattedLogs);
+    } catch (err) {
+        console.error('Error en getLogById:', err);
+        res.status(500).json({ 
+            msg: 'Error del servidor al obtener el Log', 
+            error: err.message 
+        });
+    }
+};
+
+
+/**
+ * @swagger
+ * /logs/{id}:
+ *   patch:
+ *     summary: "Actualizar un Log"
+ *     description: Actualiza un Log. Los administradores pueden actualizar cualquier Log, los Logs normales solo pueden actualizar su propio perfil (excepto rol).
+ *     tags: [Logs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *         description: Token JWT en formato "Bearer {token}"
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del Log a actualizar
+ *         example: "688abe5d6ad4e846fbdb018c"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/logUpdate'
+ *     responses:
+ *       200:
+ *         description: Log actualizado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "Log actualizado."
+ *                 Log:
+ *                   $ref: '#/components/schemas/log'
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *       403:
+ *         description: Acceso denegado
+ *       404:
+ *         description: Log no encontrado
+ *       500:
+ *         description: Error del servidor
+ */
+const updateLog = async (req, res) => {
+    try {
+        console.log('🔍 DEBUG updateLog:');
+        console.log('- Log solicitante:', req.Log);
+        console.log('- ID a actualizar:', req.params.id);
+        console.log('- Datos a actualizar:', req.body);
+        
+        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
+            return res.status(403).json({ 
+                msg: 'Acceso denegado para actualizar este log.',
+                detail: 'Solo los administradores pueden actualizar los logs'
+            });
+        }
+
+        // Un usuario no-admin no puede cambiar el log
+        if (req.user.role !== 'admin') {
+            delete req.body.log;
+            delete req.body.logId;
+        }
+
+        const log = await Log.findByIdAndUpdate(
+            req.params.id, 
+            req.body, 
+            {
+                new: true,
+                runValidators: true,
+            }
+        ).populate('userId', 'username email').select('-password');
+
+        if (!log) {
+            return res.status(404).json({ msg: 'Log no encontrado.' });
+        }
+
+        // Formatear respuesta
+        const formattedLogs = {
+            id: log._id,
+            linkSentry: log.linkSentry,
+            project: log.project,
+            type: log.type,
+            status: log.status,
+            platform: log.status,
+            filename: log.filename,
+            function: log.function,
+            priority: log.priority,
+            count: log.count,
+            firstSeen: log.firstSeen,
+            lastSeen: log.lastSeen
+        };
+
+        res.status(200).json({ 
+            msg: 'Log actualizado exitosamente.', 
+            log: formattedLogs 
+        });
+    } catch (err) {
+        console.error('Error en updateLog:', err);
+        res.status(500).json({ 
+            msg: 'Error del servidor al actualizar el Log', 
+            error: err.message 
+        });
+    }
+};
+
+/**
+ * @swagger
+ * /logs/{id}:
+ *   delete:
+ *     summary: "Eliminar un Log"
+ *     description: Elimina un Log. Los administradores pueden eliminar cualquier Log, los Logs normales solo pueden eliminar su propia cuenta.
+ *     tags: [Logs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *         description: Token JWT en formato "Bearer {token}"
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del Log a eliminar
+ *         example: "688abe5d6ad4e846fbdb018c"
+ *     responses:
+ *       200:
+ *         description: Log eliminado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "Log eliminado exitosamente."
+ *                 deletedLog:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     Logname:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *       403:
+ *         description: Acceso denegado
+ *       404:
+ *         description: Log no encontrado
+ *       500:
+ *         description: Error del servidor
+ */
+const deleteLog = async (req, res) => {
+    try {
+        console.log('🔍 DEBUG deleteLog:');
+        console.log('- Log solicitante:', req.Log);
+        console.log('- ID a eliminar:', req.params.id);
+        
+        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
+            return res.status(403).json({ 
+                msg: 'Acceso denegado para eliminar este usuario.',
+                detail: 'Solo los administradores pueden eliminar otros usuarios'
+            });
+        }
+
+        const log = await Log.findByIdAndDelete(req.params.id);
+        
+        if (!log) {
+            return res.status(404).json({ msg: 'Log no encontrado.' });
+        }
+
+        res.status(200).json({ 
+            msg: 'Log eliminado exitosamente.',
+            data: log,
+            deletedLog: {
+                id: log._id,
+            }
+        });
+    } catch (err) {
+        console.error('Error al eliminar el log:', err);
+        res.status(500).json({ 
+            msg: 'Error del servidor al eliminar el Log', 
+            error: err.message 
+        });
+    }
+};
+
+/**
+ * @swagger
+ * /logs:
+ *   post:
+ *     summary: "Crear nuevo log"
+ *     tags: [Logs]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - permission
+ *             properties:
+ *               name:
+ *                 type: string
+ *               permission:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       201:
+ *         description: Log creado exitosamente
+ *       400:
+ *         description: Datos inválidos
+ */
+
+const createLog = async (req, res) => {
+    try {
+        /*const existingLog = await Role.findOne({ name });
+        if (existingLog) {
+            return res.status(400).json({ msg: 'El log ya existe' });
+        }*/
+
+        const {
+            title,
+            linkSentry,
+            project,
+            type,
+            status,
+            platform,
+            filename,
+            function: functionName,
+            priority,
+            count,
+            firstSeen,
+            lastSeen
+        } = req.body;
+
+        const newLog = new Log({
+             title,
+            linkSentry,
+            project,
+            type,
+            status,
+            platform,
+            filename,
+            function: functionName,
+            priority,
+            count,
+            firstSeen,
+            lastSeen
+        });
+        await newLog.save();
+
+        res.status(201).json({ msg: 'Log creado exitosamente', log: newLog });
+    } catch (err) {
+        res.status(500).json({ msg: 'Error creando Log', error: err.message });
+    }
+};
+
+module.exports = {
+    getAllLogs,
+    getLogById,
+    createLog,
+    updateLog,
+    deleteLog
+};

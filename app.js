@@ -17,6 +17,7 @@ var indexRouter = require('./routes/index');
 var authRouter = require('./routes/auth');
 var usersRouter = require('./routes/users');
 var rolesRouter = require('./routes/roles');
+var logsRoutes = require('./routes/logs')
 var swaggerDocs = require('./swagger/swagger');
 
 var app = express();
@@ -30,7 +31,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(errorHandler);
+
 
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'https://pruebas-concepto.vercel.app', '*', 'http://localhost:3000'];
 
@@ -46,6 +47,7 @@ app.use('/', indexRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/roles', rolesRouter);
+app.use('/api/logs', logsRoutes);
 
 // Configurar Swagger
 swaggerDocs(app);
@@ -54,6 +56,8 @@ swaggerDocs(app);
 app.use(function(req, res, next) {
   next(createError(404));
 });
+
+app.use(errorHandler);
 
 // error handler
 // app.use(function(err, req, res, next) {
@@ -85,6 +89,8 @@ app.use((err, req, res, next) => {
         error: 'Internal Server Error',
         message: err.message
     });
+
+    
 });
 
 

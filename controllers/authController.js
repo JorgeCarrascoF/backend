@@ -185,6 +185,8 @@ const login = async (req, res, next) => {
 
         await user.populate('roleId', 'name permission');
 
+        console.log('- Rol del usuario:', user.role);
+
         const token = jwt.sign({
             id: user._id,
             username: user.username || user.userName,
@@ -231,7 +233,9 @@ const login = async (req, res, next) => {
  */
 const logout = (req, res) => {
     res.clearCookie('token');
-    res.json({ message: 'Logout exitoso' });
+    //console.log('- Rol del usuario:', user.role);
+    //res.json({ message: 'Logout exitoso' });
+    res.status(200).json({ message: 'Logout exitoso' });
 };
 
 /**
