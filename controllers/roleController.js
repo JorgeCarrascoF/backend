@@ -68,8 +68,36 @@ const createRole = async (req, res) => {
  */
 const getAllRoles = async (req, res) => {
     try {
-        const roles = await Role.find();
-        res.status(200).json(roles);
+        const limit =  parseInt(req.query.limit) || 10;
+        const search = req.query.search || '';
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page-1)*limit;
+
+        const { name } = req.query;
+
+        const query= {};
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } }           
+            ];
+        }
+
+        if (name) query.name = name;
+
+        //const roles = await Role.find();
+        const roles = await Role.find(query)
+        //.populate('userId', 'username email')
+        .skip(skip)
+        .limit(limit)
+        .sort({ lastSeen: -1 });
+
+        //res.status(200).json(roles);
+        res.status(200).json({
+            success: true,
+            page,
+            limit,
+            roles
+        });
     } catch (err) {
         res.status(500).json({ msg: 'Error obteniendo roles', error: err.message });
     }

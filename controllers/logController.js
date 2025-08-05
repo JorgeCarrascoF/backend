@@ -82,7 +82,7 @@ const Log = require('../models/log');
  * /logs:
  *   get:
  *     summary: "Obtener todos los Logs"
- *     description: Retorna todos los Logs. Solo accesible para administradores.
+ *     description: Retorna todos los Logs. Solo accesible para administradores, desarrolladores y QA's.
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -141,16 +141,46 @@ const getAllLogs = async (req, res) => {
         console.log('- Usuario en req:', req.user);
         console.log('- Rol del usuario:', req.user?.role);
         
-         if (req.user.role !== 'admin') {
+        const roles = ['admin', 'dev', 'QA'];
+         if (!roles.includes(req.user.role)) {
             return res.status(403).json({ 
-                msg: 'Acceso denegado. Se requiere rol de administrador.',
+                msg: 'Acceso denegado. Se requiere rol de administrador, desarrollador o QA.',
                 userRole: req.user.role,
-                required: 'admin'
+                required: roles
             });
         }
 
-        const logs = await Log.find()
-            .populate('userId', 'username email');
+        const limit =  parseInt(req.query.limit) || 10;
+        const search = req.query.search || '';
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page-1)*limit;
+
+        const { status, type, priority, platform, filename } = req.query;
+
+        const query= {};
+        if (search) {
+            query.$or = [
+                { status: { $regex: search, $options: 'i' } },
+                { type: { $regex: search, $options: 'i' } },
+                { priority: { $regex: search, $options: 'i' } },
+                { platform: { $regex: search, $options: 'i' } },
+                { filename: { $regex: search, $options: 'i' } },              
+            ];
+        }
+
+        if (status) query.status = status;
+        if (type) query.type = type;
+        if (priority) query.priority = priority;
+        if (platform) query.platform = platform;
+        if (filename) query.filename = filename;
+        
+        //const totalLogs = await Log.countDocuments(searchQuery);
+
+        const logs = await Log.find(query)
+            .populate('userId', 'username email')
+            .skip(skip)
+            .limit(limit)
+            .sort({ lastSeen: -1 });
             
         // Formatear la respuesta para mostrar información completa
         const formattedLogs = logs.map(log => ({
@@ -159,7 +189,7 @@ const getAllLogs = async (req, res) => {
             project: log.project,
             type: log.type,
             status: log.status,
-            platform: log.status,
+            platform: log.platform,
             filename: log.filename,
             function: log.function,
             priority: log.priority,
@@ -171,6 +201,10 @@ const getAllLogs = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            page,
+            limit,
+            //totalPages: Math.ceil(totalLogs/limit),
+            //totalResults:totalLogs,
             count: formattedLogs.length,
             data: formattedLogs
         });
@@ -188,7 +222,7 @@ const getAllLogs = async (req, res) => {
  * /logs/{id}:
  *   get:
  *     summary: "Obtener un Log por ID"
- *     description: Obtiene un Log específico. Los administradores pueden ver cualquier Log, los Logs normales solo pueden ver su propio perfil.
+ *     description: Obtiene un Log específico. Solo accesible para administradores, desarrolladores y QA's.
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -241,10 +275,11 @@ const getLogById = async (req, res) => {
         console.log('- Usuario solicitante:', req.user);
         console.log('- ID solicitado:', req.params.id);
         
-        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
+        const roles = ['admin', 'dev', 'QA'];
+        if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
             return res.status(403).json({ 
                 msg: 'Acceso denegado.',
-                detail: 'Solo los administradores pueden ver los logs por ID'
+                detail: 'Solo los adminstradores, desarrolladores y QA pueden ver los logs por ID'
             });
         }
 
@@ -288,7 +323,7 @@ const getLogById = async (req, res) => {
  * /logs/{id}:
  *   patch:
  *     summary: "Actualizar un Log"
- *     description: Actualiza un Log. Los administradores pueden actualizar cualquier Log, los Logs normales solo pueden actualizar su propio perfil (excepto rol).
+ *     description: Actualiza un Log. Solo accesible para administradores, desarrolladores y QA's.
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -342,15 +377,16 @@ const updateLog = async (req, res) => {
         console.log('- ID a actualizar:', req.params.id);
         console.log('- Datos a actualizar:', req.body);
         
-        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
+        const roles = ['admin', 'dev', 'QA'];
+        if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
             return res.status(403).json({ 
                 msg: 'Acceso denegado para actualizar este log.',
-                detail: 'Solo los administradores pueden actualizar los logs'
+                detail: 'Solo los administradores, desarrolladores y QA pueden actualizar los logs'
             });
         }
 
         // Un usuario no-admin no puede cambiar el log
-        if (req.user.role !== 'admin') {
+        if (!roles.includes(req.user.role)) {
             delete req.body.log;
             delete req.body.logId;
         }
@@ -402,7 +438,7 @@ const updateLog = async (req, res) => {
  * /logs/{id}:
  *   delete:
  *     summary: "Eliminar un Log"
- *     description: Elimina un Log. Los administradores pueden eliminar cualquier Log, los Logs normales solo pueden eliminar su propia cuenta.
+ *     description: Elimina un Log. Solo accesible para administradores, desarrolladores y QA's.
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -456,10 +492,11 @@ const deleteLog = async (req, res) => {
         console.log('- Log solicitante:', req.Log);
         console.log('- ID a eliminar:', req.params.id);
         
-        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
+        const roles = ['admin', 'dev', 'QA'];
+        if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
             return res.status(403).json({ 
                 msg: 'Acceso denegado para eliminar este usuario.',
-                detail: 'Solo los administradores pueden eliminar otros usuarios'
+                detail: 'Solo los administradores, desarrolladores y QA pueden eliminar otros usuarios'
             });
         }
 
@@ -490,6 +527,7 @@ const deleteLog = async (req, res) => {
  * /logs:
  *   post:
  *     summary: "Crear nuevo log"
+ *     description: Crea un Log. Solo accesible para administradores, desarrolladores y QA's.
  *     tags: [Logs]
  *     requestBody:
  *       required: true
@@ -520,6 +558,13 @@ const createLog = async (req, res) => {
         if (existingLog) {
             return res.status(400).json({ msg: 'El log ya existe' });
         }*/
+       const roles = ['admin', 'dev', 'QA'];
+       if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
+        return res.status(403).json({ 
+            msg: 'Acceso denegado para actualizar este log.',
+            detail: 'Solo los administradores, desarrolladores y QA pueden crear los logs'
+            });
+        }
 
         const {
             title,

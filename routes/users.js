@@ -14,9 +14,7 @@ const auth = require('../middleware/auth');
 const router = express.Router();
 
 // Rutas GET
-// router.get('/', auth, getAllUsers);
-router.get('/', auth, getUsersByFilter); // reemplaza getAllUsers por getUsersByFilter
-
+router.get('/', auth, getUsersByFilter);
 router.get('/:id', auth, getUserById);
 
 // Nueva ruta PATCH para actualizar
