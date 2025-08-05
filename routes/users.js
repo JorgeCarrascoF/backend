@@ -2,18 +2,18 @@
 // routes/users.js (ACTUALIZADO)
 // ============================================
 const express = require('express');
-const { 
-    getAllUsers, 
+const {
     getUserById, 
     updateUser,     // Importar nueva función
-    deleteUser      // Importar nueva función
+    deleteUser,      // Importar nueva función
+    getUsersByFilter
 } = require('../controllers/userController');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
 // Rutas GET
-router.get('/', auth, getAllUsers);
+router.get('/', auth, getUsersByFilter);
 router.get('/:id', auth, getUserById);
 
 // Nueva ruta PATCH para actualizar
