@@ -1,88 +1,14 @@
 const User = require('../models/user'); // Asegúrate de que el nombre del archivo sea correcto
-
-/**
- * @swagger
- * components:
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *       description: Token JWT obtenido del endpoint de login
- *   schemas:
- *     User:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *           description: ID único del usuario
- *         username:
- *           type: string
- *           description: Nombre de usuario
- *         email:
- *           type: string
- *           format: email
- *           description: Correo electrónico
- *         role:
- *           type: string
- *           enum: [admin, user]
- *           description: Rol del usuario
- *         roleId:
- *           type: string
- *           description: ID del rol asignado
- *         roleInfo:
- *           type: object
- *           properties:
- *             id:
- *               type: string
- *             name:
- *               type: string
- *             permission:
- *               type: array
- *               items:
- *                 type: string
- *         active:
- *           type: boolean
- *           description: Estado del usuario
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
- *     UserUpdate:
- *       type: object
- *       properties:
- *         username:
- *           type: string
- *           example: "nuevo_nombre"
- *         email:
- *           type: string
- *           format: email
- *           example: "nuevo_correo@example.com"
- *         roleId:
- *           type: string
- *           example: "688abe5c6ad4e846fbdb0189"
- *         active:
- *           type: boolean
- *           example: true
- *     Error:
- *       type: object
- *       properties:
- *         msg:
- *           type: string
- *           description: Mensaje de error
- *         error:
- *           type: string
- *           description: Detalle del error
- */
+const mongoose = require('mongoose');
 
 /**
  * @swagger
  * /users:
  *   get:
- *     summary: Obtener todos los usuarios
- *     description: Retorna todos los usuarios. Solo accesible para administradores.
+ *     summary: Obtener usuarios filtrados con paginación
+ *     description: >
+ *       Retorna usuarios según filtros avanzados (username, email, role, estado), con paginación.  
+ *       Solo accesible para roles distintos de `user` (admin, dev, qa).
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -94,6 +20,40 @@ const User = require('../models/user'); // Asegúrate de que el nombre del archi
  *           type: string
  *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *         description: Token JWT en formato "Bearer {token}"
+ *       - in: query
+ *         name: username
+ *         schema:
+ *           type: string
+ *         description: Filtrar por nombre de usuario exacto
+ *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
+ *           format: email
+ *         description: Filtrar por correo exacto
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [admin, dev, qa, user]
+ *         description: Filtrar por rol exacto
+ *       - in: query
+ *         name: active
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar por estado de actividad
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Página a solicitar (paginación)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Cantidad de resultados por página
  *     responses:
  *       200:
  *         description: Lista de usuarios obtenida correctamente
@@ -105,55 +65,68 @@ const User = require('../models/user'); // Asegúrate de que el nombre del archi
  *                 success:
  *                   type: boolean
  *                   example: true
+ *                 page:
+ *                   type: integer
+ *                   example: 1
+ *                 limit:
+ *                   type: integer
+ *                   example: 10
  *                 count:
- *                   type: number
- *                   example: 5
+ *                   type: integer
+ *                   example: 2
  *                 data:
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/User'
  *       401:
- *         description: Token no proporcionado o inválido
+ *         description: Token no válido o no proporcionado
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *             example:
- *               msg: "Token no proporcionado"
  *       403:
- *         description: Acceso denegado - Se requiere rol de administrador
+ *         description: Acceso denegado – solo roles admin, dev o qa
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *             example:
- *               msg: "Acceso denegado. Se requiere rol de administrador."
  *       500:
- *         description: Error del servidor
+ *         description: Error interno del servidor
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-const getAllUsers = async (req, res) => {
+
+const getUsersByFilter = async (req, res) => {
     try {
-        console.log('🔍 DEBUG getAllUsers:');
-        console.log('- Usuario en req:', req.user);
-        console.log('- Rol del usuario:', req.user?.role);
-        
-        if (req.user.role !== 'admin') {
-            return res.status(403).json({ 
-                msg: 'Acceso denegado. Se requiere rol de administrador.',
+        if (!['admin', 'dev', 'qa'].includes(req.user.role)) {
+            return res.status(403).json({
+                msg: 'Acceso denegado. Rol no autorizado.',
                 userRole: req.user.role,
-                required: 'admin'
+                required: ['admin', 'dev', 'qa']
             });
         }
 
-        const users = await User.find()
+        const limit = parseInt(req.query.limit) || 10;
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page - 1) * limit;
+
+        const { username, email, role, active } = req.query;
+
+        const query = {};
+        if (username) query.username = username;
+        if (email) query.email = email;
+        if (role) query.role = role;
+        if (active !== undefined) query.active = active;
+
+        const users = await User.find(query)
             .populate('roleId', 'name permission')
-            .select('-password');
-            
-        // Formatear la respuesta para mostrar información completa
+            .select('-password')
+            .skip(skip)
+            .limit(limit)
+            .sort({ lastSeen: -1 });
+
         const formattedUsers = users.map(user => ({
             id: user._id,
             username: user.username || user.userName,
@@ -171,17 +144,21 @@ const getAllUsers = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            page,
+            limit,
             count: formattedUsers.length,
             data: formattedUsers
         });
     } catch (err) {
-        console.error('Error en getAllUsers:', err);
-        res.status(500).json({ 
-            msg: 'Error del servidor al obtener usuarios', 
-            error: err.message 
+        console.error('Error en getUsersByFilter:', err);
+        res.status(500).json({
+            msg: 'Error del servidor al filtrar usuarios',
+            error: err.message
         });
     }
 };
+
+
 
 /**
  * @swagger
@@ -214,6 +191,19 @@ const getAllUsers = async (req, res) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/User'
+ *       400:
+ *         description: ID de usuario inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "ID de usuario inválido"
+ *                 detail:
+ *                   type: string
+ *                   example: "El ID proporcionado no es un formato válido."
  *       401:
  *         description: Token no proporcionado o inválido
  *       403:
@@ -240,20 +230,46 @@ const getUserById = async (req, res) => {
         console.log('🔍 DEBUG getUserById:');
         console.log('- Usuario solicitante:', req.user);
         console.log('- ID solicitado:', req.params.id);
-        
-        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
-            return res.status(403).json({ 
+
+        // Validación más estricta del ObjectId
+        const userId = req.params.id;
+
+        // Verificar que sea un ObjectId válido de 24 caracteres hexadecimales
+        if (!userId || !mongoose.Types.ObjectId.isValid(userId) || userId.length !== 24) {
+            return res.status(400).json({
+                msg: 'ID de usuario inválido',
+                detail: 'El ID proporcionado no es un formato válido de MongoDB ObjectId.'
+            });
+        }
+
+        // Verificar permisos
+        if (req.user.role !== 'admin' && req.user.id !== userId) {
+            return res.status(403).json({
                 msg: 'Acceso denegado.',
                 detail: 'Solo los administradores pueden ver otros usuarios'
             });
         }
 
-        const user = await User.findById(req.params.id)
+        // Crear ObjectId explícitamente para evitar problemas de cast
+        let objectId;
+        try {
+            objectId = new mongoose.Types.ObjectId(userId);
+        } catch (castError) {
+            return res.status(400).json({
+                msg: 'ID de usuario inválido',
+                detail: 'No se puede convertir el ID a un ObjectId válido.'
+            });
+        }
+
+        // Buscar usuario usando el ObjectId creado
+        const user = await User.findById(objectId)
             .populate('roleId', 'name permission')
             .select('-password');
-            
+
         if (!user) {
-            return res.status(404).json({ msg: 'Usuario no encontrado.' });
+            return res.status(404).json({
+                msg: 'Usuario no encontrado.'
+            });
         }
 
         // Formatear respuesta
@@ -273,11 +289,21 @@ const getUserById = async (req, res) => {
         };
 
         res.status(200).json(formattedUser);
+
     } catch (err) {
         console.error('Error en getUserById:', err);
-        res.status(500).json({ 
-            msg: 'Error del servidor al obtener el usuario', 
-            error: err.message 
+
+        // Manejo específico de errores de cast
+        if (err.name === 'CastError') {
+            return res.status(400).json({
+                msg: 'ID de usuario inválido',
+                detail: 'El formato del ID no es válido para MongoDB.'
+            });
+        }
+
+        res.status(500).json({
+            msg: 'Error del servidor al obtener el usuario',
+            error: err.message
         });
     }
 };
@@ -340,9 +366,9 @@ const updateUser = async (req, res) => {
         console.log('- Usuario solicitante:', req.user);
         console.log('- ID a actualizar:', req.params.id);
         console.log('- Datos a actualizar:', req.body);
-        
+
         if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 msg: 'Acceso denegado para actualizar este usuario.',
                 detail: 'Solo los administradores pueden actualizar otros usuarios'
             });
@@ -355,8 +381,8 @@ const updateUser = async (req, res) => {
         }
 
         const user = await User.findByIdAndUpdate(
-            req.params.id, 
-            req.body, 
+            req.params.id,
+            req.body,
             {
                 new: true,
                 runValidators: true,
@@ -383,15 +409,15 @@ const updateUser = async (req, res) => {
             updatedAt: user.updatedAt
         };
 
-        res.status(200).json({ 
-            msg: 'Usuario actualizado exitosamente.', 
-            user: formattedUser 
+        res.status(200).json({
+            msg: 'Usuario actualizado exitosamente.',
+            user: formattedUser
         });
     } catch (err) {
         console.error('Error en updateUser:', err);
-        res.status(500).json({ 
-            msg: 'Error del servidor al actualizar el usuario', 
-            error: err.message 
+        res.status(500).json({
+            msg: 'Error del servidor al actualizar el usuario',
+            error: err.message
         });
     }
 };
@@ -454,21 +480,21 @@ const deleteUser = async (req, res) => {
         console.log('🔍 DEBUG deleteUser:');
         console.log('- Usuario solicitante:', req.user);
         console.log('- ID a eliminar:', req.params.id);
-        
+
         if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 msg: 'Acceso denegado para eliminar este usuario.',
                 detail: 'Solo los administradores pueden eliminar otros usuarios'
             });
         }
 
         const user = await User.findByIdAndDelete(req.params.id);
-        
+
         if (!user) {
             return res.status(404).json({ msg: 'Usuario no encontrado.' });
         }
 
-        res.status(200).json({ 
+        res.status(200).json({
             msg: 'Usuario eliminado exitosamente.',
             deletedUser: {
                 id: user._id,
@@ -478,15 +504,16 @@ const deleteUser = async (req, res) => {
         });
     } catch (err) {
         console.error('Error en deleteUser:', err);
-        res.status(500).json({ 
-            msg: 'Error del servidor al eliminar el usuario', 
-            error: err.message 
+        res.status(500).json({
+            msg: 'Error del servidor al eliminar el usuario',
+            error: err.message
         });
     }
 };
 
 module.exports = {
-    getAllUsers,
+    // getAllUsers,
+    getUsersByFilter,
     getUserById,
     updateUser,
     deleteUser
