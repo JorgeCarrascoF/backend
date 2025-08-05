@@ -1,5 +1,6 @@
 const User = require('../models/user'); // Asegúrate de que el nombre del archivo sea correcto
-
+// controllers/userController.js
+const { updateUserSchema } = require('../validations/userSchema');
 
 /**
  * @swagger
@@ -264,7 +265,10 @@ const getUserById = async (req, res) => {
  * /users/{id}:
  *   patch:
  *     summary: Actualizar un usuario
- *     description: Actualiza un usuario. Los administradores pueden actualizar cualquier usuario, los usuarios normales solo pueden actualizar su propio perfil (excepto rol).
+ *     description: >
+ *       Actualiza un usuario.  
+ *       - Los administradores pueden actualizar cualquier usuario (incluyendo rol).  
+ *       - Los usuarios normales solo pueden actualizar su propio perfil, **excluyendo** los campos `role` y `email`.  
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -305,12 +309,14 @@ const getUserById = async (req, res) => {
  *       401:
  *         description: Token no proporcionado o inválido
  *       403:
- *         description: Acceso denegado
+ *         description: Acceso denegado (solo admin o dueño del perfil)
  *       404:
  *         description: Usuario no encontrado
  *       500:
  *         description: Error del servidor
  */
+
+
 const updateUser = async (req, res) => {
     try {
         console.log('🔍 DEBUG updateUser:');
@@ -318,6 +324,23 @@ const updateUser = async (req, res) => {
         console.log('- ID a actualizar:', req.params.id);
         console.log('- Datos a actualizar:', req.body);
 
+        // Validación Joi: solo campos permitidos
+        const { error } = updateUserSchema.validate(req.body, { abortEarly: false });
+        if (error) {
+            return res.status(400).json({
+                msg: 'Error de validación',
+                details: error.details.map(d => d.message)
+            });
+        }
+
+        // No permitir actualizar email
+        if (req.body.email) {
+            return res.status(400).json({
+                msg: 'El campo email no puede actualizarse'
+            });
+        }
+
+        // Permisos
         if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
             return res.status(403).json({
                 msg: 'Acceso denegado para actualizar este usuario.',
@@ -338,7 +361,9 @@ const updateUser = async (req, res) => {
                 new: true,
                 runValidators: true,
             }
-        ).populate('roleId', 'name permission').select('-password');
+        )
+            .populate('roleId', 'name permission')
+            .select('-password');
 
         if (!user) {
             return res.status(404).json({ msg: 'Usuario no encontrado.' });
@@ -350,28 +375,32 @@ const updateUser = async (req, res) => {
             username: user.username || user.userName,
             email: user.email,
             role: user.role || 'user',
-            roleInfo: user.roleId ? {
-                id: user.roleId._id,
-                name: user.roleId.name,
-                permission: user.roleId.permission
-            } : null,
+            roleInfo: user.roleId
+                    ? {
+                        id: user.roleId._id,
+                        name: user.roleId.name,
+                        permission: user.roleId.permission,
+                    }
+                : null,
             active: user.active !== undefined ? user.active : true,
             createdAt: user.createdAt,
-            updatedAt: user.updatedAt
+            updatedAt: user.updatedAt,
         };
 
         res.status(200).json({
             msg: 'Usuario actualizado exitosamente.',
-            user: formattedUser
+            user: formattedUser,
         });
     } catch (err) {
         console.error('Error en updateUser:', err);
         res.status(500).json({
             msg: 'Error del servidor al actualizar el usuario',
-            error: err.message
+            error: err.message,
         });
     }
 };
+
+module.exports = { updateUser };
 
 /**
  * @swagger
