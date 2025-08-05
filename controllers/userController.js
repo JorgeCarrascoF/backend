@@ -1,3 +1,4 @@
+
 const User = require('../models/user'); // Asegúrate de que el nombre del archivo sea correcto
 // controllers/userController.js
 const { updateUserSchema } = require('../validations/userSchema');
@@ -39,7 +40,7 @@ const { updateUserSchema } = require('../validations/userSchema');
  *           enum: [admin, dev, qa, user]
  *         description: Filtrar por rol exacto
  *       - in: query
- *         name: active
+ *         name: isActive
  *         schema:
  *           type: boolean
  *         description: Filtrar por estado de actividad
@@ -113,13 +114,13 @@ const getUsersByFilter = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const skip = (page - 1) * limit;
 
-        const { username, email, role, active } = req.query;
+        const { username, email, role, isActive } = req.query;
 
         const query = {};
         if (username) query.username = username;
         if (email) query.email = email;
         if (role) query.role = role;
-        if (active !== undefined) query.active = active;
+        if (isActive !== undefined) query.isActive = isActive;
 
         const users = await User.find(query)
             .populate('roleId', 'name permission')
@@ -138,7 +139,7 @@ const getUsersByFilter = async (req, res) => {
                 name: user.roleId.name,
                 permission: user.roleId.permission
             } : null,
-            active: user.active !== undefined ? user.active : true,
+            isActive: user.isActive !== undefined ? user.isActive : true,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         }));
@@ -245,7 +246,7 @@ const getUserById = async (req, res) => {
                 name: user.roleId.name,
                 permission: user.roleId.permission
             } : null,
-            active: user.active !== undefined ? user.active : true,
+            isActive: user.isActive !== undefined ? user.isActive : true,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         };
@@ -382,7 +383,7 @@ const updateUser = async (req, res) => {
                         permission: user.roleId.permission,
                     }
                 : null,
-            active: user.active !== undefined ? user.active : true,
+            isActive: user.isActive !== undefined ? user.isActive : true,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
         };
@@ -461,6 +462,7 @@ const deleteUser = async (req, res) => {
         console.log('- Usuario solicitante:', req.user);
         console.log('- ID a eliminar:', req.params.id);
 
+        // Permisos: admin o el propio usuario
         if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
             return res.status(403).json({
                 msg: 'Acceso denegado para eliminar este usuario.',
@@ -468,19 +470,31 @@ const deleteUser = async (req, res) => {
             });
         }
 
-        const user = await User.findByIdAndDelete(req.params.id);
+        // Actualización lógica: marcar isActive = false
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { isActive: false },
+            { new: true, runValidators: true }
+        ).select('-password');
 
         if (!user) {
             return res.status(404).json({ msg: 'Usuario no encontrado.' });
         }
 
+        // Formateo de la respuesta
+        const formattedUser = {
+            id: user._id,
+            username: user.username || user.userName,
+            email: user.email,
+            role: user.role || 'user',
+            isActive: user.isActive,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        };
+
         res.status(200).json({
             msg: 'Usuario eliminado exitosamente.',
-            deletedUser: {
-                id: user._id,
-                username: user.username || user.userName,
-                email: user.email
-            }
+            deletedUser: formattedUser
         });
     } catch (err) {
         console.error('Error en deleteUser:', err);
@@ -490,6 +504,8 @@ const deleteUser = async (req, res) => {
         });
     }
 };
+
+
 
 module.exports = {
     // getAllUsers,

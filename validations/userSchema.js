@@ -5,7 +5,7 @@ const updateUserSchema = Joi.object({
     password: Joi.string().min(6).optional(),
     // role: Joi.string().valid('admin', 'user').optional(),
     roleId: Joi.string().optional(),
-    active: Joi.boolean().optional(),
+    isActive: Joi.boolean().optional(),
     // email intentionally excluded
 });
 
