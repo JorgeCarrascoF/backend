@@ -82,7 +82,7 @@ const Log = require('../models/log');
  * /logs:
  *   get:
  *     summary: "Obtener todos los Logs"
- *     description: Retorna todos los Logs. Solo accesible para administradores.
+ *     description: Retorna todos los Logs. Solo accesible para administradores, desarrolladores y QA's.
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -222,7 +222,7 @@ const getAllLogs = async (req, res) => {
  * /logs/{id}:
  *   get:
  *     summary: "Obtener un Log por ID"
- *     description: Obtiene un Log específico. Los administradores pueden ver cualquier Log, los Logs normales solo pueden ver su propio perfil.
+ *     description: Obtiene un Log específico. Solo accesible para administradores, desarrolladores y QA's.
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -323,7 +323,7 @@ const getLogById = async (req, res) => {
  * /logs/{id}:
  *   patch:
  *     summary: "Actualizar un Log"
- *     description: Actualiza un Log. Los administradores pueden actualizar cualquier Log, los Logs normales solo pueden actualizar su propio perfil (excepto rol).
+ *     description: Actualiza un Log. Solo accesible para administradores, desarrolladores y QA's.
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -438,7 +438,7 @@ const updateLog = async (req, res) => {
  * /logs/{id}:
  *   delete:
  *     summary: "Eliminar un Log"
- *     description: Elimina un Log. Los administradores pueden eliminar cualquier Log, los Logs normales solo pueden eliminar su propia cuenta.
+ *     description: Elimina un Log. Solo accesible para administradores, desarrolladores y QA's.
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -527,6 +527,7 @@ const deleteLog = async (req, res) => {
  * /logs:
  *   post:
  *     summary: "Crear nuevo log"
+ *     description: Crea un Log. Solo accesible para administradores, desarrolladores y QA's.
  *     tags: [Logs]
  *     requestBody:
  *       required: true
