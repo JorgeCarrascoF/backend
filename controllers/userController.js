@@ -302,7 +302,7 @@ const getUserById = async (req, res) => {
         }
 
         res.status(500).json({
-            msg: 'Error delasdasd servidor al obtener el usuario',
+            msg: 'Error del servidor al obtener el usuario',
             error: err.message
         });
     }
