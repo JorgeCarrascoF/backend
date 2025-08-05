@@ -124,17 +124,17 @@ const options = {
           },
           type: {
             type: 'string',
-            enum: ['solved', 'unresolved'],
+            enum: ['error', 'warning', 'info'],
             description: 'Estado de resolución'
           },
           status: {
             type: 'string',
-            enum: ['error', 'warning', 'info'],
+            enum: ['solved', 'unresolved'],
             description: 'Tipo de estado del log'
           },
           platform: {
             type: 'string',
-            description: 'Plataforma del sistema (por ejemplo, web, mobile)'
+            description: 'Plataforma del sistema (por ejemplo: web, mobile)'
           },
           filename: {
             type: 'string',

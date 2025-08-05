@@ -12,60 +12,6 @@ const Log = require('../models/log');
  *   schemas:
  *     Log:
  *       type: object
- *       properties:
- *         id:
- *           type: string
- *           description: ID único del Log
- *         Logname:
- *           type: string
- *           description: Nombre de Log
- *         email:
- *           type: string
- *           format: email
- *           description: Correo electrónico
- *         role:
- *           type: string
- *           enum: [admin, Log]
- *           description: Rol del Log
- *         roleId:
- *           type: string
- *           description: ID del rol asignado
- *         roleInfo:
- *           type: object
- *           properties:
- *             id:
- *               type: string
- *             name:
- *               type: string
- *             permission:
- *               type: array
- *               items:
- *                 type: string
- *         active:
- *           type: boolean
- *           description: Estado del Log
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
- *     LogUpdate:
- *       type: object
- *       properties:
- *         Logname:
- *           type: string
- *           example: "nuevo_nombre"
- *         email:
- *           type: string
- *           format: email
- *           example: "nuevo_correo@example.com"
- *         roleId:
- *           type: string
- *           example: "688abe5c6ad4e846fbdb0189"
- *         active:
- *           type: boolean
- *           example: true
  *     Error:
  *       type: object
  *       properties:
@@ -77,12 +23,13 @@ const Log = require('../models/log');
  *           description: Detalle del error
  */
 
+
 /**
  * @swagger
  * /logs:
  *   get:
- *     summary: "Obtener todos los Logs"
- *     description: Retorna todos los Logs. Solo accesible para administradores, desarrolladores y QA's.
+ *     summary: "Obtener todos los Logs u Obtener logs filtrados por paginación"
+ *     description: Retorna todos los Logs y permite paginación y búsqueda por filtros. Solo accesible para administradores, desarrolladores y QA's. 
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -94,6 +41,84 @@ const Log = require('../models/log');
  *           type: string
  *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *         description: Token JWT en formato "Bearer {token}"
+
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Página a solicitar (paginación)
+
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Cantidad de resultados por página
+
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Búsqueda general por: title, project, type, status, priority, etc.
+
+ *       - in: query
+ *         name: title
+ *         schema:
+ *           type: string
+ *         description: Buscar por título exacto del log
+
+ *       - in: query
+ *         name: linkSentry
+ *         schema:
+ *           type: string
+ *         description: Buscar por enlace de Sentry exacto
+
+ *       - in: query
+ *         name: project
+ *         schema:
+ *           type: string
+ *         description: Buscar por nombre de proyecto exacto
+
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [error, warning, info]
+ *         description: Filtrar por tipo de log
+
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [solved, unresolved]
+ *         description: Filtrar por estado del log
+
+ *       - in: query
+ *         name: platform
+ *         schema:
+ *           type: string
+ *         description: Filtrar por plataforma
+
+ *       - in: query
+ *         name: filename
+ *         schema:
+ *           type: string
+ *         description: Filtrar por nombre del archivo
+
+ *       - in: query
+ *         name: functions
+ *         schema:
+ *           type: string
+ *         description: Filtrar por nombre de función
+
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: string
+ *           enum: [high, medium, low]
+ *         description: Filtrar por prioridad
+
  *     responses:
  *       200:
  *         description: Lista de Logs obtenida correctamente
@@ -105,13 +130,19 @@ const Log = require('../models/log');
  *                 success:
  *                   type: boolean
  *                   example: true
+ *                 page:
+ *                   type: integer
+ *                   example: 1
+ *                 limit:
+ *                   type: integer
+ *                   example: 10
  *                 count:
- *                   type: number
+ *                   type: integer
  *                   example: 5
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/log'
+ *                     $ref: '#/components/schemas/Log'
  *       401:
  *         description: Token no proporcionado o inválido
  *         content:
@@ -121,13 +152,13 @@ const Log = require('../models/log');
  *             example:
  *               msg: "Token no proporcionado"
  *       403:
- *         description: Acceso denegado - Se requiere rol de administrador
+ *         description: Acceso denegado - Se requiere rol permitido
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               msg: "Acceso denegado. Se requiere rol de administrador."
+ *               msg: "Acceso denegado. Se requiere rol de administrador, desarrollador o QA."
  *       500:
  *         description: Error del servidor
  *         content:
@@ -141,7 +172,7 @@ const getAllLogs = async (req, res) => {
         console.log('- Usuario en req:', req.user);
         console.log('- Rol del usuario:', req.user?.role);
         
-        const roles = ['admin', 'dev', 'QA'];
+        const roles = ['admin', 'dev', 'qa'];
          if (!roles.includes(req.user.role)) {
             return res.status(403).json({ 
                 msg: 'Acceso denegado. Se requiere rol de administrador, desarrollador o QA.',
@@ -155,24 +186,33 @@ const getAllLogs = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const skip = (page-1)*limit;
 
-        const { status, type, priority, platform, filename } = req.query;
+        const { title, linkSentry, project, type, status, 
+            platform, filename, priority, functions } = req.query;
 
         const query= {};
         if (search) {
             query.$or = [
-                { status: { $regex: search, $options: 'i' } },
+                { title: { $regex: search, $options: 'i' } },
+                { linkSentry: { $regex: search, $options: 'i' } },
+                { project: { $regex: search, $options: 'i' } },
                 { type: { $regex: search, $options: 'i' } },
-                { priority: { $regex: search, $options: 'i' } },
+                { status: { $regex: search, $options: 'i' } },
                 { platform: { $regex: search, $options: 'i' } },
-                { filename: { $regex: search, $options: 'i' } },              
+                { filename: { $regex: search, $options: 'i' } },
+                { function: { $regex: search, $options: 'i' } },
+                { priority: { $regex: search, $options: 'i' } },           
             ];
         }
 
-        if (status) query.status = status;
+        if (title) query.title = title;
+        if (linkSentry) query.linkSentry = linkSentry;
+        if (project) query.project = project;
         if (type) query.type = type;
-        if (priority) query.priority = priority;
+        if (status) query.status = status;
         if (platform) query.platform = platform;
         if (filename) query.filename = filename;
+        if (functions) query.function = functions;
+        if (priority) query.priority = priority;
         
         //const totalLogs = await Log.countDocuments(searchQuery);
 
@@ -185,6 +225,7 @@ const getAllLogs = async (req, res) => {
         // Formatear la respuesta para mostrar información completa
         const formattedLogs = logs.map(log => ({
             id: log._id,
+            title: log.title,
             linkSentry: log.linkSentry,
             project: log.project,
             type: log.type,
@@ -217,6 +258,7 @@ const getAllLogs = async (req, res) => {
     }
 };
 
+
 /**
  * @swagger
  * /logs/{id}:
@@ -247,7 +289,7 @@ const getAllLogs = async (req, res) => {
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/log'
+ *               $ref: '#/components/schemas/Log'
  *       401:
  *         description: Token no proporcionado o inválido
  *       403:
@@ -275,7 +317,7 @@ const getLogById = async (req, res) => {
         console.log('- Usuario solicitante:', req.user);
         console.log('- ID solicitado:', req.params.id);
         
-        const roles = ['admin', 'dev', 'QA'];
+        const roles = ['admin', 'dev', 'qa'];
         if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
             return res.status(403).json({ 
                 msg: 'Acceso denegado.',
@@ -347,7 +389,8 @@ const getLogById = async (req, res) => {
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/logUpdate'
+ *             //$ref: '#/components/schemas/logUpdate'
+ *             $ref: '#/components/schemas/Log'
  *     responses:
  *       200:
  *         description: Log actualizado exitosamente
@@ -360,7 +403,7 @@ const getLogById = async (req, res) => {
  *                   type: string
  *                   example: "Log actualizado."
  *                 Log:
- *                   $ref: '#/components/schemas/log'
+ *                   $ref: '#/components/schemas/Log'
  *       401:
  *         description: Token no proporcionado o inválido
  *       403:
@@ -377,7 +420,7 @@ const updateLog = async (req, res) => {
         console.log('- ID a actualizar:', req.params.id);
         console.log('- Datos a actualizar:', req.body);
         
-        const roles = ['admin', 'dev', 'QA'];
+        const roles = ['admin', 'dev', 'qa'];
         if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
             return res.status(403).json({ 
                 msg: 'Acceso denegado para actualizar este log.',
@@ -463,6 +506,7 @@ const updateLog = async (req, res) => {
  *         content:
  *           application/json:
  *             schema:
+ *               $ref: '#/components/schemas/Log'
  *               type: object
  *               properties:
  *                 msg:
@@ -492,7 +536,7 @@ const deleteLog = async (req, res) => {
         console.log('- Log solicitante:', req.Log);
         console.log('- ID a eliminar:', req.params.id);
         
-        const roles = ['admin', 'dev', 'QA'];
+        const roles = ['admin', 'dev', 'qa'];
         if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
             return res.status(403).json({ 
                 msg: 'Acceso denegado para eliminar este usuario.',
@@ -534,6 +578,7 @@ const deleteLog = async (req, res) => {
  *       content:
  *         application/json:
  *           schema:
+ *               $ref: '#/components/schemas/Log'
  *             type: object
  *             required:
  *               - name
@@ -558,10 +603,10 @@ const createLog = async (req, res) => {
         if (existingLog) {
             return res.status(400).json({ msg: 'El log ya existe' });
         }*/
-       const roles = ['admin', 'dev', 'QA'];
+       const roles = ['admin', 'dev', 'qa'];
        if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
         return res.status(403).json({ 
-            msg: 'Acceso denegado para actualizar este log.',
+            msg: 'Acceso denegado para crear este log.',
             detail: 'Solo los administradores, desarrolladores y QA pueden crear los logs'
             });
         }
