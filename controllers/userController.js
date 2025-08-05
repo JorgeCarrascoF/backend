@@ -1,5 +1,5 @@
 const User = require('../models/user'); // Asegúrate de que el nombre del archivo sea correcto
-
+const mongoose = require('mongoose');
 
 /**
  * @swagger
@@ -191,6 +191,19 @@ const getUsersByFilter = async (req, res) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/User'
+ *       400:
+ *         description: ID de usuario inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "ID de usuario inválido"
+ *                 detail:
+ *                   type: string
+ *                   example: "El ID proporcionado no es un formato válido."
  *       401:
  *         description: Token no proporcionado o inválido
  *       403:
@@ -218,19 +231,45 @@ const getUserById = async (req, res) => {
         console.log('- Usuario solicitante:', req.user);
         console.log('- ID solicitado:', req.params.id);
 
-        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
+        // Validación más estricta del ObjectId
+        const userId = req.params.id;
+
+        // Verificar que sea un ObjectId válido de 24 caracteres hexadecimales
+        if (!userId || !mongoose.Types.ObjectId.isValid(userId) || userId.length !== 24) {
+            return res.status(400).json({
+                msg: 'ID de usuario inválido',
+                detail: 'El ID proporcionado no es un formato válido de MongoDB ObjectId.'
+            });
+        }
+
+        // Verificar permisos
+        if (req.user.role !== 'admin' && req.user.id !== userId) {
             return res.status(403).json({
                 msg: 'Acceso denegado.',
                 detail: 'Solo los administradores pueden ver otros usuarios'
             });
         }
 
-        const user = await User.findById(req.params.id)
+        // Crear ObjectId explícitamente para evitar problemas de cast
+        let objectId;
+        try {
+            objectId = new mongoose.Types.ObjectId(userId);
+        } catch (castError) {
+            return res.status(400).json({
+                msg: 'ID de usuario inválido',
+                detail: 'No se puede convertir el ID a un ObjectId válido.'
+            });
+        }
+
+        // Buscar usuario usando el ObjectId creado
+        const user = await User.findById(objectId)
             .populate('roleId', 'name permission')
             .select('-password');
 
         if (!user) {
-            return res.status(404).json({ msg: 'Usuario no encontrado.' });
+            return res.status(404).json({
+                msg: 'Usuario no encontrado.'
+            });
         }
 
         // Formatear respuesta
@@ -250,10 +289,20 @@ const getUserById = async (req, res) => {
         };
 
         res.status(200).json(formattedUser);
+
     } catch (err) {
         console.error('Error en getUserById:', err);
+
+        // Manejo específico de errores de cast
+        if (err.name === 'CastError') {
+            return res.status(400).json({
+                msg: 'ID de usuario inválido',
+                detail: 'El formato del ID no es válido para MongoDB.'
+            });
+        }
+
         res.status(500).json({
-            msg: 'Error del servidor al obtener el usuario',
+            msg: 'Error delasdasd servidor al obtener el usuario',
             error: err.message
         });
     }
