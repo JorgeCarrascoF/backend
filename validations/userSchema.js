@@ -6,7 +6,6 @@ const updateUserSchema = Joi.object({
     role: Joi.string().valid('admin', 'user').optional(),
     roleId: Joi.string().optional(),
     isActive: Joi.boolean().optional(),
-    email: Joi.string().email().optional()
 });
 
 module.exports = {

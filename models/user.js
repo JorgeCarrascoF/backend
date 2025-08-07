@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Role'
     },
-    isActive: {
+    active: {
         type: Boolean,
         default: true
     }
