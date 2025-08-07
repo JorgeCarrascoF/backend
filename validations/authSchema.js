@@ -23,6 +23,12 @@ const registerSchema = Joi.object({
     roleId: Joi.string().optional()
 });
 
+const loginSchema = Joi.object({
+    email: Joi.string().required(),
+    password: Joi.string().required()
+});
+
 module.exports = {
-    registerSchema
+    registerSchema,
+    loginSchema
 };
