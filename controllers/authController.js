@@ -5,6 +5,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const boom = require('@hapi/boom');
 const User = require('../models/user');
+const { registerSchema } = require('../validations/authSchema');
+
 
 const JWT_SECRET = process.env.JWT_SECRET || 'clave_secreta';
 
@@ -35,21 +37,102 @@ const JWT_SECRET = process.env.JWT_SECRET || 'clave_secreta';
  *               password:
  *                 type: string
  *                 minLength: 6
- *                 example: "123456"
+ *                 example: "Password123!"
  *               role:
  *                 type: string
- *                 enum: [admin, user]
+ *                 enum: [admin, user, dev, qa]
  *                 example: "user"
  *     responses:
  *       201:
  *         description: Usuario registrado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Usuario registrado exitosamente"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     roleInfo:
+ *                       type: object
  *       400:
- *         description: Error en los datos
+ *         description: Error en los datos de entrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 statusCode:
+ *                   type: integer
+ *                   example: 400
+ *                 error:
+ *                   type: string
+ *                   example: "Bad Request"
+ *                 message:
+ *                   type: string
+ *                   example: "El campo 'email' es obligatorio, La contraseña debe incluir mayúsculas, minúsculas, números y símbolos"
+ *       409:
+ *         description: Conflicto, por ejemplo, usuario o email ya existen
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 statusCode:
+ *                   type: integer
+ *                   example: 409
+ *                 error:
+ *                   type: string
+ *                   example: "Conflict"
+ *                 message:
+ *                   type: string
+ *                   example: "El nombre de usuario ya existe, El email ya está registrado"
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 statusCode:
+ *                   type: integer
+ *                   example: 500
+ *                 error:
+ *                   type: string
+ *                   example: "Internal Server Error"
+ *                 message:
+ *                   type: string
+ *                   example: "Error del servidor al registrar el usuario"
  */
-const register = async (req, res, next) => {
-    const { username, email, password, role, roleId } = req.body;
 
+const register = async (req, res) => {
     try {
+        // Validar los datos de entrada
+        const { error, value } = registerSchema.validate(req.body, { abortEarly: false });
+
+        if (error) {
+            // Mapear los errores de validación a un formato más legible
+            const errorMessages = error.details.map(detail => detail.message);
+            return res.status(400).json({
+                statusCode: 400,
+                error: "Bad Request",
+                message: errorMessages.join(', ')
+            });
+        }
+
+        const { username, email, password, role, roleId } = value;
+
         const existingUser = await User.findOne({
             $or: [
                 { username },
@@ -60,15 +143,22 @@ const register = async (req, res, next) => {
 
         if (existingUser) {
             if (existingUser.username === username || existingUser.userName === username) {
-                return next(boom.conflict('El nombre de usuario ya existe'));
+                return res.status(409).json({
+                    statusCode: 409,
+                    error: "Conflict",
+                    message: "El nombre de usuario ya existe"
+                });
             }
             if (existingUser.email === email) {
-                return next(boom.conflict('El email ya está registrado'));
+                return res.status(409).json({
+                    statusCode: 409,
+                    error: "Conflict",
+                    message: "El email ya está registrado"
+                });
             }
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-
         let finalRoleId = roleId;
         let finalRole = role || 'user';
 
@@ -76,7 +166,11 @@ const register = async (req, res, next) => {
             const Role = require('../models/role');
             const roleExists = await Role.findById(roleId);
             if (!roleExists) {
-                return next(boom.badRequest('El rol especificado no existe'));
+                return res.status(400).json({
+                    statusCode: 400,
+                    error: "Bad Request",
+                    message: "El rol especificado no existe"
+                });
             }
             if (roleExists.name === 'Administrador') {
                 finalRole = 'admin';
@@ -105,8 +199,20 @@ const register = async (req, res, next) => {
             }
         });
     } catch (err) {
-        next(boom.badRequest(err.message));
+        res.status(500).json({
+            statusCode: 500,
+            error: "Internal Server Error",
+            message: "Error del servidor al registrar el usuario"
+        });
     }
+};
+
+module.exports = {
+    register
+};
+
+module.exports = {
+    register
 };
 
 /**
