@@ -1,8 +1,5 @@
-
 const User = require('../models/user'); // Asegúrate de que el nombre del archivo sea correcto
 const mongoose = require('mongoose');
-// controllers/userController.js
-const { updateUserSchema } = require('../validations/userSchema');
 
 /**
  * @swagger
@@ -41,7 +38,7 @@ const { updateUserSchema } = require('../validations/userSchema');
  *           enum: [admin, dev, qa, user]
  *         description: Filtrar por rol exacto
  *       - in: query
- *         name: isActive
+ *         name: active
  *         schema:
  *           type: boolean
  *         description: Filtrar por estado de actividad
@@ -115,13 +112,13 @@ const getUsersByFilter = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const skip = (page - 1) * limit;
 
-        const { username, email, role, isActive } = req.query;
+        const { username, email, role, active } = req.query;
 
         const query = {};
         if (username) query.username = username;
         if (email) query.email = email;
         if (role) query.role = role;
-        if (isActive !== undefined) query.isActive = isActive;
+        if (active !== undefined) query.active = active;
 
         const users = await User.find(query)
             .populate('roleId', 'name permission')
@@ -140,7 +137,7 @@ const getUsersByFilter = async (req, res) => {
                 name: user.roleId.name,
                 permission: user.roleId.permission
             } : null,
-            isActive: user.isActive !== undefined ? user.isActive : true,
+            active: user.active !== undefined ? user.active : true,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         }));
@@ -286,7 +283,7 @@ const getUserById = async (req, res) => {
                 name: user.roleId.name,
                 permission: user.roleId.permission
             } : null,
-            isActive: user.isActive !== undefined ? user.isActive : true,
+            active: user.active !== undefined ? user.active : true,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         };
@@ -316,10 +313,7 @@ const getUserById = async (req, res) => {
  * /users/{id}:
  *   patch:
  *     summary: Actualizar un usuario
- *     description: >
- *       Actualiza un usuario.  
- *       - Los administradores pueden actualizar cualquier usuario (incluyendo rol).  
- *       - Los usuarios normales solo pueden actualizar su propio perfil, **excluyendo** los campos `role` y `email`.  
+ *     description: Actualiza un usuario. Los administradores pueden actualizar cualquier usuario, los usuarios normales solo pueden actualizar su propio perfil (excepto rol).
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -360,14 +354,12 @@ const getUserById = async (req, res) => {
  *       401:
  *         description: Token no proporcionado o inválido
  *       403:
- *         description: Acceso denegado (solo admin o dueño del perfil)
+ *         description: Acceso denegado
  *       404:
  *         description: Usuario no encontrado
  *       500:
  *         description: Error del servidor
  */
-
-
 const updateUser = async (req, res) => {
     try {
         console.log('🔍 DEBUG updateUser:');
@@ -375,23 +367,6 @@ const updateUser = async (req, res) => {
         console.log('- ID a actualizar:', req.params.id);
         console.log('- Datos a actualizar:', req.body);
 
-        // Validación Joi: solo campos permitidos
-        const { error } = updateUserSchema.validate(req.body, { abortEarly: false });
-        if (error) {
-            return res.status(400).json({
-                msg: 'Error de validación',
-                details: error.details.map(d => d.message)
-            });
-        }
-
-        // No permitir actualizar email
-        if (req.body.email) {
-            return res.status(400).json({
-                msg: 'El campo email no puede actualizarse'
-            });
-        }
-
-        // Permisos
         if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
             return res.status(403).json({
                 msg: 'Acceso denegado para actualizar este usuario.',
@@ -412,9 +387,7 @@ const updateUser = async (req, res) => {
                 new: true,
                 runValidators: true,
             }
-        )
-            .populate('roleId', 'name permission')
-            .select('-password');
+        ).populate('roleId', 'name permission').select('-password');
 
         if (!user) {
             return res.status(404).json({ msg: 'Usuario no encontrado.' });
@@ -426,32 +399,28 @@ const updateUser = async (req, res) => {
             username: user.username || user.userName,
             email: user.email,
             role: user.role || 'user',
-            roleInfo: user.roleId
-                ? {
-                    id: user.roleId._id,
-                    name: user.roleId.name,
-                    permission: user.roleId.permission,
-                }
-                : null,
-            isActive: user.isActive !== undefined ? user.isActive : true,
+            roleInfo: user.roleId ? {
+                id: user.roleId._id,
+                name: user.roleId.name,
+                permission: user.roleId.permission
+            } : null,
+            active: user.active !== undefined ? user.active : true,
             createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
+            updatedAt: user.updatedAt
         };
 
         res.status(200).json({
             msg: 'Usuario actualizado exitosamente.',
-            user: formattedUser,
+            user: formattedUser
         });
     } catch (err) {
         console.error('Error en updateUser:', err);
         res.status(500).json({
             msg: 'Error del servidor al actualizar el usuario',
-            error: err.message,
+            error: err.message
         });
     }
 };
-
-module.exports = { updateUser };
 
 /**
  * @swagger
@@ -512,7 +481,6 @@ const deleteUser = async (req, res) => {
         console.log('- Usuario solicitante:', req.user);
         console.log('- ID a eliminar:', req.params.id);
 
-        // Permisos: admin o el propio usuario
         if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
             return res.status(403).json({
                 msg: 'Acceso denegado para eliminar este usuario.',
@@ -520,31 +488,19 @@ const deleteUser = async (req, res) => {
             });
         }
 
-        // Actualización lógica: marcar isActive = false
-        const user = await User.findByIdAndUpdate(
-            req.params.id,
-            { isActive: false },
-            { new: true, runValidators: true }
-        ).select('-password');
+        const user = await User.findByIdAndDelete(req.params.id);
 
         if (!user) {
             return res.status(404).json({ msg: 'Usuario no encontrado.' });
         }
 
-        // Formateo de la respuesta
-        const formattedUser = {
-            id: user._id,
-            username: user.username || user.userName,
-            email: user.email,
-            role: user.role || 'user',
-            isActive: user.isActive,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
-        };
-
         res.status(200).json({
             msg: 'Usuario eliminado exitosamente.',
-            deletedUser: formattedUser
+            deletedUser: {
+                id: user._id,
+                username: user.username || user.userName,
+                email: user.email
+            }
         });
     } catch (err) {
         console.error('Error en deleteUser:', err);
@@ -554,8 +510,6 @@ const deleteUser = async (req, res) => {
         });
     }
 };
-
-
 
 module.exports = {
     // getAllUsers,
