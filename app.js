@@ -49,6 +49,13 @@ app.use('/api/users', usersRouter);
 app.use('/api/roles', rolesRouter);
 app.use('/api/logs', logsRoutes);
 
+// TODO: Hacer el endpoint funcional
+app.post('/webhook/sentry', (req, res) => {
+  console.log('🎯 Webhook recibido de Sentry:');
+  console.log(JSON.stringify(req.body, null, 2)); // Muestra bonito
+  res.status(200).send('OK');
+});
+
 // Configurar Swagger
 swaggerDocs(app);
 
