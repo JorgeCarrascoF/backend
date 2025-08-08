@@ -5,9 +5,21 @@ const boom = require('@hapi/boom');
 const authService = require('../services/authService');
 
 const register = async (req, res, next) => {
-    const { username, email, password, role, roleId } = req.body;
-
     try {
+        const { error } = registerSchema.validate(req.body, { abortEarly: false });
+
+        if (error) {
+            // Extraer los mensajes de error personalizados
+            const errorMessages = error.details.map(detail => detail.message);
+            return res.status(400).json({
+                statusCode: 400,
+                error: "Bad Request",
+                message: errorMessages.join(', ')
+            });
+        }
+
+        const { username, email, password, role, roleId } = req.body;
+
         const user = await authService.registerUser({
             username,
             email,
