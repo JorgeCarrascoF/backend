@@ -165,7 +165,7 @@
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               msg: "Acceso denegado. Se requiere rol de administrador, desarrollador o QA."
+ *               msg: "Acceso denegado. Solo tienen acceso los administradores, desarrolladores o QA's."
  *       500:
  *         description: Error del servidor
  *         content:
@@ -234,7 +234,7 @@
  * /logs/{id}:
  *   patch:
  *     summary: "Actualizar un Log"
- *     description: Actualiza un Log. Solo accesible para administradores, desarrolladores y QA's.
+ *     description: Actualiza un Log. Solo accesible para administradores.
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -289,7 +289,7 @@
  * /logs/{id}:
  *   delete:
  *     summary: "Eliminar un Log"
- *     description: Elimina un Log. Solo accesible para administradores, desarrolladores y QA's.
+ *     description: Elimina un Log. Solo accesible para administradores.
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -345,7 +345,7 @@
  * /logs:
  *   post:
  *     summary: "Crear nuevo log"
- *     description: Crea un Log. Solo accesible para administradores, desarrolladores y QA's.
+ *     description: Crea un Log. Solo accesible para administradores.
  *     tags: [Logs]
  *     requestBody:
  *       required: true
