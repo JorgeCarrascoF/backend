@@ -19,6 +19,7 @@ const getUsersByFilter = async (req, res) => {
             email: req.query.email,
             role: req.query.role,
             isActive: req.query.isActive,
+            search: req.query.search,
         };
         const pagination = {
             limit: parseInt(req.query.limit) || 10,

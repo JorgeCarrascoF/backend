@@ -20,7 +20,7 @@
  *           type: string
  *         role:
  *           type: string
- *           enum: [admin, dev, qa, user]
+ *           enum: [admin, user]
  *         roleInfo:
  *           type: object
  *           properties:
@@ -67,7 +67,7 @@
  *     summary: Obtener usuarios filtrados con paginación
  *     description: >
  *       Retorna usuarios según filtros avanzados (username, email, role, estado), con paginación.  
- *       Solo accesible para roles distintos de `user` (admin, dev, qa).
+ *       Solo accesible para roles distintos de `user` (admin).
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -79,6 +79,11 @@
  *           type: string
  *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *         description: Token JWT en formato "Bearer {token}"
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Búsqueda global por múltiples campos
  *       - in: query
  *         name: username
  *         schema:
@@ -94,7 +99,7 @@
  *         name: role
  *         schema:
  *           type: string
- *           enum: [admin, dev, qa, user]
+ *           enum: [admin, user]
  *         description: Filtrar por rol exacto
  *       - in: query
  *         name: isActive
@@ -144,7 +149,7 @@
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       403:
- *         description: Acceso denegado – solo roles admin, dev o qa
+ *         description: Acceso denegado – solo roles admin o user
  *         content:
  *           application/json:
  *             schema:

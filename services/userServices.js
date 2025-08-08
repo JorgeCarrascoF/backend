@@ -35,12 +35,22 @@ const _formatUserData = (user) => {
 const getUsersByFilter = async (filters, pagination) => {
     const { page, limit } = pagination;
     const skip = (page - 1) * limit;
+    const { search, username, email, role, isActive } = filters;
 
     const query = {};
-    if (filters.username) query.username = filters.username;
-    if (filters.email) query.email = filters.email;
-    if (filters.role) query.role = filters.role;
-    if (filters.isActive !== undefined) query.isActive = filters.isActive;
+    if (search) {
+            query.$or = [
+                { username: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } },
+                { role: { $regex: search, $options: 'i' } },          
+            ];
+        }
+
+    
+    if (username) query.username = username;
+    if (email) query.email = email;
+    if (role) query.role = role;
+    if (isActive !== undefined) query.isActive = isActive;
 
     const users = await User.find(query)
         .populate('roleId', 'name permission')
