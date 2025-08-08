@@ -6,19 +6,23 @@ const getAllLogs = async (filters, pagination) => {
 
     if (filters.search) {
         query.$or = [
-            { title: { $regex: filters.search, $options: 'i' } },
-            { linkSentry: { $regex: filters.search, $options: 'i' } },
-            { project: { $regex: filters.search, $options: 'i' } },
-            { type: { $regex: filters.search, $options: 'i' } },
-            { status: { $regex: filters.search, $options: 'i' } },
-            { platform: { $regex: filters.search, $options: 'i' } },
+            { sentry_event_id: { $regex: filters.search, $options: 'i' } },
+            { event_id: { $regex: filters.search, $options: 'i' } },
+            { message: { $regex: filters.search, $options: 'i' } },
+            { link_sentry: { $regex: filters.search, $options: 'i' } },
+            { culprit: { $regex: filters.search, $options: 'i' } },
             { filename: { $regex: filters.search, $options: 'i' } },
-            { function: { $regex: filters.search, $options: 'i' } },
-            { priority: { $regex: filters.search, $options: 'i' } },
+            { function_name: { $regex: filters.search, $options: 'i' } },
+            { error_type: { $regex: filters.search, $options: 'i' } },
+            { environment: { $regex: filters.search, $options: 'i' } },
+            { affected_user_ip: { $regex: filters.search, $options: 'i' } },
+            { sentry_timestamp: { $regex: filters.search, $options: 'i' } },
+            { created_at: { $regex: filters.search, $options: 'i' } },
         ];
     }
 
-    ['title', 'linkSentry', 'project', 'type', 'status', 'platform', 'filename', 'functions', 'priority']
+    ['sentry_event_id', 'event_id', 'message', 'link_sentry', 'culprit', 'filename', 'function_name', 
+        'error_type', 'environment', 'affected_user_ip', 'sentry_timestamp', 'created_at']
         .forEach(field => {
             if (filters[field]) query[field === 'functions' ? 'function' : field] = filters[field];
         });
@@ -31,18 +35,18 @@ const getAllLogs = async (filters, pagination) => {
 
     return logs.map(log => ({
         id: log._id,
-        title: log.title,
-        linkSentry: log.linkSentry,
-        project: log.project,
-        type: log.type,
-        status: log.status,
-        platform: log.platform,
+        sentry_event_id: log.sentry_event_id,
+        event_id: log.event_id,
+        message: log.message,
+        link_sentry: log.link_sentry,
+        culprit: log.culprit,
         filename: log.filename,
-        function: log.function,
-        priority: log.priority,
-        count: log.count,
-        firstSeen: log.firstSeen,
-        lastSeen: log.lastSeen
+        function_name: log.function_name,
+        error_type: log.error_type,
+        environment: log.environment,
+        affected_user_ip: log.affected_user_ip,
+        sentry_timestamp: log.sentry_timestamp,
+        created_at: log.created_at
     }));
 };
 
@@ -55,17 +59,18 @@ const getLogById = async (id) => {
 
     return {
         id: log._id,
-        linkSentry: log.linkSentry,
-        project: log.project,
-        type: log.type,
-        status: log.status,
-        platform: log.status,
+        sentry_event_id: log.sentry_event_id,
+        event_id: log.event_id,
+        message: log.message,
+        link_sentry: log.link_sentry,
+        culprit: log.culprit,
         filename: log.filename,
-        function: log.function,
-        priority: log.priority,
-        count: log.count,
-        firstSeen: log.firstSeen,
-        lastSeen: log.lastSeen
+        function_name: log.function_name,
+        error_type: log.error_type,
+        environment: log.environment,
+        affected_user_ip: log.affected_user_ip,
+        sentry_timestamp: log.sentry_timestamp,
+        created_at: log.created_at
     };
 };
 
@@ -84,17 +89,18 @@ const updateLog = async (id, data) => {
 
     return {
         id: log._id,
-        linkSentry: log.linkSentry,
-        project: log.project,
-        type: log.type,
-        status: log.status,
-        platform: log.status,
+        sentry_event_id: log.sentry_event_id,
+        event_id: log.event_id,
+        message: log.message,
+        link_sentry: log.link_sentry,
+        culprit: log.culprit,
         filename: log.filename,
-        function: log.function,
-        priority: log.priority,
-        count: log.count,
-        firstSeen: log.firstSeen,
-        lastSeen: log.lastSeen
+        function_name: log.function_name,
+        error_type: log.error_type,
+        environment: log.environment,
+        affected_user_ip: log.affected_user_ip,
+        sentry_timestamp: log.sentry_timestamp,
+        created_at: log.created_at
     };
 };
 
