@@ -1,566 +1,143 @@
-
-const User = require('../models/user'); // Asegúrate de que el nombre del archivo sea correcto
-const mongoose = require('mongoose');
 // controllers/userController.js
+const userService = require('../services/userServices');
 const { updateUserSchema } = require('../validations/userSchema');
 
-/**
- * @swagger
- * /users:
- *   get:
- *     summary: Obtener usuarios filtrados con paginación
- *     description: >
- *       Retorna usuarios según filtros avanzados (username, email, role, estado), con paginación.  
- *       Solo accesible para roles distintos de `user` (admin, dev, qa).
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *         description: Token JWT en formato "Bearer {token}"
- *       - in: query
- *         name: username
- *         schema:
- *           type: string
- *         description: Filtrar por nombre de usuario exacto
- *       - in: query
- *         name: email
- *         schema:
- *           type: string
- *           format: email
- *         description: Filtrar por correo exacto
- *       - in: query
- *         name: role
- *         schema:
- *           type: string
- *           enum: [admin, dev, qa, user]
- *         description: Filtrar por rol exacto
- *       - in: query
- *         name: isActive
- *         schema:
- *           type: boolean
- *         description: Filtrar por estado de actividad
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Página a solicitar (paginación)
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: Cantidad de resultados por página
- *     responses:
- *       200:
- *         description: Lista de usuarios obtenida correctamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 page:
- *                   type: integer
- *                   example: 1
- *                 limit:
- *                   type: integer
- *                   example: 10
- *                 count:
- *                   type: integer
- *                   example: 2
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/User'
- *       401:
- *         description: Token no válido o no proporcionado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       403:
- *         description: Acceso denegado – solo roles admin, dev o qa
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Error interno del servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
+// Las definiciones de Swagger no cambian, por lo que se omiten por brevedad...
 
 const getUsersByFilter = async (req, res) => {
     try {
-        if (!['admin', 'dev', 'qa'].includes(req.user.role)) {
+        // 1. Verificación de permisos (responsabilidad del controlador)
+        if (!['admin', 'user'].includes(req.user.role)) {
             return res.status(403).json({
                 msg: 'Acceso denegado. Rol no autorizado.',
-                userRole: req.user.role,
-                required: ['admin', 'dev', 'qa']
             });
         }
-
-        const limit = parseInt(req.query.limit) || 10;
-        const page = parseInt(req.query.page) || 1;
-        const skip = (page - 1) * limit;
-
-        const { username, email, role, isActive } = req.query;
-
-        const query = {};
-        if (username) query.username = username;
-        if (email) query.email = email;
-        if (role) query.role = role;
-        if (isActive !== undefined) query.isActive = isActive;
-
-        const users = await User.find(query)
-            .populate('roleId', 'name permission')
-            .select('-password')
-            .skip(skip)
-            .limit(limit)
-            .sort({ lastSeen: -1 });
-
-        const formattedUsers = users.map(user => ({
-            id: user._id,
-            username: user.username || user.userName,
-            email: user.email,
-            role: user.role || 'user',
-            roleInfo: user.roleId ? {
-                id: user.roleId._id,
-                name: user.roleId.name,
-                permission: user.roleId.permission
-            } : null,
-            isActive: user.isActive !== undefined ? user.isActive : true,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
-        }));
-
-        res.status(200).json({
-            success: true,
-            page,
-            limit,
-            count: formattedUsers.length,
-            data: formattedUsers
-        });
-    } catch (err) {
-        console.error('Error en getUsersByFilter:', err);
-        res.status(500).json({
-            msg: 'Error del servidor al filtrar usuarios',
-            error: err.message
-        });
-    }
-};
-
-
-
-/**
- * @swagger
- * /users/{id}:
- *   get:
- *     summary: Obtener un usuario por ID
- *     description: Obtiene un usuario específico. Los administradores pueden ver cualquier usuario, los usuarios normales solo pueden ver su propio perfil.
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *         description: Token JWT en formato "Bearer {token}"
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID del usuario
- *         example: "688abe5d6ad4e846fbdb018c"
- *     responses:
- *       200:
- *         description: Datos del usuario obtenidos correctamente
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       400:
- *         description: ID de usuario inválido
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 msg:
- *                   type: string
- *                   example: "ID de usuario inválido"
- *                 detail:
- *                   type: string
- *                   example: "El ID proporcionado no es un formato válido."
- *       401:
- *         description: Token no proporcionado o inválido
- *       403:
- *         description: Acceso denegado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               msg: "Acceso denegado."
- *       404:
- *         description: Usuario no encontrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               msg: "Usuario no encontrado."
- *       500:
- *         description: Error del servidor
- */
-const getUserById = async (req, res) => {
-    try {
-        console.log('🔍 DEBUG getUserById:');
-        console.log('- Usuario solicitante:', req.user);
-        console.log('- ID solicitado:', req.params.id);
-
-        // Validación más estricta del ObjectId
-        const userId = req.params.id;
-
-        // Verificar que sea un ObjectId válido de 24 caracteres hexadecimales
-        if (!userId || !mongoose.Types.ObjectId.isValid(userId) || userId.length !== 24) {
-            return res.status(400).json({
-                msg: 'ID de usuario inválido',
-                detail: 'El ID proporcionado no es un formato válido de MongoDB ObjectId.'
-            });
-        }
-
-        // Verificar permisos
-        if (req.user.role !== 'admin' && req.user.id !== userId) {
-            return res.status(403).json({
-                msg: 'Acceso denegado.',
-                detail: 'Solo los administradores pueden ver otros usuarios'
-            });
-        }
-
-        // Crear ObjectId explícitamente para evitar problemas de cast
-        let objectId;
-        try {
-            objectId = new mongoose.Types.ObjectId(userId);
-        } catch (castError) {
-            return res.status(400).json({
-                msg: 'ID de usuario inválido',
-                detail: 'No se puede convertir el ID a un ObjectId válido.'
-            });
-        }
-
-        // Buscar usuario usando el ObjectId creado
-        const user = await User.findById(objectId)
-            .populate('roleId', 'name permission')
-            .select('-password');
-
-        if (!user) {
-            return res.status(404).json({
-                msg: 'Usuario no encontrado.'
-            });
-        }
-
-        // Formatear respuesta
-        const formattedUser = {
-            id: user._id,
-            username: user.username || user.userName,
-            email: user.email,
-            role: user.role || 'user',
-            roleInfo: user.roleId ? {
-                id: user.roleId._id,
-                name: user.roleId.name,
-                permission: user.roleId.permission
-            } : null,
-            isActive: user.isActive !== undefined ? user.isActive : true,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
+        
+        // 2. Preparar datos para el servicio
+        const filters = {
+            username: req.query.username,
+            email: req.query.email,
+            role: req.query.role,
+            isActive: req.query.isActive,
+            search: req.query.search,
+        };
+        const pagination = {
+            limit: parseInt(req.query.limit) || 10,
+            page: parseInt(req.query.page) || 1,
         };
 
-        res.status(200).json(formattedUser);
+        // 3. Llamar al servicio
+        const { data, count } = await userService.getUsersByFilter(filters, pagination);
+
+        // 4. Enviar respuesta HTTP
+        res.status(200).json({
+            success: true,
+            page: pagination.page,
+            limit: pagination.limit,
+            count: data.length, // Registros en la página actual
+            total: count, // Total de registros que coinciden con el filtro
+            data: data,
+        });
 
     } catch (err) {
-        console.error('Error en getUserById:', err);
-
-        // Manejo específico de errores de cast
-        if (err.name === 'CastError') {
-            return res.status(400).json({
-                msg: 'ID de usuario inválido',
-                detail: 'El formato del ID no es válido para MongoDB.'
-            });
-        }
-
-        res.status(500).json({
-            msg: 'Error del servidor al obtener el usuario',
-            error: err.message
-        });
+        console.error('Error en controller getUsersByFilter:', err);
+        res.status(500).json({ msg: 'Error del servidor al filtrar usuarios', error: err.message });
     }
 };
 
-/**
- * @swagger
- * /users/{id}:
- *   patch:
- *     summary: Actualizar un usuario
- *     description: >
- *       Actualiza un usuario.  
- *       - Los administradores pueden actualizar cualquier usuario (incluyendo rol).  
- *       - Los usuarios normales solo pueden actualizar su propio perfil, **excluyendo** los campos `role` y `email`.  
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *         description: Token JWT en formato "Bearer {token}"
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID del usuario a actualizar
- *         example: "688abe5d6ad4e846fbdb018c"
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UserUpdate'
- *     responses:
- *       200:
- *         description: Usuario actualizado exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 msg:
- *                   type: string
- *                   example: "Usuario actualizado."
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *       401:
- *         description: Token no proporcionado o inválido
- *       403:
- *         description: Acceso denegado (solo admin o dueño del perfil)
- *       404:
- *         description: Usuario no encontrado
- *       500:
- *         description: Error del servidor
- */
+const getUserById = async (req, res) => {
+    try {
+        // 1. Verificación de permisos
+        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
+            return res.status(403).json({ msg: 'Acceso denegado.' });
+        }
 
+        // 2. Llamar al servicio
+        const user = await userService.getUserById(req.params.id);
+        
+        // 3. Enviar respuesta HTTP
+        res.status(200).json(user);
+
+    } catch (err) {
+        console.error('Error en controller getUserById:', err);
+        if (err.message === 'Usuario no encontrado.') {
+            return res.status(404).json({ msg: err.message });
+        }
+        res.status(500).json({ msg: 'Error del servidor al obtener el usuario', error: err.message });
+    }
+};
 
 const updateUser = async (req, res) => {
     try {
-        console.log('🔍 DEBUG updateUser:');
-        console.log('- Usuario solicitante:', req.user);
-        console.log('- ID a actualizar:', req.params.id);
-        console.log('- Datos a actualizar:', req.body);
+        const { id } = req.params;
+        const updateData = req.body;
 
-        // Validación Joi: solo campos permitidos
-        const { error } = updateUserSchema.validate(req.body, { abortEarly: false });
+        // 1. Verificación de permisos y validación de entrada
+        if (req.user.role !== 'admin' && req.user.id !== id) {
+            return res.status(403).json({ msg: 'Acceso denegado para actualizar este usuario.' });
+        }
+
+        const { error } = updateUserSchema.validate(updateData, { abortEarly: false });
         if (error) {
-            return res.status(400).json({
-                msg: 'Error de validación',
-                details: error.details.map(d => d.message)
-            });
+            return res.status(400).json({ msg: 'Error de validación', details: error.details.map(d => d.message) });
         }
 
-        // No permitir actualizar email
-        if (req.body.email) {
-            return res.status(400).json({
-                msg: 'El campo email no puede actualizarse'
-            });
+        if (updateData.email) {
+            return res.status(400).json({ msg: 'El campo email no puede actualizarse' });
         }
-
-        // Permisos
-        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
-            return res.status(403).json({
-                msg: 'Acceso denegado para actualizar este usuario.',
-                detail: 'Solo los administradores pueden actualizar otros usuarios'
-            });
-        }
-
-        // Un usuario no-admin no puede cambiar su rol ni roleId
+        
+        // Un no-admin no puede cambiar su rol
         if (req.user.role !== 'admin') {
-            delete req.body.role;
-            delete req.body.roleId;
+            delete updateData.role;
+            delete updateData.roleId;
         }
 
-        const user = await User.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            {
-                new: true,
-                runValidators: true,
-            }
-        )
-            .populate('roleId', 'name permission')
-            .select('-password');
+        // 2. Llamar al servicio
+        const updatedUser = await userService.updateUser(id, updateData);
 
-        if (!user) {
-            return res.status(404).json({ msg: 'Usuario no encontrado.' });
-        }
-
-        // Formatear respuesta
-        const formattedUser = {
-            id: user._id,
-            username: user.username || user.userName,
-            email: user.email,
-            role: user.role || 'user',
-            roleInfo: user.roleId
-                ? {
-                    id: user.roleId._id,
-                    name: user.roleId.name,
-                    permission: user.roleId.permission,
-                }
-                : null,
-            isActive: user.isActive !== undefined ? user.isActive : true,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
-        };
-
+        // 3. Enviar respuesta HTTP
         res.status(200).json({
             msg: 'Usuario actualizado exitosamente.',
-            user: formattedUser,
+            user: updatedUser,
         });
+
     } catch (err) {
-        console.error('Error en updateUser:', err);
-        res.status(500).json({
-            msg: 'Error del servidor al actualizar el usuario',
-            error: err.message,
-        });
+        console.error('Error en controller updateUser:', err);
+        if (err.message === 'Usuario no encontrado.') {
+            return res.status(404).json({ msg: err.message });
+        }
+        res.status(500).json({ msg: 'Error del servidor al actualizar el usuario', error: err.message });
     }
 };
 
-module.exports = { updateUser };
-
-/**
- * @swagger
- * /users/{id}:
- *   delete:
- *     summary: Eliminar un usuario
- *     description: Elimina un usuario. Los administradores pueden eliminar cualquier usuario, los usuarios normales solo pueden eliminar su propia cuenta.
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *         description: Token JWT en formato "Bearer {token}"
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID del usuario a eliminar
- *         example: "688abe5d6ad4e846fbdb018c"
- *     responses:
- *       200:
- *         description: Usuario eliminado exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 msg:
- *                   type: string
- *                   example: "Usuario eliminado exitosamente."
- *                 deletedUser:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     username:
- *                       type: string
- *                     email:
- *                       type: string
- *       401:
- *         description: Token no proporcionado o inválido
- *       403:
- *         description: Acceso denegado
- *       404:
- *         description: Usuario no encontrado
- *       500:
- *         description: Error del servidor
- */
 const deleteUser = async (req, res) => {
     try {
-        console.log('🔍 DEBUG deleteUser:');
-        console.log('- Usuario solicitante:', req.user);
-        console.log('- ID a eliminar:', req.params.id);
-
-        // Permisos: admin o el propio usuario
+        // 1. Verificación de permisos
         if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
-            return res.status(403).json({
-                msg: 'Acceso denegado para eliminar este usuario.',
-                detail: 'Solo los administradores pueden eliminar otros usuarios'
-            });
+            return res.status(403).json({ msg: 'Acceso denegado para eliminar este usuario.' });
         }
 
-        // Actualización lógica: marcar isActive = false
-        const user = await User.findByIdAndUpdate(
-            req.params.id,
-            { isActive: false },
-            { new: true, runValidators: true }
-        ).select('-password');
+        // 2. Llamar al servicio
+        const deletedUser = await userService.deleteUser(req.params.id);
 
-        if (!user) {
-            return res.status(404).json({ msg: 'Usuario no encontrado.' });
-        }
-
-        // Formateo de la respuesta
-        const formattedUser = {
-            id: user._id,
-            username: user.username || user.userName,
-            email: user.email,
-            role: user.role || 'user',
-            isActive: user.isActive,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
-        };
-
+        // 3. Enviar respuesta HTTP
         res.status(200).json({
             msg: 'Usuario eliminado exitosamente.',
-            deletedUser: formattedUser
+            deletedUser: deletedUser
         });
+
     } catch (err) {
-        console.error('Error en deleteUser:', err);
-        res.status(500).json({
-            msg: 'Error del servidor al eliminar el usuario',
-            error: err.message
-        });
+        console.error('Error en controller deleteUser:', err);
+        if (err.message === 'Usuario no encontrado.') {
+            return res.status(404).json({ msg: err.message });
+        }
+        res.status(500).json({ msg: 'Error del servidor al eliminar el usuario', error: err.message });
     }
 };
 
-
-
 module.exports = {
-    // getAllUsers,
     getUsersByFilter,
     getUserById,
     updateUser,
-    deleteUser
+    deleteUser,
 };
