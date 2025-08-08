@@ -86,33 +86,33 @@
  *         name: link_sentry
  *         schema:
  *           type: string
- *           description: Enlace al error en Sentry
+ *         description: Enlace al error en Sentry
  *       - in: query
  *         name: culprit
  *         schema:
  *           type: string
- *           description: Causa principal del error
+ *         description: Causa principal del error
  *       - in: query
  *         name: filename
  *         schema:
  *           type: string
- *           description: Nombre del archivo donde ocurrió el error
+ *         description: Nombre del archivo donde ocurrió el error
  *       - in: query
  *         name: function_name
  *         schema:
  *           type: string
- *           description: Función donde ocurrió el error
+ *         description: Función donde ocurrió el error
  *       - in: query
  *         name: error_type
  *         schema:
  *           type: string
  *           enum: ['error', 'warning', 'info']
- *           description: Tipo de error
+ *         description: Tipo de error
  *       - in: query
  *         name: environment
  *         schema:
  *           type: string
- *           description: Entorno de ejecución (staging, production)
+ *         description: Entorno de ejecución (staging, production)
  *     responses:
  *       200:
  *         description: Lista de Logs obtenida correctamente
