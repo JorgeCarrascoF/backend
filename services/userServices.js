@@ -2,6 +2,7 @@
 const Boom = require('@hapi/boom');
 const User = require('../models/user');
 const { updateUserSchema } = require('../validations/userSchema');
+const mongoose = require('mongoose');
 
 /**
  * Formatea los datos de un usuario para la respuesta de la API.
@@ -39,14 +40,14 @@ const getUsersByFilter = async (filters, pagination) => {
 
     const query = {};
     if (search) {
-            query.$or = [
-                { username: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } },
-                { role: { $regex: search, $options: 'i' } },          
-            ];
-        }
+        query.$or = [
+            { username: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } },
+            { role: { $regex: search, $options: 'i' } },
+        ];
+    }
 
-    
+
     if (username) query.username = username;
     if (email) query.email = email;
     if (role) query.role = role;
@@ -73,12 +74,16 @@ const getUsersByFilter = async (filters, pagination) => {
  * @throws {Error} - Si el usuario no se encuentra.
  */
 const getUserById = async (userId) => {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw Boom.badRequest('El ID proporcionado no es válido.');
+    }
+
     const user = await User.findById(userId)
         .populate('roleId', 'name permission')
         .select('-password');
 
     if (!user) {
-        throw new Error('Usuario no encontrado.');
+        throw Boom.notFound('Usuario no encontrado.');
     }
 
     return _formatUserData(user);

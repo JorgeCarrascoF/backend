@@ -1,6 +1,7 @@
 // controllers/userController.js
 const userService = require('../services/userServices');
 const { updateUserSchema } = require('../validations/userSchema');
+const mongoose = require('mongoose');
 
 // Las definiciones de Swagger no cambian, por lo que se omiten por brevedad...
 
@@ -47,17 +48,21 @@ const getUsersByFilter = async (req, res) => {
 
 const getUserById = async (req, res) => {
     try {
-        // 1. Verificación de permisos
+        // Verificación de permisos
         if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
             return res.status(403).json({ msg: 'Acceso denegado.' });
         }
 
-        // 2. Llamar al servicio
-        const user = await userService.getUserById(req.params.id);
-        
-        // 3. Enviar respuesta HTTP
-        res.status(200).json(user);
+        // Validar formato del ID
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ msg: 'El ID proporcionado no es válido.' });
+        }
 
+        // Llamar al servicio
+        const user = await userService.getUserById(req.params.id);
+
+        // Enviar respuesta HTTP
+        res.status(200).json(user);
     } catch (err) {
         console.error('Error en controller getUserById:', err);
         if (err.message === 'Usuario no encontrado.') {
@@ -66,6 +71,7 @@ const getUserById = async (req, res) => {
         res.status(500).json({ msg: 'Error del servidor al obtener el usuario', error: err.message });
     }
 };
+
 
 const updateUser = async (req, res) => {
     try {
