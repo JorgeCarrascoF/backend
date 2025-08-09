@@ -41,7 +41,8 @@
  *           description: Tipo de error
  *         environment:
  *           type: string
- *           description: Entorno de ejecución (staging, production)
+ *           enum: ['staging', 'development', 'production']
+ *           description: Entorno de ejecución
  *         affected_user_ip:
  *           type: string
  *           description: IP del usuario afectado
@@ -112,7 +113,8 @@
  *         name: environment
  *         schema:
  *           type: string
- *         description: Entorno de ejecución (staging, production)
+ *           enum: ['staging', 'development', 'production']
+ *         description: Entorno de ejecución
  *     responses:
  *       200:
  *         description: Lista de Logs obtenida correctamente

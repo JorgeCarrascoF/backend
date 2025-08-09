@@ -32,7 +32,10 @@ const logSchema = new mongoose.Schema({
         trim: true,
         enum: ['error', 'warning', 'info']
     },
-    environment: String,
+    environment: {
+        type: String,
+        enum: ['staging', 'development', 'production']
+    },
     affected_user_ip: {
         type: String,
         trim: true

@@ -15,16 +15,13 @@ const getAllLogs = async (filters, pagination) => {
             { function_name: { $regex: filters.search, $options: 'i' } },
             { error_type: { $regex: filters.search, $options: 'i' } },
             { environment: { $regex: filters.search, $options: 'i' } },
-            { affected_user_ip: { $regex: filters.search, $options: 'i' } },
-            { sentry_timestamp: { $regex: filters.search, $options: 'i' } },
-            { created_at: { $regex: filters.search, $options: 'i' } },
-        ];
+            { affected_user_ip: { $regex: filters.search, $options: 'i' } }        ];
     }
 
     ['sentry_event_id', 'event_id', 'message', 'link_sentry', 'culprit', 'filename', 'function_name', 
-        'error_type', 'environment', 'affected_user_ip', 'sentry_timestamp', 'created_at']
+        'error_type', 'environment', 'affected_user_ip']
         .forEach(field => {
-            if (filters[field]) query[field === 'functions' ? 'function' : field] = filters[field];
+            if (filters[field]) query[field] = filters[field];
         });
 
     const logs = await Log.find(query)
