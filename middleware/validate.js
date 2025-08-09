@@ -4,13 +4,12 @@ const validate = (schema) => {
     return (req, res, next) => {
         const { error } = schema.validate(req.body, { abortEarly: false });
         if (error) {
-            return next(Boom.badRequest('Error de validación', {
-                details: error.details.map(d => ({
-                    message: d.message,
-                    path: d.path.join('.'),
-                    type: d.type
-                }))
-            }));
+            const errorMessages = error.details.map(detail => detail.message);
+            return res.status(400).json({
+                statusCode: 400,
+                error: "Bad Request",
+                message: errorMessages.join(', ')
+            });
         }
         next();
     };

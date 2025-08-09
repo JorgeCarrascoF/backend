@@ -5,127 +5,116 @@
  *     Log:
  *       type: object
  *       required:
- *         - title
- *         - project
- *         - type
- *         - status
+ *         - message
+ *         - event_id
+ *         - sentry_timestamp
+ *         - created_at
+ *         - userId
  *       properties:
  *         _id:
  *           type: string
- *         title:
+ *           description: ID único del log
+ *         sentry_event_id:
  *           type: string
- *         linkSentry:
+ *           description: ID del evento en Sentry
+ *         event_id:
  *           type: string
- *         project:
+ *           description: ID del evento interno
+ *         message:
  *           type: string
- *         type:
+ *           description: Mensaje del error o log
+ *         link_sentry:
  *           type: string
- *           enum: [solved, unresolved]
- *         status:
+ *           description: Enlace al error en Sentry
+ *         culprit:
  *           type: string
- *           enum: [error, warning, info]
- *         platform:
- *           type: string
+ *           description: Causa principal del error
  *         filename:
  *           type: string
- *         function:
+ *           description: Nombre del archivo donde ocurrió el error
+ *         function_name:
  *           type: string
- *         priority:
+ *           description: Función donde ocurrió el error
+ *         error_type:
  *           type: string
- *           enum: [high, medium, low]
- *         count:
- *           type: integer
- *         firstSeen:
+ *           enum: ['error', 'warning', 'info']
+ *           description: Tipo de error
+ *         environment:
+ *           type: string
+ *           enum: ['staging', 'development', 'production']
+ *           description: Entorno de ejecución
+ *         affected_user_ip:
+ *           type: string
+ *           description: IP del usuario afectado
+ *         sentry_timestamp:
  *           type: string
  *           format: date-time
- *         lastSeen:
+ *           description: Fecha y hora original del evento en Sentry
+ *         created_at:
  *           type: string
  *           format: date-time
+ *           description: Fecha y hora en que se registró el log en el sistema
+ *         userId:
+ *           type: string
+ *           description: ID del usuario que generó el log
  */
-
 
 /**
  * @swagger
  * /logs:
  *   get:
- *     summary: "Obtener todos los Logs u obtener logs filtrados por paginación"
- *     description: Retorna todos los Logs y permite paginación y búsqueda por filtros. Solo accesible para administradores, desarrolladores y QA's. 
+ *     summary: Obtener todos los Logs (con filtros y paginación)
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *         description: Token JWT en formato "Bearer {token}"
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Página de resultados (paginación)
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
- *         description: Cantidad de registros por página
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
  *         description: Búsqueda global por múltiples campos
  *       - in: query
- *         name: title
+ *         name: link_sentry
  *         schema:
  *           type: string
- *         description: Filtrar por título exacto del log
+ *         description: Enlace al error en Sentry
  *       - in: query
- *         name: linkSentry
+ *         name: culprit
  *         schema:
  *           type: string
- *         description: Filtrar por enlace de Sentry
- *       - in: query
- *         name: project
- *         schema:
- *           type: string
- *         description: Filtrar por nombre de proyecto
- *       - in: query
- *         name: type
- *         schema:
- *           type: string
- *           enum: [error, warning, info]
- *         description: Filtrar por tipo de log
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [solved, unresolved]
- *         description: Filtrar por estado del log
- *       - in: query
- *         name: platform
- *         schema:
- *           type: string
- *         description: Filtrar por plataforma del sistema
+ *         description: Causa principal del error
  *       - in: query
  *         name: filename
  *         schema:
  *           type: string
- *         description: Filtrar por nombre de archivo
+ *         description: Nombre del archivo donde ocurrió el error
  *       - in: query
- *         name: functions
+ *         name: function_name
  *         schema:
  *           type: string
- *         description: Filtrar por nombre de la función
+ *         description: Función donde ocurrió el error
  *       - in: query
- *         name: priority
+ *         name: error_type
  *         schema:
  *           type: string
- *           enum: [high, medium, low]
- *         description: Filtrar por prioridad
+ *           enum: ['error', 'warning', 'info']
+ *         description: Tipo de error
+ *       - in: query
+ *         name: environment
+ *         schema:
+ *           type: string
+ *           enum: ['staging', 'development', 'production']
+ *         description: Entorno de ejecución
  *     responses:
  *       200:
  *         description: Lista de Logs obtenida correctamente
@@ -136,237 +125,114 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
  *                 page:
  *                   type: integer
- *                   example: 1
  *                 limit:
  *                   type: integer
- *                   example: 10
- *                 count:
+ *                 total:
  *                   type: integer
- *                   example: 3
  *                 data:
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Log'
  *       401:
  *         description: Token no proporcionado o inválido
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               msg: "Token no proporcionado"
  *       403:
- *         description: Acceso denegado - Se requiere rol permitido
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               msg: "Acceso denegado. Solo tienen acceso los administradores, desarrolladores o QA's."
+ *         description: Acceso denegado
  *       500:
  *         description: Error del servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-
 
 /**
  * @swagger
  * /logs/{id}:
  *   get:
- *     summary: "Obtener un Log por ID"
- *     description: Obtiene un Log específico. Solo accesible para administradores, desarrolladores y QA's.
+ *     summary: Obtener un Log por ID
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *         description: Token JWT en formato "Bearer {token}"
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del Log
- *         example: "688abe5d6ad4e846fbdb018c"
  *     responses:
  *       200:
- *         description: Datos del Log obtenidos correctamente
+ *         description: Log encontrado
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Log'
- *       401:
- *         description: Token no proporcionado o inválido
- *       403:
- *         description: Acceso denegado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               msg: "Acceso denegado."
  *       404:
  *         description: Log no encontrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               msg: "Log no encontrado."
- *       500:
- *         description: Error del servidor
  */
-
-
-/**
- * @swagger
- * /logs/{id}:
- *   patch:
- *     summary: "Actualizar un Log"
- *     description: Actualiza un Log. Solo accesible para administradores.
- *     tags: [Logs]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *         description: Token JWT en formato "Bearer {token}"
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID del Log a actualizar
- *         example: "688abe5d6ad4e846fbdb018c"
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             //$ref: '#/components/schemas/logUpdate'
- *             $ref: '#/components/schemas/Log'
- *     responses:
- *       200:
- *         description: Log actualizado exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 msg:
- *                   type: string
- *                   example: "Log actualizado."
- *                 Log:
- *                   $ref: '#/components/schemas/Log'
- *       401:
- *         description: Token no proporcionado o inválido
- *       403:
- *         description: Acceso denegado
- *       404:
- *         description: Log no encontrado
- *       500:
- *         description: Error del servidor
- */
-
-
-/**
- * @swagger
- * /logs/{id}:
- *   delete:
- *     summary: "Eliminar un Log"
- *     description: Elimina un Log. Solo accesible para administradores.
- *     tags: [Logs]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: header
- *         name: Authorization
- *         required: true
- *         schema:
- *           type: string
- *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *         description: Token JWT en formato "Bearer {token}"
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: ID del Log a eliminar
- *         example: "688abe5d6ad4e846fbdb018c"
- *     responses:
- *       200:
- *         description: Log eliminado exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Log'
- *               type: object
- *               properties:
- *                 msg:
- *                   type: string
- *                   example: "Log eliminado exitosamente."
- *                 deletedLog:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     Logname:
- *                       type: string
- *                     email:
- *                       type: string
- *       401:
- *         description: Token no proporcionado o inválido
- *       403:
- *         description: Acceso denegado
- *       404:
- *         description: Log no encontrado
- *       500:
- *         description: Error del servidor
- */
-
 
 /**
  * @swagger
  * /logs:
  *   post:
- *     summary: "Crear nuevo log"
- *     description: Crea un Log. Solo accesible para administradores.
+ *     summary: Crear un nuevo log
  *     tags: [Logs]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *               $ref: '#/components/schemas/Log'
- *             type: object
- *             required:
- *               - name
- *               - permission
- *             properties:
- *               name:
- *                 type: string
- *               permission:
- *                 type: array
- *                 items:
- *                   type: string
+ *             $ref: '#/components/schemas/Log'
  *     responses:
  *       201:
  *         description: Log creado exitosamente
  *       400:
  *         description: Datos inválidos
+ */
+
+/**
+ * @swagger
+ * /logs/{id}:
+ *   patch:
+ *     summary: Actualizar un log existente
+ *     tags: [Logs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Log'
+ *     responses:
+ *       200:
+ *         description: Log actualizado
+ *       404:
+ *         description: Log no encontrado
+ */
+
+/**
+ * @swagger
+ * /logs/{id}:
+ *   delete:
+ *     summary: Eliminar un log
+ *     tags: [Logs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Log eliminado
+ *       404:
+ *         description: Log no encontrado
  */
