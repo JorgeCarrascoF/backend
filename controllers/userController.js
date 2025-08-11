@@ -82,10 +82,6 @@ const updateUser = async (req, res) => {
             return res.status(400).json({ msg: 'Error de validación', details: error.details.map(d => d.message) });
         }
 
-        if (updateData.email) {
-            return res.status(400).json({ msg: 'El campo email no puede actualizarse' });
-        }
-        
         // Un no-admin no puede cambiar su rol
         if (req.user.role !== 'admin') {
             delete updateData.role;
@@ -109,6 +105,7 @@ const updateUser = async (req, res) => {
         res.status(500).json({ msg: 'Error del servidor al actualizar el usuario', error: err.message });
     }
 };
+
 
 const deleteUser = async (req, res) => {
     try {
