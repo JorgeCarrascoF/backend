@@ -18,10 +18,15 @@
  *           schema:
  *             type: object
  *             required:
+ *               - fullName
  *               - username
  *               - email
  *               - password
  *             properties:
+ *               fullName:
+ *                 type: string
+ *                 description: "Nombre completo del usuario"
+ *                 example: "Juan Pérez"
  *               username:
  *                 type: string
  *                 example: "usuario123"

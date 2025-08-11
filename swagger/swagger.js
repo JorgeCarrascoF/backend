@@ -42,6 +42,7 @@ const options = {
           type: 'object',
           properties: {
             id: { type: 'string', description: 'ID único del usuario' },
+            fullName: { type: 'string', description: 'Nombre completo del usuario' },
             username: { type: 'string', description: 'Nombre de usuario' },
             email: { type: 'string', format: 'email', description: 'Correo electrónico' },
             role: { type: 'string', enum: ['admin', 'user'], description: 'Rol del usuario' },

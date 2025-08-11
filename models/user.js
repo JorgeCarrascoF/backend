@@ -1,6 +1,13 @@
 const mongoose = require('../connections/db');
 
 const userSchema = new mongoose.Schema({
+    fullName: {
+        type: String,
+        required: [true, 'Nombre completo es requerido'],
+        trim: true,
+        minlength: 3,
+        maxlength: 100
+    },
     username: {
         type: String,
         required: [true, 'Username es requerido'],

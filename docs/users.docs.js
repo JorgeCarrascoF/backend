@@ -14,6 +14,9 @@
  *       properties:
  *         id:
  *           type: string
+ *         fullName:
+ *           type: string
+ *           description: "Nombre completo del usuario"
  *         username:
  *           type: string
  *         email:
@@ -44,6 +47,8 @@
  *     UserUpdate:
  *       type: object
  *       properties:
+ *         fullName:
+ *           type: string
  *         username:
  *           type: string
  *         email:

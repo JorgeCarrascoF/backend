@@ -1,6 +1,10 @@
 const Joi = require('joi');
 
 const registerSchema = Joi.object({
+    fullName: Joi.string().required().messages({
+        'string.base': 'El campo fullName debe ser una cadena de texto.',
+        'any.required': 'El campo fullName es obligatorio.'
+    }),
     username: Joi.string().required().messages({
         'string.base': 'El campo username debe ser una cadena de texto.',
         'any.required': 'El campo username es obligatorio.'

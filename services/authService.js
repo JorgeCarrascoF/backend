@@ -10,7 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'clave_secreta';
 
 class AuthService {
     async registerUser(userData) {
-        const { username, email, password, role, roleId } = userData;
+        const { fullName, username, email, password, role, roleId } = userData;
 
         // Verificar si el usuario ya existe
         const existingUser = await User.findOne({
@@ -50,6 +50,7 @@ class AuthService {
 
         // Crear nuevo usuario
         const user = new User({
+            fullName,
             username,
             email,
             password: hashedPassword,
@@ -62,6 +63,7 @@ class AuthService {
 
         return {
             id: user._id,
+            fullName: user.fullName,
             username: user.username,
             email: user.email,
             role: user.role,
@@ -107,6 +109,7 @@ class AuthService {
             token,
             user: {
                 id: user._id,
+                fullName: user.fullName,
                 username: user.username || user.userName,
                 email: user.email,
                 role: user.role || 'user',
