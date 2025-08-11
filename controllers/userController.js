@@ -7,7 +7,7 @@ const { updateUserSchema } = require('../validations/userSchema');
 const getUsersByFilter = async (req, res) => {
     try {
         // 1. Verificación de permisos (responsabilidad del controlador)
-        if (!['admin', 'dev', 'qa'].includes(req.user.role)) {
+        if (!['admin', 'user'].includes(req.user.role)) {
             return res.status(403).json({
                 msg: 'Acceso denegado. Rol no autorizado.',
             });
@@ -19,6 +19,7 @@ const getUsersByFilter = async (req, res) => {
             email: req.query.email,
             role: req.query.role,
             isActive: req.query.isActive,
+            search: req.query.search,
         };
         const pagination = {
             limit: parseInt(req.query.limit) || 10,
