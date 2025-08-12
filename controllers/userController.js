@@ -1,19 +1,17 @@
 // controllers/userController.js
 const userService = require('../services/userServices');
 const { updateUserSchema } = require('../validations/userSchema');
-
-// Las definiciones de Swagger no cambian, por lo que se omiten por brevedad...
+const Sentry = require('../instrument'); // Importar Sentry
 
 const getUsersByFilter = async (req, res) => {
     try {
-        // 1. Verificación de permisos (responsabilidad del controlador)
-        if (!['admin', 'user'].includes(req.user.role)) {
+        // Solo superadmin, admin y usuarios pueden ver la lista de usuarios
+        if (!['superadmin', 'admin', 'user'].includes(req.user.role)) {
             return res.status(403).json({
                 msg: 'Acceso denegado. Rol no autorizado.',
             });
         }
-        
-        // 2. Preparar datos para el servicio
+
         const filters = {
             username: req.query.username,
             email: req.query.email,
@@ -26,20 +24,19 @@ const getUsersByFilter = async (req, res) => {
             page: parseInt(req.query.page) || 1,
         };
 
-        // 3. Llamar al servicio
         const { data, count } = await userService.getUsersByFilter(filters, pagination);
 
-        // 4. Enviar respuesta HTTP
         res.status(200).json({
             success: true,
             page: pagination.page,
             limit: pagination.limit,
-            count: data.length, // Registros en la página actual
-            total: count, // Total de registros que coinciden con el filtro
+            count: data.length,
+            total: count,
             data: data,
         });
 
     } catch (err) {
+        Sentry.captureException(err);
         console.error('Error en controller getUsersByFilter:', err);
         res.status(500).json({ msg: 'Error del servidor al filtrar usuarios', error: err.message });
     }
@@ -47,18 +44,18 @@ const getUsersByFilter = async (req, res) => {
 
 const getUserById = async (req, res) => {
     try {
-        // 1. Verificación de permisos
-        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
+        // Superadmin puede ver cualquier usuario
+        // Admin puede ver cualquier usuario
+        // Usuario normal solo puede verse a sí mismo
+        if (req.user.role === 'user' && req.user.id !== req.params.id) {
             return res.status(403).json({ msg: 'Acceso denegado.' });
         }
 
-        // 2. Llamar al servicio
         const user = await userService.getUserById(req.params.id);
-        
-        // 3. Enviar respuesta HTTP
         res.status(200).json(user);
 
     } catch (err) {
+        Sentry.captureException(err);
         console.error('Error en controller getUserById:', err);
         if (err.message === 'Usuario no encontrado.') {
             return res.status(404).json({ msg: err.message });
@@ -72,9 +69,19 @@ const updateUser = async (req, res) => {
         const { id } = req.params;
         const updateData = req.body;
 
-        // 1. Verificación de permisos y validación de entrada
-        if (req.user.role !== 'admin' && req.user.id !== id) {
+        // Solo superadmin puede actualizar cualquier usuario
+        // Admin solo puede actualizar usuarios que no sean superadmin
+        // Usuario normal solo puede actualizarse a sí mismo
+        if (req.user.role === 'user' && req.user.id !== id) {
             return res.status(403).json({ msg: 'Acceso denegado para actualizar este usuario.' });
+        }
+
+        if (req.user.role === 'admin') {
+            // Verificar que no esté intentando actualizar a un superadmin
+            const targetUser = await userService.getUserById(id);
+            if (targetUser.role === 'superadmin') {
+                return res.status(403).json({ msg: 'Los administradores no pueden modificar usuarios superadmin.' });
+            }
         }
 
         const { error } = updateUserSchema.validate(updateData, { abortEarly: false });
@@ -82,22 +89,21 @@ const updateUser = async (req, res) => {
             return res.status(400).json({ msg: 'Error de validación', details: error.details.map(d => d.message) });
         }
 
-        // Un no-admin no puede cambiar su rol
-        if (req.user.role !== 'admin') {
+        // Solo superadmin puede cambiar roles
+        if (req.user.role !== 'superadmin') {
             delete updateData.role;
             delete updateData.roleId;
         }
 
-        // 2. Llamar al servicio
         const updatedUser = await userService.updateUser(id, updateData);
 
-        // 3. Enviar respuesta HTTP
         res.status(200).json({
             msg: 'Usuario actualizado exitosamente.',
             user: updatedUser,
         });
 
     } catch (err) {
+        Sentry.captureException(err);
         console.error('Error en controller updateUser:', err);
         if (err.message === 'Usuario no encontrado.') {
             return res.status(404).json({ msg: err.message });
@@ -106,24 +112,27 @@ const updateUser = async (req, res) => {
     }
 };
 
-
 const deleteUser = async (req, res) => {
     try {
-        // 1. Verificación de permisos
-        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
-            return res.status(403).json({ msg: 'Acceso denegado para eliminar este usuario.' });
+        // Solo superadmin puede eliminar usuarios
+        if (req.user.role !== 'superadmin') {
+            return res.status(403).json({ msg: 'Solo los superadministradores pueden eliminar usuarios.' });
         }
 
-        // 2. Llamar al servicio
+        // Verificar que no se esté eliminando a sí mismo
+        if (req.user.id === req.params.id) {
+            return res.status(400).json({ msg: 'No puedes eliminar tu propia cuenta.' });
+        }
+
         const deletedUser = await userService.deleteUser(req.params.id);
 
-        // 3. Enviar respuesta HTTP
         res.status(200).json({
             msg: 'Usuario eliminado exitosamente.',
             deletedUser: deletedUser
         });
 
     } catch (err) {
+        Sentry.captureException(err);
         console.error('Error en controller deleteUser:', err);
         if (err.message === 'Usuario no encontrado.') {
             return res.status(404).json({ msg: err.message });
