@@ -6,12 +6,12 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'API Equipo 2 Tarde',
+      title: 'API Buggle - Equipo 2 Tarde',
       description: 'Documentación de API con autenticación JWT + Cookies',
       version: '1.0.0',
       contact: {
-        name: 'Equipo 2 Tarde',
-        email: 'equipo2tarde@example.com'
+        name: 'Buggle',
+        email: 'buggle@example.com'
       }
     },
     servers: [
@@ -66,22 +66,69 @@ const options = {
         },
         Log: {
           type: 'object',
+          required: ['message', 'event_id', 'sentry_timestamp', 'created_at', 'userId'],
           properties: {
-            _id: { type: 'string', description: 'ID único del log' },
-            title: { type: 'string', description: 'Título del error' },
-            linkSentry: { type: 'string', description: 'Enlace al error en Sentry' },
-            project: { type: 'string', description: 'Nombre del proyecto' },
-            type: { type: 'string', enum: ['solved', 'unresolved'], description: 'Estado de resolución' },
-            status: { type: 'string', enum: ['error', 'warning', 'info'], description: 'Tipo de estado del log' },
-            platform: { type: 'string', description: 'Plataforma del sistema (por ejemplo, web, mobile)' },
-            filename: { type: 'string', description: 'Nombre del archivo donde ocurrió el error' },
-            function: { type: 'string', description: 'Función en la que ocurrió el error' },
-            priority: { type: 'string', enum: ['high', 'medium', 'low'], description: 'Nivel de prioridad' },
-            count: { type: 'number', description: 'Cantidad de veces que ocurrió' },
-            firstSeen: { type: 'string', format: 'date-time', description: 'Primera vez que se vio el error' },
-            lastSeen: { type: 'string', format: 'date-time', description: 'Última vez que se vio el error' }
-          },
-          required: ['title', 'project', 'type', 'status']
+            _id: {
+              type: 'string',
+              description: 'ID único del log'
+            },
+            sentry_event_id: {
+              type: 'string',
+              description: 'ID del evento en Sentry'
+            },
+            event_id: {
+              type: 'string',
+              description: 'ID del evento interno'
+            },
+            message: {
+              type: 'string',
+              description: 'Mensaje del error o log'
+            },
+            link_sentry: {
+              type: 'string',
+              description: 'Enlace al error en Sentry'
+            },
+            culprit: {
+              type: 'string',
+              description: 'Causa principal del error'
+            },
+            filename: {
+              type: 'string',
+              description: 'Nombre del archivo donde ocurrió el error'
+            },
+            function_name: {
+              type: 'string',
+              description: 'Función donde ocurrió el error'
+            },
+            error_type: {
+              type: 'string',
+              enum: ['error', 'warning', 'info'],
+              description: 'Tipo de error'
+            },
+            environment: {
+              type: 'string',
+              enum: ['staging', 'development', 'production'],
+              description: 'Entorno de ejecución'
+            },
+            affected_user_ip: {
+              type: 'string',
+              description: 'IP del usuario afectado'
+            },
+            sentry_timestamp: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha y hora original del evento en Sentry'
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha y hora en que se registró el log en el sistema'
+            },
+            userId: {
+              type: 'string',
+              description: 'ID del usuario que generó el log'
+            }
+          }
         },
         Error: {
           type: 'object',
@@ -113,7 +160,7 @@ function swaggerDocs(app) {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     explorer: true,
     customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'API Equipo 2 Tarde - Documentación'
+    customSiteTitle: 'API Buggle - Documentación'
   }));
 
   app.get('/api-docs.json', (req, res) => {

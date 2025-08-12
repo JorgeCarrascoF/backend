@@ -1,19 +1,65 @@
 const mongoose = require('mongoose');
 
 const logSchema = new mongoose.Schema({
-    title: String,
-    linkSentry: String,
-    project: String,
-    type: { type: String, enum: ['error', 'warning', 'info'] },
-    status: { type: String, enum: ['solved', 'unresolved'] },
-    platform: String,
-    filename: String,
-    function: String,
-    priority: { type: String, enum: ['high', 'medium', 'low'] },
-    count: Number,
-    firstSeen: Date,
-    lastSeen: Date,
+    sentry_event_id: {
+        type: String,
+        trim: true
+    },
+    event_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Event'},
+    message: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    link_sentry: {
+        type: String,
+        trim: true
+    },
+    culprit: {
+        type: String,
+        trim: true
+    },
+    filename:  {
+        type: String,
+        trim: true
+    },
+    function_name:  {
+        type: String,
+        trim: true
+    },
+    error_type: {
+        type: String,
+        trim: true,
+        enum: ['error', 'warning', 'info']
+    },
+    environment: {
+        type: String,
+        enum: ['staging', 'development', 'production']
+    },
+    affected_user_ip: {
+        type: String,
+        trim: true
+    },
+    sentry_timestamp: {
+        type: Date,
+        required: true
+    },
+    created_at: {
+        type: Date,
+        required: true,
+        default: Date.now
+    },
+    comments: {
+        type: String,
+        trim: true
+    },
+    function_name: {
+        type: String,
+        enum: ['solved', 'unresolved'],
+        default: 'unresolved'
+    },
     userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    json_sentry: { type: Object }
 });
         
 const Log = mongoose.model('Log', logSchema);
