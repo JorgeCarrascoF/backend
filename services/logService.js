@@ -7,7 +7,6 @@ const getAllLogs = async (filters, pagination) => {
     if (filters.search) {
         query.$or = [
             { sentry_event_id: { $regex: filters.search, $options: 'i' } },
-            { event_id: { $regex: filters.search, $options: 'i' } },
             { message: { $regex: filters.search, $options: 'i' } },
             { link_sentry: { $regex: filters.search, $options: 'i' } },
             { culprit: { $regex: filters.search, $options: 'i' } },
@@ -15,11 +14,13 @@ const getAllLogs = async (filters, pagination) => {
             { function_name: { $regex: filters.search, $options: 'i' } },
             { error_type: { $regex: filters.search, $options: 'i' } },
             { environment: { $regex: filters.search, $options: 'i' } },
-            { affected_user_ip: { $regex: filters.search, $options: 'i' } }        ];
+            { comments: { $regex: filters.search, $options: 'i' } },
+            { status: { $regex: filters.search, $options: 'i' } },
+        ];
     }
 
-    ['sentry_event_id', 'event_id', 'message', 'link_sentry', 'culprit', 'filename', 'function_name', 
-        'error_type', 'environment', 'affected_user_ip']
+    ['sentry_event_id', 'message', 'link_sentry', 'culprit', 'filename', 'function_name',
+        'error_type', 'environment', 'comments', 'status']
         .forEach(field => {
             if (filters[field]) query[field] = filters[field];
         });
@@ -28,7 +29,7 @@ const getAllLogs = async (filters, pagination) => {
         .populate('userId', 'username email')
         .skip(skip)
         .limit(limit)
-        .sort({ lastSeen: -1 });
+        .sort({ sentry_timestamp: -1 });
 
     return logs.map(log => ({
         id: log._id,
@@ -43,7 +44,9 @@ const getAllLogs = async (filters, pagination) => {
         environment: log.environment,
         affected_user_ip: log.affected_user_ip,
         sentry_timestamp: log.sentry_timestamp,
-        created_at: log.created_at
+        created_at: log.created_at,
+        comments: log.comments,
+        status: log.status   
     }));
 };
 
@@ -67,7 +70,9 @@ const getLogById = async (id) => {
         environment: log.environment,
         affected_user_ip: log.affected_user_ip,
         sentry_timestamp: log.sentry_timestamp,
-        created_at: log.created_at
+        created_at: log.created_at,
+        comments: log.comments,
+        status: log.status   
     };
 };
 
@@ -97,7 +102,9 @@ const updateLog = async (id, data) => {
         environment: log.environment,
         affected_user_ip: log.affected_user_ip,
         sentry_timestamp: log.sentry_timestamp,
-        created_at: log.created_at
+        created_at: log.created_at,
+        comments: log.comments,
+        status: log.status   
     };
 };
 
