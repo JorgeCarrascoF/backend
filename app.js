@@ -18,6 +18,7 @@ var authRouter = require('./routes/auth');
 var usersRouter = require('./routes/users');
 var rolesRouter = require('./routes/roles');
 var logsRoutes = require('./routes/logs')
+var documentRoutes = require('./routes/document');
 var swaggerDocs = require('./swagger/swagger');
 
 var app = express();
@@ -48,6 +49,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/roles', rolesRouter);
 app.use('/api/logs', logsRoutes);
+app.use('/api/documents', documentRoutes);
 
 // TODO: Hacer el endpoint funcional
 app.post('/webhook/sentry', (req, res) => {
