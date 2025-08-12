@@ -53,9 +53,9 @@ const logSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
-    function_name: {
+    status: {
         type: String,
-        enum: ['solved', 'unresolved'],
+        enum: ['unresolved', 'solved'],
         default: 'unresolved'
     },
     userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},

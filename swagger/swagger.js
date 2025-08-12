@@ -124,6 +124,15 @@ const options = {
               format: 'date-time',
               description: 'Fecha y hora en que se registró el log en el sistema'
             },
+            comments: {
+              type: 'string',
+              description: 'Comentarios de los usuarios'
+            },
+            status: {
+              type: 'string',
+              enum: ['unresolved', 'solved'],
+              description: 'Estado del log'
+            },
             userId: {
               type: 'string',
               description: 'ID del usuario que generó el log'
@@ -144,13 +153,15 @@ const options = {
       { name: 'Users', description: 'Gestión de usuarios' },
       { name: 'Roles', description: 'Gestión de roles' },
       { name: 'Logs', description: 'Gestión de logs' },
+      { name: 'Events', description: 'Gestión de eventos' },
+      { name: 'Projects', description: 'Gestión de proyectos' },
       { name: 'General', description: 'Endpoints generales' }
     ]
   },
   apis: [
     './routes/*.js',
     './controllers/*.js',
-    './docs/*.js' // Asegúrate de incluir esta línea
+    './docs/*.js'
   ]
 };
 
