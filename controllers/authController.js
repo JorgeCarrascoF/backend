@@ -3,6 +3,7 @@
 // ============================================
 const boom = require('@hapi/boom');
 const authService = require('../services/authService');
+const { registerSchema } = require('../validations/authSchema');
 
 const register = async (req, res, next) => {
     try {
@@ -18,9 +19,10 @@ const register = async (req, res, next) => {
             });
         }
 
-        const { username, email, password, role, roleId } = req.body;
+        const { fullName, username, email, password, role, roleId } = req.body;
 
         const user = await authService.registerUser({
+            fullName,
             username,
             email,
             password,

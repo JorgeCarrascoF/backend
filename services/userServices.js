@@ -13,6 +13,7 @@ const _formatUserData = (user) => {
     if (!user) return null;
     return {
         id: user._id,
+        fullName: user.fullName,
         username: user.username || user.userName,
         email: user.email,
         role: user.role || 'user',
