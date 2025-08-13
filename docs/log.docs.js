@@ -5,36 +5,25 @@
  *     Log:
  *       type: object
  *       required:
+ *         - issue_id
  *         - message
- *         - event_id
- *         - sentry_timestamp
  *         - created_at
- *         - userId
  *       properties:
  *         _id:
  *           type: string
  *           description: ID único del log
- *         sentry_event_id:
+ *         issue_id:
  *           type: string
- *           description: ID del evento en Sentry
- *         event_id:
- *           type: string
- *           description: ID del evento interno
+ *           description: ID único del incidente (coincide con Sentry si aplica)
  *         message:
  *           type: string
- *           description: Mensaje del error o log
- *         link_sentry:
+ *           description: Mensaje del error
+ *         description:
  *           type: string
- *           description: Enlace al error en Sentry
+ *           description: Descripción detallada, útil para logs manuales
  *         culprit:
  *           type: string
  *           description: Causa principal del error
- *         filename:
- *           type: string
- *           description: Nombre del archivo donde ocurrió el error
- *         function_name:
- *           type: string
- *           description: Función donde ocurrió el error
  *         error_type:
  *           type: string
  *           enum: ['error', 'warning', 'info']
@@ -43,34 +32,41 @@
  *           type: string
  *           enum: ['staging', 'development', 'production']
  *           description: Entorno de ejecución
- *         affected_user_ip:
+ *         status:
  *           type: string
- *           description: IP del usuario afectado
- *         sentry_timestamp:
+ *           enum: ['unresolved', 'solved']
+ *           description: Estado del log
+ *         priority:
  *           type: string
- *           format: date-time
- *           description: Fecha y hora original del evento en Sentry
+ *           enum: ['low', 'medium', 'high', 'critical']
+ *           description: Nivel de prioridad del log
+ *         assigned_to:
+ *           type: string
+ *           description: Usuario asignado para resolver el log
  *         created_at:
  *           type: string
  *           format: date-time
- *           description: Fecha y hora en que se registró el log en el sistema
- *         comments:
+ *           description: Fecha y hora en que se creó el log
+ *         last_seen_at:
  *           type: string
- *           description: Comentarios de los usuarios
- *         status:
- *           type: string
- *           enum: ['unresolved', 'solved'],
- *           description: Estado del log
- *         userId:
- *           type: string
- *           description: ID del usuario que generó el log
+ *           format: date-time
+ *           description: Última vez que se detectó este incidente (trazabilidad)
+ *         count:
+ *           type: integer
+ *           description: Número de veces que ha ocurrido este incidente (trazabilidad)
+ *         active:
+ *           type: boolean
+ *           description: Indica si el log está activo (para borrado lógico)
+ *         json_sentry:
+ *           type: object
+ *           description: Payload completo de Sentry
  */
 
 /**
  * @swagger
  * /logs:
  *   get:
- *     summary: Obtener todos los Logs (con filtros y paginación)
+ *     summary: Obtener todos los logs (con filtros y paginación)
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -91,31 +87,15 @@
  *           type: string
  *         description: Búsqueda global por múltiples campos
  *       - in: query
- *         name: link_sentry
+ *         name: issue_id
  *         schema:
  *           type: string
- *         description: Enlace al error en Sentry
+ *         description: Filtrar por ID de incidente
  *       - in: query
- *         name: culprit
+ *         name: message
  *         schema:
  *           type: string
- *         description: Causa principal del error
- *       - in: query
- *         name: filename
- *         schema:
- *           type: string
- *         description: Nombre del archivo donde ocurrió el error
- *       - in: query
- *         name: function_name
- *         schema:
- *           type: string
- *         description: Función donde ocurrió el error
- *       - in: query
- *         name: error_type
- *         schema:
- *           type: string
- *           enum: ['error', 'warning', 'info']
- *         description: Tipo de error
+ *         description: Filtrar por mensaje de log
  *       - in: query
  *         name: environment
  *         schema:
@@ -123,19 +103,30 @@
  *           enum: ['staging', 'development', 'production']
  *         description: Entorno de ejecución
  *       - in: query
- *         name: comments
- *         schema:
- *           type: string
- *         description: Comentarios de los usuarios
- *       - in: query
  *         name: status
  *         schema:
  *           type: string
  *           enum: ['unresolved', 'solved']
  *         description: Estado del log
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: string
+ *           enum: ['low', 'medium', 'high', 'critical']
+ *         description: Prioridad del log
+ *       - in: query
+ *         name: assigned_to
+ *         schema:
+ *           type: string
+ *         description: Usuario asignado
+ *       - in: query
+ *         name: active
+ *         schema:
+ *           type: boolean
+ *         description: Filtrar por logs activos/inactivos
  *     responses:
  *       200:
- *         description: Lista de Logs obtenida correctamente
+ *         description: Logs retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -154,18 +145,18 @@
  *                   items:
  *                     $ref: '#/components/schemas/Log'
  *       401:
- *         description: Token no proporcionado o inválido
+ *         description: Missing or invalid token
  *       403:
- *         description: Acceso denegado
+ *         description: Access denied
  *       500:
- *         description: Error del servidor
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /logs/{id}:
  *   get:
- *     summary: Obtener un Log por ID
+ *     summary: Obtener un log por ID
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -177,13 +168,13 @@
  *           type: string
  *     responses:
  *       200:
- *         description: Log encontrado
+ *         description: Log found
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Log'
  *       404:
- *         description: Log no encontrado
+ *         description: Log not found
  */
 
 /**
@@ -202,9 +193,9 @@
  *             $ref: '#/components/schemas/Log'
  *     responses:
  *       201:
- *         description: Log creado exitosamente
+ *         description: Log created successfully
  *       400:
- *         description: Datos inválidos
+ *         description: Invalid data
  */
 
 /**
@@ -229,9 +220,9 @@
  *             $ref: '#/components/schemas/Log'
  *     responses:
  *       200:
- *         description: Log actualizado
+ *         description: Log updated successfully
  *       404:
- *         description: Log no encontrado
+ *         description: Log not found
  */
 
 /**
@@ -250,7 +241,7 @@
  *           type: string
  *     responses:
  *       200:
- *         description: Log eliminado
+ *         description: Log deleted successfully
  *       404:
- *         description: Log no encontrado
+ *         description: Log not found
  */

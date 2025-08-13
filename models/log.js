@@ -1,29 +1,22 @@
 const mongoose = require('mongoose');
 
 const logSchema = new mongoose.Schema({
-    sentry_event_id: {
+    issue_id: {
         type: String,
-        trim: true
+        trim: true,
+        required: true,
+        unique: true
     },
-    event_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Event'},
     message: {
         type: String,
         required: true,
         trim: true
     },
-    link_sentry: {
+    description: {
         type: String,
         trim: true
     },
     culprit: {
-        type: String,
-        trim: true
-    },
-    filename:  {
-        type: String,
-        trim: true
-    },
-    function_name:  {
         type: String,
         trim: true
     },
@@ -36,31 +29,42 @@ const logSchema = new mongoose.Schema({
         type: String,
         enum: ['staging', 'development', 'production']
     },
-    affected_user_ip: {
+    status: {
         type: String,
-        trim: true
+        enum: ['unresolved', 'solved'],
+        default: 'unresolved'
     },
-    sentry_timestamp: {
-        type: Date,
-        required: true
+    priority: {
+        type: String,
+        enum: ['low', 'medium', 'high', 'critical'],
+    },
+    assigned_to: {
+        type: String,
+        default: null
     },
     created_at: {
         type: Date,
         required: true,
         default: Date.now
     },
-    comments: {
-        type: String,
-        trim: true
+    last_seen_at:
+    {
+        type: Date,
+        default: Date.now
     },
-    status: {
-        type: String,
-        enum: ['unresolved', 'solved'],
-        default: 'unresolved'
+    count: {
+        type: Number
     },
-    userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    active: {
+        type: Boolean,
+        required: true,
+        default: true
+    },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     json_sentry: { type: Object }
-});
-        
+    ,
+},
+    { timestamps: false });
+
 const Log = mongoose.model('Log', logSchema);
-module.exports=Log;
+module.exports = Log;

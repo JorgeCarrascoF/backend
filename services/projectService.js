@@ -1,4 +1,4 @@
-const Project = require('../models/project');
+/*const Project = require('../models/project');
 
 const getAllProjects = async (filters, pagination) => {
     const { limit, skip } = pagination;
@@ -88,3 +88,4 @@ module.exports = {
     updateProject,
     deleteProject
 };
+*/

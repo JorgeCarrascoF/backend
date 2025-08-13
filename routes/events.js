@@ -1,5 +1,5 @@
 // routes/events.js
-const express = require('express');
+/*const express = require('express');
 const eventController = require('../controllers/eventController');
 const router = express.Router();
 const {authMiddleware} = require('../middleware/auth');
@@ -8,7 +8,7 @@ router.post('/', authMiddleware, eventController.createEvent);
 router.get('/', authMiddleware, eventController.getAllEvents);
 router.get('/:id', authMiddleware, eventController.getEventById);
 router.patch('/:id', authMiddleware, eventController.updateEvent);
-router.delete('/:id', authMiddleware, eventController.deleteEvent);
+router.delete('/:id', authMiddleware, eventController.deleteEvent);*/
 
 
 /*router.post('/', EventoController.crear);

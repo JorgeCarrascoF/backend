@@ -1,5 +1,5 @@
 /**
- * @swagger
+ * //@swagger
  * components:
  *   schemas:
  *     Project:
@@ -38,7 +38,7 @@
 
 
 /**
- * @swagger
+ * //@swagger
  * /projects:
  *   get:
  *     summary: Obtener todos los proyectos (con filtros y paginación)
@@ -116,7 +116,7 @@
  */
 
 /**
- * @swagger
+ * //@swagger
  * /projects/{id}:
  *   get:
  *     summary: Obtener un proyecto por ID
@@ -141,7 +141,7 @@
  */
 
 /**
- * @swagger
+ * //@swagger
  * /projects:
  *   post:
  *     summary: Crear un nuevo proyecto
@@ -162,7 +162,7 @@
  */
 
 /**
- * @swagger
+ * //@swagger
  * /projects/{id}:
  *   patch:
  *     summary: Actualizar un proyecto existente
@@ -189,7 +189,7 @@
  */
 
 /**
- * @swagger
+ * //@swagger
  * /projects/{id}:
  *   delete:
  *     summary: Eliminar un proyecto

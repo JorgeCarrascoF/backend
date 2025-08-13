@@ -1,4 +1,4 @@
-const eventService = require('../services/eventService');
+/*const eventService = require('../services/eventService');
 
 const rolAdmin = 'admin';
 
@@ -127,3 +127,4 @@ module.exports = {
     updateEvent,
     deleteEvent
 };
+*/
