@@ -1,64 +1,54 @@
 const Log = require('../models/log');
 
 const getAllLogs = async (filters, pagination) => {
-    const { limit, skip, sortBy = 'sentry_timestamp', sortOrder = 'desc' } = pagination;
+    const { limit, skip } = pagination;
     const query = {};
 
     if (filters.search) {
         query.$or = [
-            { sentry_event_id: { $regex: filters.search, $options: 'i' } },
+            { issue_id: { $regex: filters.search, $options: 'i' } },
             { message: { $regex: filters.search, $options: 'i' } },
-            { link_sentry: { $regex: filters.search, $options: 'i' } },
+            { description: { $regex: filters.search, $options: 'i' } },
             { culprit: { $regex: filters.search, $options: 'i' } },
-            { filename: { $regex: filters.search, $options: 'i' } },
-            { function_name: { $regex: filters.search, $options: 'i' } },
             { error_type: { $regex: filters.search, $options: 'i' } },
             { environment: { $regex: filters.search, $options: 'i' } },
-            { comments: { $regex: filters.search, $options: 'i' } },
             { status: { $regex: filters.search, $options: 'i' } },
+            { priority: { $regex: filters.search, $options: 'i' } },
+            { assigned_to: { $regex: filters.search, $options: 'i' } },
+            { active: { $regex: filters.search, $options: 'i' } },
         ];
     }
 
-    ['sentry_event_id', 'message', 'link_sentry', 'culprit', 'filename', 'function_name',
-        'error_type', 'environment', 'comments', 'status']
+    ['issue_id', 'message', 'description', 'culprit', 'error_type', 'environment',
+        'status', 'priority', 'assigned_to', 'active']
         .forEach(field => {
             if (filters[field]) query[field] = filters[field];
         });
-
-    // Determinar el orden de clasificación
-    const sort = {};
-    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
     const logs = await Log.find(query)
         .populate('userId', 'username email')
         .skip(skip)
         .limit(limit)
-        .sort(sort);
+        .sort({ sentry_timestamp: -1 });
 
-    const totalLogs = await Log.countDocuments(query);
+    return logs.map(log => ({
+        id: log._id,
+        issue_id: log.issue_id,
+        message: log.message,
+        description: log.description,
+        culprit: log.culprit,
+        error_type: log.error_type,
+        environment: log.environment,
+        status: log.status,
+        priority: log.priority,
+        assigned_to: log.assigned_to,
+        created_at: log.created_at,
+        lst_aseen_at: log.lst_aseen_at,
+        count: log.count,
+        active: log.active,
 
-    return {
-        data: logs.map(log => ({
-            id: log._id,
-            sentry_event_id: log.sentry_event_id,
-            event_id: log.event_id,
-            message: log.message,
-            link_sentry: log.link_sentry,
-            culprit: log.culprit,
-            filename: log.filename,
-            function_name: log.function_name,
-            error_type: log.error_type,
-            environment: log.environment,
-            affected_user_ip: log.affected_user_ip,
-            sentry_timestamp: log.sentry_timestamp,
-            created_at: log.created_at,
-            comments: log.comments,
-            status: log.status
-        })),
-        total: totalLogs
-    };
+    }));
 };
-
 
 const getLogById = async (id) => {
     const log = await Log.findById(id)
@@ -69,20 +59,19 @@ const getLogById = async (id) => {
 
     return {
         id: log._id,
-        sentry_event_id: log.sentry_event_id,
-        event_id: log.event_id,
+        issue_id: log.issue_id,
         message: log.message,
-        link_sentry: log.link_sentry,
+        description: log.description,
         culprit: log.culprit,
-        filename: log.filename,
-        function_name: log.function_name,
         error_type: log.error_type,
         environment: log.environment,
-        affected_user_ip: log.affected_user_ip,
-        sentry_timestamp: log.sentry_timestamp,
+        status: log.status,
+        priority: log.priority,
+        assigned_to: log.assigned_to,
         created_at: log.created_at,
-        comments: log.comments,
-        status: log.status   
+        lst_aseen_at: log.lst_aseen_at,
+        count: log.count,
+        active: log.active,
     };
 };
 
@@ -101,20 +90,19 @@ const updateLog = async (id, data) => {
 
     return {
         id: log._id,
-        sentry_event_id: log.sentry_event_id,
-        event_id: log.event_id,
+        issue_id: log.issue_id,
         message: log.message,
-        link_sentry: log.link_sentry,
+        description: log.description,
         culprit: log.culprit,
-        filename: log.filename,
-        function_name: log.function_name,
         error_type: log.error_type,
         environment: log.environment,
-        affected_user_ip: log.affected_user_ip,
-        sentry_timestamp: log.sentry_timestamp,
+        status: log.status,
+        priority: log.priority,
+        assigned_to: log.assigned_to,
         created_at: log.created_at,
-        comments: log.comments,
-        status: log.status   
+        lst_aseen_at: log.lst_aseen_at,
+        count: log.count,
+        active: log.active,
     };
 };
 

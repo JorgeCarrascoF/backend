@@ -67,39 +67,27 @@ const options = {
         },
         Log: {
           type: 'object',
-          required: ['message', 'event_id', 'sentry_timestamp', 'created_at', 'userId'],
+          required: ['issue_id', 'message', 'created_at', 'active', 'userId'],
           properties: {
             _id: {
               type: 'string',
               description: 'ID único del log'
             },
-            sentry_event_id: {
+            issue_id: {
               type: 'string',
-              description: 'ID del evento en Sentry'
-            },
-            event_id: {
-              type: 'string',
-              description: 'ID del evento interno'
+              description: 'ID único del incidente'
             },
             message: {
               type: 'string',
-              description: 'Mensaje del error o log'
+              description: 'Mensaje del error'
             },
-            link_sentry: {
+            description: {
               type: 'string',
-              description: 'Enlace al error en Sentry'
+              description: 'Descripción detallada'
             },
             culprit: {
               type: 'string',
               description: 'Causa principal del error'
-            },
-            filename: {
-              type: 'string',
-              description: 'Nombre del archivo donde ocurrió el error'
-            },
-            function_name: {
-              type: 'string',
-              description: 'Función donde ocurrió el error'
             },
             error_type: {
               type: 'string',
@@ -111,28 +99,40 @@ const options = {
               enum: ['staging', 'development', 'production'],
               description: 'Entorno de ejecución'
             },
-            affected_user_ip: {
-              type: 'string',
-              description: 'IP del usuario afectado'
-            },
-            sentry_timestamp: {
-              type: 'string',
-              format: 'date-time',
-              description: 'Fecha y hora original del evento en Sentry'
-            },
-            created_at: {
-              type: 'string',
-              format: 'date-time',
-              description: 'Fecha y hora en que se registró el log en el sistema'
-            },
-            comments: {
-              type: 'string',
-              description: 'Comentarios de los usuarios'
-            },
             status: {
               type: 'string',
               enum: ['unresolved', 'solved'],
               description: 'Estado del log'
+            },
+            description: {
+              type: 'string',
+              description: 'Estado del log'
+            },
+            priority: {
+              type: 'string',
+              description: 'Nivel de prioridad del log'
+            },
+            assigned_to: {
+              type: 'string',
+              description: 'Usuario asignado para resolver el log'
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Fecha y hora en que se registró el log'
+            },
+            last_seen_at: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Última vez que se detectó este incidente'
+            },
+            count: {
+              type: 'string',
+              description: 'Número de veces que ha ocurrido este incidente'
+            },
+            active: {
+              type: 'string',
+              description: 'Indica si el log está activo'
             },
             userId: {
               type: 'string',
@@ -154,8 +154,8 @@ const options = {
       { name: 'Users', description: 'Gestión de usuarios' },
       { name: 'Roles', description: 'Gestión de roles' },
       { name: 'Logs', description: 'Gestión de logs' },
-      { name: 'Events', description: 'Gestión de eventos' },
-      { name: 'Projects', description: 'Gestión de proyectos' },
+      //{ name: 'Events', description: 'Gestión de eventos' },
+      //{ name: 'Projects', description: 'Gestión de proyectos' },
       { name: 'General', description: 'Endpoints generales' }
     ]
   },
