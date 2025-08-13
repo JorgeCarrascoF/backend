@@ -17,7 +17,7 @@ const registerSchema = Joi.object({
     password: Joi.string().min(6).required().pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])')).messages({
         'string.base': 'El campo password debe ser una cadena de texto.',
         'string.min': 'La contraseña debe tener al menos 6 caracteres.',
-        'string.pattern.base': 'La contraseña debe incluir mayúsculas, minúsculas, números y símbolos.',
+        'string.pattern.base': 'La contraseña debe incluir mayúsculas, minúsculas, números y símbolos (!@#$%^&*).',
         'any.required': 'El campo password es obligatorio.'
     }),
     role: Joi.string().valid('admin', 'user').optional().messages({
