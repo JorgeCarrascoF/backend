@@ -60,45 +60,64 @@
 //     handleSentryWebhook
 // };
 
-const crypto = require('crypto?');
 const Log = require('../models/log');
+const Event = require('../models/event');
 
-const receiveSentryLog = async (req, res) => {
+exports.handleSentryWebhook = async (req, res) => {
     try {
-        const signature = req.headers['sentry web hook?'];
-        const secret = process.env.SENTRY_WEBHOOK_SECRET;
+        console.log('Webhook recibido desde Sentry:', JSON.stringify(req.body, null, 2));
 
-        // Validar secret
-        if (signature !== secret) {
-            return res.status(403).json({ msg: 'Firma inválida. Acceso denegado.' });
+        const sentryEventId = req.body?.data?.event?.event_id;
+        const eventPayload = req.body?.data?.event;
+
+        if (!sentryEventId || !eventPayload) {
+            return res.status(400).json({ msg: 'Faltan datos en el payload de Sentry' });
         }
 
-        const sentryEventId = req.body.data?.event?.event_id;
-        if (!sentryEventId) {
-            return res.status(400).json({ msg: 'No se recibió sentry_event_id válido.' });
+        // Buscar o crear Event relacionado
+        let relatedEvent = await Event.findOne({ issue_id: eventPayload.issue_id });
+
+        if (!relatedEvent) {
+            relatedEvent = await Event.create({
+                issue_id: eventPayload.issue_id,
+                short_id: eventPayload.short_id || 'N/A',
+                title: eventPayload.title,
+                level: eventPayload.level || 'error',
+                status: 'unresolved',
+                count: eventPayload.count || 1,
+                user_count: eventPayload.user_count || 0,
+                is_unhandled: eventPayload.is_unhandled || false,
+                created_at: new Date(),
+                update_at: new Date()
+            });
+            console.log(`Event creado: ${relatedEvent._id}`);
         }
 
+        // Crear el Log
         const newLog = await Log.create({
             sentry_event_id: sentryEventId,
-            message: req.body.data.event.title,
-            link_sentry: req.body.data.event.web_url,
-            culprit: req.body.data.event.culprit,
-            filename: req.body.data.event.location,
-            function_name: req.body.data.event.metadata?.function,
-            error_type: req.body.data.event.type,
-            environment: req.body.data.event.environment,
-            affected_user_ip: req.body.data.event.user?.ip_address,
-            sentry_timestamp: req.body.data.event.timestamp,
+            event_id: relatedEvent._id,
+            message: eventPayload.title,
+            link_sentry: eventPayload.web_url,
+            culprit: eventPayload.culprit,
+            filename: eventPayload.location,
+            function_name: eventPayload.metadata?.function,
+            error_type: eventPayload.type,
+            environment: eventPayload.environment,
+            affected_user_ip: eventPayload.user?.ip_address,
+            sentry_timestamp: eventPayload.timestamp,
+            created_at: new Date(),
             status: 'unresolved',
             json_sentry: req.body
         });
 
-        return res.status(201).json({ msg: 'Log recibido y guardado correctamente', log: newLog });
+        res.status(201).json({
+            msg: 'Log creado desde webhook de Sentry',
+            log: newLog
+        });
 
     } catch (err) {
-        console.error('Error al recibir log de Sentry:', err);
-        return res.status(500).json({ msg: 'Error procesando el log de Sentry', error: err.message });
+        console.error('Error procesando webhook de Sentry:', err);
+        res.status(500).json({ msg: 'Error procesando webhook de Sentry', error: err.message });
     }
 };
-
-module.exports = { receiveSentryLog };
