@@ -46,9 +46,20 @@ const logSchema = new mongoose.Schema({
     },
     created_at: {
         type: Date,
-        required: true
+        required: true,
+        default: Date.now
+    },
+    comments: {
+        type: String,
+        trim: true
+    },
+    status: {
+        type: String,
+        enum: ['unresolved', 'solved'],
+        default: 'unresolved'
     },
     userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+    json_sentry: { type: Object }
 });
         
 const Log = mongoose.model('Log', logSchema);

@@ -35,4 +35,38 @@ async function authMiddleware(req, res, next) { // La función debe ser async
     }
 }
 
-module.exports = authMiddleware;
+// Middleware para verificar si el usuario tiene un rol específico
+function requireRole(roles) {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ msg: 'Usuario no autenticado' });
+        }
+
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ 
+                msg: 'Acceso denegado. Rol no autorizado.',
+                requiredRoles: roles,
+                currentRole: req.user.role
+            });
+        }
+
+        next();
+    };
+}
+
+// Middleware para verificar si el usuario es superadmin
+function requireSuperAdmin(req, res, next) {
+    return requireRole(['superadmin'])(req, res, next);
+}
+
+// Middleware para verificar si el usuario es admin o superadmin
+function requireAdminOrSuper(req, res, next) {
+    return requireRole(['admin', 'superadmin'])(req, res, next);
+}
+
+module.exports = {
+    authMiddleware,
+    requireRole,
+    requireSuperAdmin,
+    requireAdminOrSuper
+};

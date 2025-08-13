@@ -1,8 +1,8 @@
 const express = require('express');
-const middleware = require('../middleware/auth');
+const { authMiddleware } = require('../middleware/auth');
 const router = express.Router();
 
-router.get('/dashboard', middleware, (req, res) => {
+router.get('/dashboard', authMiddleware, (req, res) => {
   res.json({ msg: `Bienvenido ${req.user.userName}` });
 });
 
