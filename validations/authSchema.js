@@ -14,7 +14,7 @@ const registerSchema = Joi.object({
         'string.email': 'El formato del campo email es inválido.',
         'any.required': 'El campo email es obligatorio.'
     }),
-    password: Joi.string().min(6).required().pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])')).messages({
+    password: Joi.string().min(8).required().pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])')).messages({
         'string.base': 'El campo password debe ser una cadena de texto.',
         'string.min': 'La contraseña debe tener al menos 6 caracteres.',
         'string.pattern.base': 'La contraseña debe incluir mayúsculas, minúsculas, números y símbolos (!@#$%^&*).',

@@ -1,7 +1,7 @@
 const Log = require('../models/log');
 
 const getAllLogs = async (filters, pagination) => {
-    const { limit, skip } = pagination;
+    const { limit, skip, sortBy = 'sentry_timestamp', sortOrder = 'desc' } = pagination;
     const query = {};
 
     if (filters.search) {
@@ -25,30 +25,40 @@ const getAllLogs = async (filters, pagination) => {
             if (filters[field]) query[field] = filters[field];
         });
 
+    // Determinar el orden de clasificación
+    const sort = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
     const logs = await Log.find(query)
         .populate('userId', 'username email')
         .skip(skip)
         .limit(limit)
-        .sort({ sentry_timestamp: -1 });
+        .sort(sort);
 
-    return logs.map(log => ({
-        id: log._id,
-        sentry_event_id: log.sentry_event_id,
-        event_id: log.event_id,
-        message: log.message,
-        link_sentry: log.link_sentry,
-        culprit: log.culprit,
-        filename: log.filename,
-        function_name: log.function_name,
-        error_type: log.error_type,
-        environment: log.environment,
-        affected_user_ip: log.affected_user_ip,
-        sentry_timestamp: log.sentry_timestamp,
-        created_at: log.created_at,
-        comments: log.comments,
-        status: log.status   
-    }));
+    const totalLogs = await Log.countDocuments(query);
+
+    return {
+        data: logs.map(log => ({
+            id: log._id,
+            sentry_event_id: log.sentry_event_id,
+            event_id: log.event_id,
+            message: log.message,
+            link_sentry: log.link_sentry,
+            culprit: log.culprit,
+            filename: log.filename,
+            function_name: log.function_name,
+            error_type: log.error_type,
+            environment: log.environment,
+            affected_user_ip: log.affected_user_ip,
+            sentry_timestamp: log.sentry_timestamp,
+            created_at: log.created_at,
+            comments: log.comments,
+            status: log.status
+        })),
+        total: totalLogs
+    };
 };
+
 
 const getLogById = async (id) => {
     const log = await Log.findById(id)

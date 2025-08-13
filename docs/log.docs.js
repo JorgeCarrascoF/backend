@@ -59,7 +59,7 @@
  *           description: Comentarios de los usuarios
  *         status:
  *           type: string
- *           enum: ['unresolved', 'solved'],
+ *           enum: ['unresolved', 'solved']
  *           description: Estado del log
  *         userId:
  *           type: string
@@ -70,7 +70,7 @@
  * @swagger
  * /logs:
  *   get:
- *     summary: Obtener todos los Logs (con filtros y paginación)
+ *     summary: Obtener todos los Logs (con filtros, paginación y ordenamiento)
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -80,16 +80,31 @@
  *         schema:
  *           type: integer
  *           default: 1
+ *         description: Número de página
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
+ *         description: Número de logs por página
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
  *         description: Búsqueda global por múltiples campos
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           default: sentry_timestamp
+ *         description: Campo por el cual ordenar (ej. sentry_timestamp, created_at)
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Orden de clasificación (ascendente o descendente)
  *       - in: query
  *         name: link_sentry
  *         schema:
@@ -143,12 +158,21 @@
  *               properties:
  *                 success:
  *                   type: boolean
+ *                   example: true
  *                 page:
  *                   type: integer
+ *                   example: 1
  *                 limit:
  *                   type: integer
+ *                   example: 10
+ *                 count:
+ *                   type: integer
+ *                   description: Número de logs en la página actual
+ *                   example: 5
  *                 total:
  *                   type: integer
+ *                   description: Número total de logs que coinciden con la consulta
+ *                   example: 55
  *                 data:
  *                   type: array
  *                   items:
