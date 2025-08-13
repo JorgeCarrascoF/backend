@@ -2,7 +2,7 @@
 const express = require('express');
 const projectController = require('../controllers/projectController');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth');
+const {authMiddleware} = require('../middleware/auth');
 
 router.post('/', authMiddleware, projectController.createProject);
 router.get('/', authMiddleware, projectController.getAllProjects);

@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const documentController = require('../controllers/documentController');
-const authMiddleware = require('../middleware/auth'); 
+const {authMiddleware} = require('../middleware/auth'); 
 const authorizeAdmin = require('../middleware/authorizeAdmin'); 
+
 
 // Aplicar los middlewares a todas las rutas de documentos
 router.post('/', authMiddleware, authorizeAdmin, documentController.createDocument);
