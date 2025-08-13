@@ -54,6 +54,13 @@
  *           type: string
  *           format: date-time
  *           description: Fecha y hora en que se registró el log en el sistema
+ *         comments:
+ *           type: string
+ *           description: Comentarios de los usuarios
+ *         status:
+ *           type: string
+ *           enum: ['unresolved', 'solved'],
+ *           description: Estado del log
  *         userId:
  *           type: string
  *           description: ID del usuario que generó el log
@@ -115,6 +122,17 @@
  *           type: string
  *           enum: ['staging', 'development', 'production']
  *         description: Entorno de ejecución
+ *       - in: query
+ *         name: comments
+ *         schema:
+ *           type: string
+ *         description: Comentarios de los usuarios
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: ['unresolved', 'solved']
+ *         description: Estado del log
  *     responses:
  *       200:
  *         description: Lista de Logs obtenida correctamente

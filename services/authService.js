@@ -43,8 +43,11 @@ class AuthService {
             if (!roleExists) {
                 throw boom.badRequest('El rol especificado no existe');
             }
+            // Mapear nombres de roles a códigos internos
             if (roleExists.name === 'Administrador') {
                 finalRole = 'admin';
+            } else if (roleExists.name === 'SuperAdministrador') {
+                finalRole = 'superadmin';
             }
         }
 

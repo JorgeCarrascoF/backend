@@ -1,6 +1,8 @@
-require('dotenv').config();
-const app = require('./app');
-require('./connections/db'); // Tu conexión existente
+require("dotenv").config();
+require("./instrument.js"); // Sentry lo más arriba posible
+
+const app = require("./app");
+require("./connections/db");
 
 const PORT = process.env.PORT || 3000;
 
