@@ -7,9 +7,10 @@ const getAllLogs = async (req, res) => {
         console.log('🔍 DEBUG getAllLogs:');
         console.log('- Usuario en req:', req.user);
         console.log('- Rol del usuario:', req.user?.role);
+
         const roles = ['admin', 'user'];
-         if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ 
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({
                 msg: 'Acceso denegado. Se requiere rol de administrador, desarrollador o QA.',
                 userRole: req.user.role,
                 required: roles
@@ -19,21 +20,24 @@ const getAllLogs = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const page = parseInt(req.query.page) || 1;
         const skip = (page - 1) * limit;
+        const sortBy = req.query.sortBy || 'sentry_timestamp';
+        const sortOrder = req.query.sortOrder || 'desc';
 
-        //const totalLogs = await Log.countDocuments(searchQuery);
-        const logs = await logService.getAllLogs(req.query, { limit, skip });
+        const result = await logService.getAllLogs(req.query, { limit, skip, sortBy, sortOrder });
 
         res.status(200).json({
             success: true,
             page,
             limit,
-            count: logs.length,
-            data: logs
+            count: result.data.length,
+            total: result.total,
+            data: result.data
         });
     } catch (err) {
         res.status(500).json({ msg: 'Error del servidor al obtener Logs', error: err.message });
     }
 };
+
 
 const getLogById = async (req, res) => {
     try {
@@ -43,7 +47,7 @@ const getLogById = async (req, res) => {
 
         const roles = ['admin', 'user'];
         if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 msg: 'Acceso denegado.',
                 detail: 'Solo los adminstradores, desarrolladores y QA pueden ver los logs por ID'
             });
