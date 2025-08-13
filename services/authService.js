@@ -106,7 +106,7 @@ class AuthService {
             email: user.email,
             role: user.role || 'user',
             roleId: user.roleId?._id
-        }, JWT_SECRET, { expiresIn: '1h' });
+        }, JWT_SECRET, { expiresIn: '24h' });
 
         return {
             token,
