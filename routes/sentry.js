@@ -27,3 +27,4 @@ router.get('/events/level', requireAdminOrSuper, getSentryEventsByLevel);
 router.get('/events/:id', requireAdminOrSuper, getSentryEventById);
 
 module.exports = router;
+
