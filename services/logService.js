@@ -29,25 +29,28 @@ const getAllLogs = async (filters, pagination) => {
         .populate('userId', 'username email')
         .skip(skip)
         .limit(limit)
-        .sort({ sentry_timestamp: -1 });
+        .sort({ created_at: -1 });
+    const totalLogs = await Log.countDocuments(query);
 
-    return logs.map(log => ({
-        id: log._id,
-        issue_id: log.issue_id,
-        message: log.message,
-        description: log.description,
-        culprit: log.culprit,
-        error_type: log.error_type,
-        environment: log.environment,
-        status: log.status,
-        priority: log.priority,
-        assigned_to: log.assigned_to,
-        created_at: log.created_at,
-        lst_aseen_at: log.lst_aseen_at,
-        count: log.count,
-        active: log.active,
-
-    }));
+    return {
+        data: logs.map(log => ({
+          id: log._id,
+          issue_id: log.issue_id,
+          message: log.message,
+          description: log.description,
+          culprit: log.culprit,
+          error_type: log.error_type,
+          environment: log.environment,
+          status: log.status,
+          priority: log.priority,
+          assigned_to: log.assigned_to,
+          created_at: log.created_at,
+          lst_aseen_at: log.lst_aseen_at,
+          count: log.count,
+          active: log.active,
+        })),
+        total: totalLogs
+    };
 };
 
 const getLogById = async (id) => {
