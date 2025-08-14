@@ -73,6 +73,13 @@ const createLog = async (req, res) => {
 
         const newLog = await logService.createLog(req.body);
 
+        if (newLog.count > 1){
+            return res.status(200).json({
+                msg: 'Log updated - duplicated found',
+                log: newLog
+            });
+        }
+
         res.status(201).json({ msg: 'Log creado exitosamente', log: newLog });
     } catch (err) {
         res.status(500).json({ msg: 'Error creando Log', error: err.message });
