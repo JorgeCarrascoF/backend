@@ -17,7 +17,8 @@ var indexRouter = require('./routes/index');
 var authRouter = require('./routes/auth');
 var usersRouter = require('./routes/users');
 var rolesRouter = require('./routes/roles');
-var logsRoutes = require('./routes/logs')
+var logsRoutes = require('./routes/logs');
+var sentryRoutes = require('./routes/sentry');
 var swaggerDocs = require('./swagger/swagger');
 
 var app = express();
@@ -48,6 +49,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/roles', rolesRouter);
 app.use('/api/logs', logsRoutes);
+app.use('/api/sentry', sentryRoutes);
 
 // TODO: Hacer el endpoint funcional
 app.post('/webhook/sentry', (req, res) => {
@@ -70,7 +72,6 @@ app.use(errorHandler);
 // app.use(function(err, req, res, next) {
 //   res.locals.message = err.message;
 //   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
 //   res.status(err.status || 500);
   
 //   // Si es una petición API, responder con JSON

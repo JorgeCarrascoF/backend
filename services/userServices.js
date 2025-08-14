@@ -71,58 +71,12 @@ const getUserById = async (userId) => {
 
 
 /* -------------------------
-   VERSIÓN ORIGINAL (correcta)
-   (Se deja comentada para referencia)
+    VERSIÓN ORIGINAL (correcta)
+    (Se deja comentada para referencia)
 ------------------------- */
 
-const updateUser = async (userId, updateData) => {
-    // Validar con Joi
-    const { error } = updateUserSchema.validate(updateData);
-    if (error) {
-        const validationError = new Error('Error de validación');
-        validationError.statusCode = 400;
-        validationError.details = error.details.map((d) => ({
-            message: d.message,
-            path: d.path.join('.'),
-            type: d.type,
-        }));
-        throw validationError;
-    }
-
-    // Verificar email duplicado
-    if (updateData.email) {
-        const emailExists = await User.findOne({ email: updateData.email, _id: { $ne: userId } });
-        if (emailExists) {
-            const conflictError = new Error('El email ya está en uso por otro usuario.');
-            conflictError.statusCode = 409; // Conflict
-            throw conflictError;
-        }
-    }
-
-    const user = await User.findByIdAndUpdate(userId, updateData, {
-        new: true,
-        runValidators: true,
-    })
-        .populate('roleId', 'name permission')
-        .select('-password');
-
-    if (!user) {
-        const notFoundError = new Error('Usuario no encontrado.');
-        notFoundError.statusCode = 404;
-        throw notFoundError;
-    }
-
-    return _formatUserData(user);
-};
-
-
-// /* -------------------------
-//    VERSIÓN QUE FORZA ERROR / TUMBA EL SERVIDOR 
-//    NOTA: Esto forzará un crash asíncrono del proceso.
-//    usarlo solo en desarrollo para probar el sdk de sentry SOLO en desarrollo. Para desactivar, reemplaza por la versión original arriba.
-// ------------------------- */
 // const updateUser = async (userId, updateData) => {
-//     // --- Validación previa (igual que la versión correcta) ---
+//     // Validar con Joi
 //     const { error } = updateUserSchema.validate(updateData);
 //     if (error) {
 //         const validationError = new Error('Error de validación');
@@ -135,25 +89,71 @@ const updateUser = async (userId, updateData) => {
 //         throw validationError;
 //     }
 
-//     // --- Forzar un crash asíncrono: esto no será atrapado por try/catch de controladores ---
-//     // Método 1: lanzar en nextTick -> uncaughtException -> crash
-//     process.nextTick(() => {
-//         throw new Error('Crash forzado desde updateUser (process.nextTick).');
-//     });
+//     // Verificar email duplicado
+//     if (updateData.email) {
+//         const emailExists = await User.findOne({ email: updateData.email, _id: { $ne: userId } });
+//         if (emailExists) {
+//             const conflictError = new Error('El email ya está en uso por otro usuario.');
+//             conflictError.statusCode = 409; // Conflict
+//             throw conflictError;
+//         }
+//     }
 
-//     // Alternativa (comentada): exit inmediato del proceso
-//     // setTimeout(() => process.exit(1), 100);
+//     const user = await User.findByIdAndUpdate(userId, updateData, {
+//         new: true,
+//         runValidators: true,
+//     })
+//         .populate('roleId', 'name permission')
+//         .select('-password');
 
-//     // Por si acaso devuelvo algo (esto raramente llegará antes del crash)
-//     return {
-//         id: userId,
-//         username: updateData.username || 'test',
-//         note: 'Este return puede no llegar porque el proceso será crasheado asíncronamente'
-//     };
+//     if (!user) {
+//         const notFoundError = new Error('Usuario no encontrado.');
+//         notFoundError.statusCode = 404;
+//         throw notFoundError;
+//     }
+
+//     return _formatUserData(user);
 // };
 
+
+// /* -------------------------
+//    VERSIÓN QUE FORZA ERROR / TUMBA EL SERVIDOR 
+//    NOTA: Esto forzará un crash asíncrono del proceso.
+//    usarlo solo en desarrollo para probar el sdk de sentry SOLO en desarrollo. Para desactivar, reemplaza por la versión original arriba.
+// ------------------------- */
+const updateUser = async (userId, updateData) => {
+    // --- Validación previa (igual que la versión correcta) ---
+    const { error } = updateUserSchema.validate(updateData);
+    if (error) {
+        const validationError = new Error('Error de validación');
+        validationError.statusCode = 400;
+        validationError.details = error.details.map((d) => ({
+            message: d.message,
+            path: d.path.join('.'),
+            type: d.type,
+        }));
+        throw validationError;
+    }
+
+    // --- Forzar un crash asíncrono: esto no será atrapado por try/catch de controladores ---
+    // Método 1: lanzar en nextTick -> uncaughtException -> crash
+    process.nextTick(() => {
+        throw new Error('Crash forzado desde updateUser (process.nextTick).');
+    });
+
+    // Alternativa (comentada): exit inmediato del proceso
+    // setTimeout(() => process.exit(1), 100);
+
+    // Por si acaso devuelvo algo (esto raramente llegará antes del crash)
+    return {
+        id: userId,
+        username: updateData.username || 'test',
+        note: 'Este return puede no llegar porque el proceso será crasheado asíncronamente'
+    };
+};
+
 /* -------------------------
-   deleteUser (sin cambios)
+    deleteUser (sin cambios)
 ------------------------- */
 const deleteUser = async (userId) => {
     const user = await User.findByIdAndUpdate(

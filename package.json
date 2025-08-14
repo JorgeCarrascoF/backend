@@ -6,7 +6,8 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "init-superadmin": "node scripts/initSuperAdmin.js",
-    "test-superadmin": "node testSuperAdmin.js"
+    "test-superadmin": "node testSuperAdmin.js",
+    "test-sentry": "node testSentryCapture.js"
   },
   "dependencies": {
     "@hapi/boom": "^10.0.1",

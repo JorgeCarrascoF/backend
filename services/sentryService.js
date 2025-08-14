@@ -1,198 +1,323 @@
-// 1. Función principal de transformación
+// ============================================
+// services/sentryService.js
+// Servicio para procesar eventos de Sentry automáticamente
+// ============================================
+const Sentry = require('../instrument');
+const Log = require('../models/log');
 
-async function processSentryWebhook(webhookPayload) {
-    try {
-        const sentryEvent = webhookPayload.data.event;
-
-        // Paso 1: Transformar y procesar proyecto
-        const projectData = await transformProject(sentryEvent);
-
-        // Paso 2: Transformar y procesar evento
-        const eventData = await transformEvent(sentryEvent, projectData.id);
-
-        // Paso 3: Evaluar si crear incidencia
-        const incidentData = await evaluateAndCreateIncident(sentryEvent, eventData, webhookPayload.data.triggered_rule);
-
-        return {
-            project: projectData,
-            event: eventData,
-            incident: incidentData
-        };
-
-    } catch (error) {
-        console.error('Error processing Sentry webhook:', error);
-        throw error;
-    }
-}
-
-// 2. Transformación de proyecto javascript
-async function transformProject(sentryEvent) {
-    // Del payload de Sentry, el proyecto viene como un ID numérico
-    const sentryProjectId = sentryEvent.project.toString(); // "4509752919851088"
-
-    // Buscar proyecto existente
-    let project = await findProjectBySentryId(sentryProjectId);
-
-    if (!project) {
-        // Extraer información disponible del evento
-        const projectData = {
-            id: generateId(),
-            sentry_project_id: sentryProjectId,
-            name: extractProjectName(sentryEvent), // Ver función auxiliar abajo
-            slug: extractProjectSlug(sentryEvent),
-            platform: sentryEvent.platform, // "javascript"
-            is_active: true
-        };
-
-        project = await createProject(projectData);
-    }
-
-    return project;
-}
-
-// Funciones auxiliares para extraer datos del proyecto
-function extractProjectName(sentryEvent) {
-    // El webhook no incluye nombre del proyecto directamente
-    // Podrías extraerlo de la URL o usar un mapeo
-    const urlPattern = /projects\/([^\/]+)\/([^\/]+)/;
-    const match = sentryEvent.web_url?.match(urlPattern);
-    return match ? match[2] : `Project-${sentryEvent.project}`;
-}
-
-function extractProjectSlug(sentryEvent) {
-    // Similar al nombre, extraer del URL o generar
-    return extractProjectName(sentryEvent).toLowerCase().replace(/\s+/g, '-');
-}
-
-// 3. Transformación de evento}
-async function transformEvent(sentryEvent, projectId) {
-    const eventData = {
-        id: generateId(),
-        issue_id: sentryEvent.issue_id, // "56076521"
-        short_id: generateShortId(sentryEvent), // Necesitas generar esto
-        title: sentryEvent.title, // "TypeError: num.toUpperCase is not a function"
-        level: sentryEvent.level, // "error"
-        project_id: projectId,
-        status: mapSentryStatus(sentryEvent), // Ver función abajo
-        count: parseInt(sentryEvent.stats?.['24h']?.reduce((sum, [_, count]) => sum + count, 0) || 1),
-        user_count: 1, // Default, Sentry no lo proporciona claramente en este webhook
-        is_unhandled: sentryEvent.exception?.values?.[0]?.mechanism?.handled === false,
-
-        // Campos adicionales útiles
-        permalink: sentryEvent.web_url,
-        culprit: sentryEvent.culprit,
-        first_seen: new Date(sentryEvent.datetime), // Usar timestamp del evento
-        last_seen: new Date(sentryEvent.datetime),
-
-        // Metadata como JSON
-        metadata: {
-            exception_type: sentryEvent.exception?.values?.[0]?.type,
-            exception_value: sentryEvent.exception?.values?.[0]?.value,
-            filename: sentryEvent.metadata?.filename,
-            function: sentryEvent.metadata?.function,
-            environment: getTagValue(sentryEvent.tags, 'environment'),
-            browser: getTagValue(sentryEvent.tags, 'browser'),
-            os: getTagValue(sentryEvent.tags, 'os'),
-            url: getTagValue(sentryEvent.tags, 'url')
+class SentryService {
+    
+    /**
+     * Procesa un evento de Sentry automáticamente
+     * @param {Object} event - Evento de Sentry
+     * @param {Object} hint - Información adicional del evento
+     */
+    async processSentryEvent(event, hint = {}) {
+        try {
+            // Extraer información clave del evento
+            const eventData = this.extractEventData(event, hint);
+            
+            // Crear log automáticamente
+            await this.createLogFromSentry(eventData);
+            
+            // Procesar métricas y alertas si es necesario
+            await this.processMetrics(eventData);
+            
+            console.log(`✅ Evento Sentry procesado: ${eventData.message}`);
+            
+        } catch (error) {
+            console.error('❌ Error procesando evento Sentry:', error);
+            // No re-lanzar para no romper el flujo
         }
-    };
-
-    // Verificar si el evento ya existe
-    let existingEvent = await findEventByIssueId(sentryEvent.issue_id);
-
-    if (existingEvent) {
-        return await updateEvent(existingEvent.id, {
-            count: eventData.count,
-            last_seen: eventData.last_seen,
-            updated_at: new Date()
-        });
-    } else {
-        return await createEvent(eventData);
+    }
+    
+    /**
+     * Procesa una transacción de Sentry
+     * @param {Object} transaction - Transacción de Sentry
+     */
+    async processSentryTransaction(transaction) {
+        try {
+            const transactionData = this.extractTransactionData(transaction);
+            
+            // Crear log de transacción
+            await this.createTransactionLog(transactionData);
+            
+            console.log(`✅ Transacción Sentry procesada: ${transactionData.operation}`);
+            
+        } catch (error) {
+            console.error('❌ Error procesando transacción Sentry:', error);
+        }
+    }
+    
+    /**
+     * Extrae datos relevantes del evento de Sentry
+     */
+    extractEventData(event, hint) {
+        const eventId = event.event_id || (hint && hint.event_id);
+        const message = event.message || 
+                       (event.exception && event.exception.values && 
+                        event.exception.values[0] && 
+                        event.exception.values[0].value) || 
+                       'Error sin mensaje';
+        
+        const level = event.level || 'error';
+        const culprit = event.culprit || '';
+        const timestamp = event.timestamp ? new Date(event.timestamp * 1000) : new Date();
+        
+        // Extraer tags útiles
+        const tags = this.extractTags(event);
+        
+        // Extraer contexto del usuario si está disponible
+        const user = event.user || {};
+        const request = event.request || {};
+        
+        return {
+            eventId,
+            message,
+            level,
+            culprit,
+            timestamp,
+            tags,
+            user,
+            request,
+            platform: event.platform,
+            sdk: event.sdk,
+            contexts: event.contexts,
+            raw: event // Datos completos para debugging
+        };
+    }
+    
+    /**
+     * Extrae datos de una transacción
+     */
+    extractTransactionData(transaction) {
+        return {
+            operation: transaction.transaction || 'unknown',
+            duration: transaction.duration,
+            status: transaction.status,
+            timestamp: new Date(),
+            tags: this.extractTags(transaction),
+            raw: transaction
+        };
+    }
+    
+    /**
+     * Extrae tags del evento de forma robusta
+     */
+    extractTags(event) {
+        const tags = {};
+        
+        if (event.tags) {
+            if (Array.isArray(event.tags)) {
+                // Tags como array de arrays [[key, value]]
+                event.tags.forEach(tag => {
+                    if (Array.isArray(tag) && tag.length >= 2) {
+                        tags[tag[0]] = tag[1];
+                    }
+                });
+            } else if (typeof event.tags === 'object') {
+                // Tags como objeto {key: value}
+                Object.assign(tags, event.tags);
+            }
+        }
+        
+        return tags;
+    }
+    
+    /**
+     * Crea un log automáticamente desde el evento de Sentry
+     */
+    async createLogFromSentry(eventData) {
+        try {
+            const logData = {
+                level: this.mapSentryLevelToLogLevel(eventData.level),
+                message: eventData.message,
+                source: 'sentry',
+                metadata: {
+                    eventId: eventData.eventId,
+                    culprit: eventData.culprit,
+                    platform: eventData.platform,
+                    tags: eventData.tags,
+                    user: eventData.user,
+                    request: eventData.request,
+                    contexts: eventData.contexts
+                },
+                timestamp: eventData.timestamp,
+                // Campos adicionales para categorización
+                category: this.categorizeEvent(eventData),
+                severity: this.calculateSeverity(eventData.level)
+            };
+            
+            const log = new Log(logData);
+            await log.save();
+            
+            return log;
+            
+        } catch (error) {
+            console.error('Error creando log desde Sentry:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Crea un log para transacciones
+     */
+    async createTransactionLog(transactionData) {
+        try {
+            const logData = {
+                level: 'info',
+                message: `Transacción: ${transactionData.operation}`,
+                source: 'sentry-transaction',
+                metadata: {
+                    operation: transactionData.operation,
+                    duration: transactionData.duration,
+                    status: transactionData.status,
+                    tags: transactionData.tags
+                },
+                timestamp: transactionData.timestamp,
+                category: 'performance',
+                severity: 'low'
+            };
+            
+            const log = new Log(logData);
+            await log.save();
+            
+            return log;
+            
+        } catch (error) {
+            console.error('Error creando log de transacción:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Mapea niveles de Sentry a niveles de log
+     */
+    mapSentryLevelToLogLevel(sentryLevel) {
+        const levelMap = {
+            'fatal': 'fatal',
+            'error': 'error',
+            'warning': 'warn',
+            'info': 'info',
+            'debug': 'debug'
+        };
+        
+        return levelMap[sentryLevel] || 'error';
+    }
+    
+    /**
+     * Categoriza el evento basado en su contenido
+     */
+    categorizeEvent(eventData) {
+        if (eventData.message.includes('database') || eventData.message.includes('db')) {
+            return 'database';
+        }
+        if (eventData.message.includes('auth') || eventData.message.includes('login')) {
+            return 'authentication';
+        }
+        if (eventData.message.includes('validation')) {
+            return 'validation';
+        }
+        if (eventData.message.includes('permission') || eventData.message.includes('access')) {
+            return 'authorization';
+        }
+        
+        return 'general';
+    }
+    
+    /**
+     * Calcula la severidad del evento
+     */
+    calculateSeverity(level) {
+        const severityMap = {
+            'fatal': 'critical',
+            'error': 'high',
+            'warning': 'medium',
+            'info': 'low',
+            'debug': 'low'
+        };
+        
+        return severityMap[level] || 'medium';
+    }
+    
+    /**
+     * Procesa métricas del evento
+     */
+    async processMetrics(eventData) {
+        try {
+            // Aquí puedes implementar lógica para:
+            // - Contar errores por categoría
+            // - Alertar si hay muchos errores similares
+            // - Actualizar dashboards en tiempo real
+            
+            // Ejemplo: Contar errores por nivel
+            const errorCount = await Log.countDocuments({
+                level: this.mapSentryLevelToLogLevel(eventData.level),
+                timestamp: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Últimas 24h
+            });
+            
+            // Si hay muchos errores, podrías enviar una alerta
+            if (errorCount > 100) {
+                console.warn(`⚠️ Muchos errores detectados: ${errorCount} en las últimas 24h`);
+                // Aquí podrías enviar notificación por email, Slack, etc.
+            }
+            
+        } catch (error) {
+            console.error('Error procesando métricas:', error);
+        }
+    }
+    
+    /**
+     * Obtiene estadísticas de eventos de Sentry
+     */
+    async getSentryStats(timeRange = '24h') {
+        try {
+            const now = new Date();
+            let startDate;
+            
+            switch (timeRange) {
+                case '1h':
+                    startDate = new Date(now.getTime() - 60 * 60 * 1000);
+                    break;
+                case '24h':
+                    startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                    break;
+                case '7d':
+                    startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    break;
+                default:
+                    startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            }
+            
+            const stats = await Log.aggregate([
+                {
+                    $match: {
+                        source: { $in: ['sentry', 'sentry-transaction'] },
+                        timestamp: { $gte: startDate }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            level: '$level',
+                            category: '$category',
+                            source: '$source'
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $sort: { count: -1 }
+                }
+            ]);
+            
+            return stats;
+            
+        } catch (error) {
+            console.error('Error obteniendo estadísticas de Sentry:', error);
+            throw error;
+        }
     }
 }
 
-// Funciones auxiliares
-function mapSentryStatus(sentryEvent) {
-    // Mapear estados de Sentry a tus estados
-    const statusMap = {
-        'unresolved': 'unresolved',
-        'resolved': 'resolved',
-        'ignored': 'ignored'
-    };
-    return statusMap[sentryEvent.status] || 'unresolved';
-}
-
-function getTagValue(tags, key) {
-    const tag = tags?.find(([tagKey]) => tagKey === key);
-    return tag ? tag[1] : null;
-}
-
-function generateShortId(sentryEvent) {
-    // Generar un ID corto basado en el issue_id o crear uno
-    return `JS-${sentryEvent.issue_id.slice(-6).toUpperCase()}`;
-}
-
-// 4. Evaluación y creación de incidencia
-async function evaluateAndCreateIncident(sentryEvent, eventRecord, triggeredRule) {
-    // Reglas para determinar si crear incidencia
-    const shouldCreateIncident = (
-        sentryEvent.level === 'error' || sentryEvent.level === 'fatal'
-    ) && (
-            sentryEvent.exception?.values?.[0]?.mechanism?.handled === false
-        ) && (
-            triggeredRule !== null // Se disparó una regla de alerta
-        );
-
-    if (!shouldCreateIncident) {
-        return null;
-    }
-
-    // Verificar si ya existe incidencia para este evento
-    let existingIncident = await findIncidentByEventId(eventRecord.id);
-    if (existingIncident) {
-        return existingIncident;
-    }
-
-    // Crear nueva incidencia
-    const incidentData = {
-        id: generateId(),
-        code: await generateIncidentCode(),
-        title: sentryEvent.title,
-        event_id: eventRecord.id,
-        state_id: await getStateIdByName('new'),
-        category_id: await getCategoryByLevel(sentryEvent.level),
-        created_by: await getSystemUserId(),
-        tags: extractIncidentTags(sentryEvent),
-        created_at: new Date()
-    };
-
-    const incident = await createIncident(incidentData);
-
-    // Crear entrada en historial
-    await createHistorialEstado({
-        incidencia_id: incident.id,
-        by: incidentData.created_by,
-        from_id: null,
-        to_id: incidentData.state_id,
-        note: `Incidencia creada automáticamente desde regla: ${triggeredRule}`,
-        at: new Date()
-    });
-
-    return incident;
-}
-
-function extractIncidentTags(sentryEvent) {
-    const tags = [];
-
-    // Extraer tags útiles del evento
-    if (sentryEvent.platform) tags.push(`platform:${sentryEvent.platform}`);
-    if (sentryEvent.level) tags.push(`level:${sentryEvent.level}`);
-
-    const environment = getTagValue(sentryEvent.tags, 'environment');
-    if (environment) tags.push(`env:${environment}`);
-
-    const browser = getTagValue(sentryEvent.tags, 'browser.name');
-    if (browser) tags.push(`browser:${browser}`);
-
-    return tags;
-}
+module.exports = new SentryService();

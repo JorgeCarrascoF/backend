@@ -1,104 +1,300 @@
-// const { processSentryWebhook } = require('../services/sentryProcessor');
-// const Sentry = require('@sentry/node');
+// ============================================
+// controllers/sentryController.js
+// Controlador para manejar estadísticas y consultas de Sentry
+// ============================================
+const sentryService = require('../services/sentryService');
+const Sentry = require('../instrument');
 
-// async function handleSentryWebhook(req, res) {
-//     try {
-//         console.log('=== WEBHOOK SENTRY RECIBIDO ===');
-//         console.log('Action:', req.body.action);
-//         console.log('Event ID:', req.body.data?.event?.event_id);
-//         console.log('Issue ID:', req.body.data?.event?.issue_id);
-
-//         // Verificar que sea el tipo de webhook que manejamos
-//         if (req.body.action !== 'triggered' || !req.body.data?.event) {
-//             console.log('Webhook ignorado - tipo no soportado');
-//             return res.status(200).json({
-//                 message: 'Webhook received but not processed - unsupported type'
-//             });
-//         }
-
-//         // Procesar el webhook
-//         const result = await processSentryWebhook(req.body);
-
-//         console.log('=== PROCESAMIENTO COMPLETADO ===');
-//         console.log('Proyecto:', result.project?.name);
-//         console.log('Evento ID:', result.event?.id);
-//         console.log('Incidencia creada:', result.incident ? 'SÍ' : 'NO');
-
-//         res.status(200).json({
-//             success: true,
-//             processed: {
-//                 project_id: result.project.id,
-//                 event_id: result.event.id,
-//                 incident_created: !!result.incident,
-//                 incident_code: result.incident?.code || null
-//             }
-//         });
-
-//     } catch (error) {
-//         console.error('=== ERROR EN WEBHOOK ===', error);
-
-//         // Enviar el error del webhook también a Sentry
-//         Sentry.captureException(error, {
-//             tags: {
-//                 section: 'webhook-processing',
-//                 webhook_type: 'sentry'
-//             },
-//             extra: {
-//                 webhook_payload: req.body,
-//                 error_message: error.message
-//             }
-//         });
-
-//         res.status(500).json({
-//             error: 'Error processing webhook',
-//             message: error.message
-//         });
-//     }
-// }
-
-// module.exports = {
-//     handleSentryWebhook
-// };
-
-const crypto = require('crypto?');
-const Log = require('../models/log');
-
-const receiveSentryLog = async (req, res) => {
+/**
+ * Obtiene estadísticas de eventos de Sentry
+ */
+const getSentryStats = async (req, res) => {
     try {
-        const signature = req.headers['sentry web hook?'];
-        const secret = process.env.SENTRY_WEBHOOK_SECRET;
-
-        // Validar secret
-        if (signature !== secret) {
-            return res.status(403).json({ msg: 'Firma inválida. Acceso denegado.' });
+        const { timeRange = '24h' } = req.query;
+        
+        // Validar timeRange
+        const validTimeRanges = ['1h', '24h', '7d', '30d'];
+        if (!validTimeRanges.includes(timeRange)) {
+            return res.status(400).json({
+                success: false,
+                message: 'TimeRange inválido. Valores permitidos: 1h, 24h, 7d, 30d'
+            });
         }
 
-        const sentryEventId = req.body.data?.event?.event_id;
-        if (!sentryEventId) {
-            return res.status(400).json({ msg: 'No se recibió sentry_event_id válido.' });
-        }
-
-        const newLog = await Log.create({
-            sentry_event_id: sentryEventId,
-            message: req.body.data.event.title,
-            link_sentry: req.body.data.event.web_url,
-            culprit: req.body.data.event.culprit,
-            filename: req.body.data.event.location,
-            function_name: req.body.data.event.metadata?.function,
-            error_type: req.body.data.event.type,
-            environment: req.body.data.event.environment,
-            affected_user_ip: req.body.data.event.user?.ip_address,
-            sentry_timestamp: req.body.data.event.timestamp,
-            status: 'unresolved',
-            json_sentry: req.body
+        const stats = await sentryService.getSentryStats(timeRange);
+        
+        res.status(200).json({
+            success: true,
+            timeRange,
+            data: stats,
+            timestamp: new Date()
         });
 
-        return res.status(201).json({ msg: 'Log recibido y guardado correctamente', log: newLog });
-
-    } catch (err) {
-        console.error('Error al recibir log de Sentry:', err);
-        return res.status(500).json({ msg: 'Error procesando el log de Sentry', error: err.message });
+    } catch (error) {
+        Sentry.captureException(error);
+        console.error('Error obteniendo estadísticas de Sentry:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo estadísticas de Sentry',
+            error: error.message
+        });
     }
 };
 
-module.exports = { receiveSentryLog };
+/**
+ * Obtiene eventos de Sentry por categoría
+ */
+const getSentryEventsByCategory = async (req, res) => {
+    try {
+        const { category, limit = 50, page = 1 } = req.query;
+        
+        // Validar categoría
+        const validCategories = ['database', 'authentication', 'validation', 'authorization', 'general', 'performance'];
+        if (category && !validCategories.includes(category)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Categoría inválida',
+                validCategories
+            });
+        }
+
+        const Log = require('../models/log');
+        const query = { source: { $in: ['sentry', 'sentry-transaction'] } };
+        
+        if (category) {
+            query.category = category;
+        }
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const events = await Log.find(query)
+            .sort({ timestamp: -1 })
+            .skip(skip)
+            .limit(parseInt(limit))
+            .select('-__v');
+
+        const total = await Log.countDocuments(query);
+
+        res.status(200).json({
+            success: true,
+            category: category || 'all',
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            },
+            data: events
+        });
+
+    } catch (error) {
+        Sentry.captureException(error);
+        console.error('Error obteniendo eventos de Sentry por categoría:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo eventos de Sentry',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Obtiene eventos de Sentry por nivel de severidad
+ */
+const getSentryEventsByLevel = async (req, res) => {
+    try {
+        const { level, limit = 50, page = 1 } = req.query;
+        
+        // Validar nivel
+        const validLevels = ['fatal', 'error', 'warn', 'info', 'debug'];
+        if (level && !validLevels.includes(level)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Nivel inválido',
+                validLevels
+            });
+        }
+
+        const Log = require('../models/log');
+        const query = { source: { $in: ['sentry', 'sentry-transaction'] } };
+        
+        if (level) {
+            query.level = level;
+        }
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const events = await Log.find(query)
+            .sort({ timestamp: -1 })
+            .skip(skip)
+            .limit(parseInt(limit))
+            .select('-__v');
+
+        const total = await Log.countDocuments(query);
+
+        res.status(200).json({
+            success: true,
+            level: level || 'all',
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            },
+            data: events
+        });
+
+    } catch (error) {
+        Sentry.captureException(error);
+        console.error('Error obteniendo eventos de Sentry por nivel:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo eventos de Sentry',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Obtiene resumen de eventos de Sentry
+ */
+const getSentrySummary = async (req, res) => {
+    try {
+        const Log = require('../models/log');
+        
+        // Estadísticas generales
+        const totalEvents = await Log.countDocuments({ 
+            source: { $in: ['sentry', 'sentry-transaction'] } 
+        });
+        
+        const totalErrors = await Log.countDocuments({ 
+            source: { $in: ['sentry', 'sentry-transaction'] },
+            level: { $in: ['error', 'fatal'] }
+        });
+        
+        const totalWarnings = await Log.countDocuments({ 
+            source: { $in: ['sentry', 'sentry-transaction'] },
+            level: 'warn'
+        });
+
+        // Eventos de las últimas 24h
+        const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const eventsLast24h = await Log.countDocuments({
+            source: { $in: ['sentry', 'sentry-transaction'] },
+            timestamp: { $gte: last24h }
+        });
+
+        const errorsLast24h = await Log.countDocuments({
+            source: { $in: ['sentry', 'sentry-transaction'] },
+            level: { $in: ['error', 'fatal'] },
+            timestamp: { $gte: last24h }
+        });
+
+        // Eventos por categoría
+        const eventsByCategory = await Log.aggregate([
+            {
+                $match: {
+                    source: { $in: ['sentry', 'sentry-transaction'] }
+                }
+            },
+            {
+                $group: {
+                    _id: '$category',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            }
+        ]);
+
+        // Eventos por nivel
+        const eventsByLevel = await Log.aggregate([
+            {
+                $match: {
+                    source: { $in: ['sentry', 'sentry-transaction'] }
+                }
+            },
+            {
+                $group: {
+                    _id: '$level',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            summary: {
+                total: {
+                    events: totalEvents,
+                    errors: totalErrors,
+                    warnings: totalWarnings
+                },
+                last24h: {
+                    events: eventsLast24h,
+                    errors: errorsLast24h
+                },
+                byCategory: eventsByCategory,
+                byLevel: eventsByLevel
+            },
+            timestamp: new Date()
+        });
+
+    } catch (error) {
+        Sentry.captureException(error);
+        console.error('Error obteniendo resumen de Sentry:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo resumen de Sentry',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Obtiene un evento específico de Sentry por ID
+ */
+const getSentryEventById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const Log = require('../models/log');
+        const event = await Log.findOne({
+            _id: id,
+            source: { $in: ['sentry', 'sentry-transaction'] }
+        });
+
+        if (!event) {
+            return res.status(404).json({
+                success: false,
+                message: 'Evento de Sentry no encontrado'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: event
+        });
+
+    } catch (error) {
+        Sentry.captureException(error);
+        console.error('Error obteniendo evento de Sentry por ID:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error obteniendo evento de Sentry',
+            error: error.message
+        });
+    }
+};
+
+module.exports = {
+    getSentryStats,
+    getSentryEventsByCategory,
+    getSentryEventsByLevel,
+    getSentrySummary,
+    getSentryEventById
+};
