@@ -1,4 +1,4 @@
-const Event = require('../models/event');
+/*const Event = require('../models/event');
 
 const getAllEvents = async (filters, pagination) => {
     const { limit, skip } = pagination;
@@ -105,3 +105,4 @@ module.exports = {
     updateEvent,
     deleteEvent
 };
+*/

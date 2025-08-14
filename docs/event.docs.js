@@ -1,5 +1,5 @@
 /**
- * @swagger
+ * //@swagger
  * components:
  *   schemas:
  *     Event:
@@ -51,7 +51,7 @@
  */
 
 /**
- * @swagger
+ * //@swagger
  * /events:
  *   get:
  *     summary: Obtener todos los Eventos (con filtros y paginación)
@@ -118,7 +118,7 @@
  */
 
 /**
- * @swagger
+ * //@swagger
  * /events/{id}:
  *   get:
  *     summary: Obtener un Evento por ID
@@ -143,7 +143,7 @@
  */
 
 /**
- * @swagger
+ * //@swagger
  * /events:
  *   post:
  *     summary: Crear un nuevo Evento
@@ -164,7 +164,7 @@
  */
 
 /**
- * @swagger
+ * //@swagger
  * /events/{id}:
  *   patch:
  *     summary: Actualizar un Evento existente
@@ -191,7 +191,7 @@
  */
 
 /**
- * @swagger
+ * //@swagger
  * /events/{id}:
  *   delete:
  *     summary: Eliminar un Evento
