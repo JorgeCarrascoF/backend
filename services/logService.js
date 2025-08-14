@@ -1,7 +1,7 @@
 const Log = require('../models/log');
 
 const getAllLogs = async (filters, pagination) => {
-    const { limit, skip, sortBy = 'sentry_timestamp', sortOrder = 'desc' } = pagination;
+    const { limit, skip } = pagination;
     const query = {};
 
     if (filters.search) {
@@ -25,16 +25,11 @@ const getAllLogs = async (filters, pagination) => {
             if (filters[field]) query[field] = filters[field];
         });
 
-    // Determinar el orden de clasificación
-    const sort = {};
-    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
-
     const logs = await Log.find(query)
         .populate('userId', 'username email')
         .skip(skip)
         .limit(limit)
-        .sort(sort);
-  
+        .sort({ created_at: -1 });
     const totalLogs = await Log.countDocuments(query);
 
     return {
@@ -57,7 +52,6 @@ const getAllLogs = async (filters, pagination) => {
         total: totalLogs
     };
 };
-
 
 const getLogById = async (id) => {
     const log = await Log.findById(id)
