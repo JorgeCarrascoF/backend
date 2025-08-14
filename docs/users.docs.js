@@ -23,7 +23,7 @@
  *           type: string
  *         role:
  *           type: string
- *           enum: [admin, user]
+ *           enum: ['superadmin', 'admin', 'user']
  *         roleInfo:
  *           type: object
  *           properties:
@@ -72,7 +72,7 @@
  *     summary: Obtener usuarios filtrados con paginación
  *     description: >
  *       Retorna usuarios según filtros avanzados (username, email, role, estado), con paginación.  
- *       Solo accesible para roles distintos de `user` (admin).
+ *       Solo accesible para roles distintos de `user` (superadmin y admin).
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -104,7 +104,7 @@
  *         name: role
  *         schema:
  *           type: string
- *           enum: [admin, user]
+ *           enum: ['superadmin', 'admin', 'user']
  *         description: Filtrar por rol exacto
  *       - in: query
  *         name: isActive

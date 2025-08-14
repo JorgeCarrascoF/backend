@@ -1,6 +1,6 @@
 const logService = require('../services/logService');
 
-const rolAdmin = 'admin';
+const rolAdmin = ['superadmin', 'admin'];
 
 const getAllLogs = async (req, res) => {
     try {
@@ -8,7 +8,7 @@ const getAllLogs = async (req, res) => {
         console.log('- Usuario en req:', req.user);
         console.log('- Rol del usuario:', req.user?.role);
 
-        const roles = ['admin', 'user'];
+        const roles = ['superadmin', 'admin', 'user'];
         if (!roles.includes(req.user.role)) {
             return res.status(403).json({
                 msg: 'Acceso denegado. Se requiere rol de administrador, desarrollador o QA.',
@@ -45,7 +45,7 @@ const getLogById = async (req, res) => {
         console.log('- Usuario solicitante:', req.user);
         console.log('- ID solicitado:', req.params.id);
 
-        const roles = ['admin', 'user'];
+        const roles = ['superadmin', 'admin', 'user'];
         if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
             return res.status(403).json({
                 msg: 'Acceso denegado.',
