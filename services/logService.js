@@ -45,7 +45,7 @@ const getAllLogs = async (filters, pagination) => {
           priority: log.priority,
           assigned_to: log.assigned_to,
           created_at: log.created_at,
-          lst_aseen_at: log.lst_aseen_at,
+          last_seen_at: log.last_seen_at,
           count: log.count,
           active: log.active,
         })),
@@ -72,7 +72,7 @@ const getLogById = async (id) => {
         priority: log.priority,
         assigned_to: log.assigned_to,
         created_at: log.created_at,
-        lst_aseen_at: log.lst_aseen_at,
+        last_seen_at: log.last_seen_at,
         count: log.count,
         active: log.active,
     };
