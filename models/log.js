@@ -27,11 +27,11 @@ const logSchema = new mongoose.Schema({
     },
     environment: {
         type: String,
-        enum: ['staging', 'development', 'production']
+        enum: ['testing', 'development', 'production']
     },
     status: {
         type: String,
-        enum: ['unresolved', 'solved'],
+        enum: ['unresolved', 'in review', 'solved'],
         default: 'unresolved'
     },
     priority: {
