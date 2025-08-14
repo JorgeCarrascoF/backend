@@ -14,8 +14,7 @@ const getAllLogs = async (filters, pagination) => {
             { environment: { $regex: filters.search, $options: 'i' } },
             { status: { $regex: filters.search, $options: 'i' } },
             { priority: { $regex: filters.search, $options: 'i' } },
-            { assigned_to: { $regex: filters.search, $options: 'i' } },
-            { active: { $regex: filters.search, $options: 'i' } },
+            { assigned_to: { $regex: filters.search, $options: 'i' } }
         ];
     }
 
