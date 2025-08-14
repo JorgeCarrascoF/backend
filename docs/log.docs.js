@@ -30,11 +30,11 @@
  *           description: Tipo de error
  *         environment:
  *           type: string
- *           enum: ['staging', 'development', 'production']
+ *           enum: ['testing', 'development', 'production']
  *           description: Entorno de ejecución
  *         status:
  *           type: string
- *           enum: ['unresolved', 'solved']
+ *           enum: ['unresolved', 'in review', 'solved']
  *           description: Estado del log
  *         priority:
  *           type: string
@@ -105,13 +105,13 @@
  *         name: environment
  *         schema:
  *           type: string
- *           enum: ['staging', 'development', 'production']
+ *           enum: ['testing', 'development', 'production']
  *         description: Entorno de ejecución
  *       - in: query
  *         name: status
  *         schema:
  *           type: string
- *           enum: ['unresolved', 'solved']
+ *           enum: ['unresolved', 'in review', 'solved']
  *         description: Estado del log
  *       - in: query
  *         name: priority

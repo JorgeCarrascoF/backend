@@ -45,7 +45,7 @@ const options = {
             fullName: { type: 'string', description: 'Nombre completo del usuario' },
             username: { type: 'string', description: 'Nombre de usuario' },
             email: { type: 'string', format: 'email', description: 'Correo electrónico' },
-            role: { type: 'string', enum: ['admin', 'user'], description: 'Rol del usuario' },
+            role: { type: 'string', enum: ['superadmin', 'admin', 'user'], description: 'Rol del usuario' },
             roleId: { type: 'string', description: 'ID del rol asignado' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
@@ -96,17 +96,17 @@ const options = {
             },
             environment: {
               type: 'string',
-              enum: ['staging', 'development', 'production'],
+              enum: ['testing', 'development', 'production'],
               description: 'Entorno de ejecución'
             },
             status: {
               type: 'string',
-              enum: ['unresolved', 'solved'],
+              enum: ['unresolved', 'in review', 'solved'],
               description: 'Estado del log'
             },
             description: {
               type: 'string',
-              description: 'Estado del log'
+              description: 'Descripción detallada'
             },
             priority: {
               type: 'string',

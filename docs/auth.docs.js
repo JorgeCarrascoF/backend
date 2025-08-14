@@ -40,7 +40,7 @@
  *                 example: "123456"
  *               role:
  *                 type: string
- *                 enum: [admin, user]
+ *                 enum: ['superadmin', 'admin', 'user']
  *                 example: "user"
  *     responses:
  *       201:
