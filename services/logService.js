@@ -1,4 +1,5 @@
 const Log = require('../models/log');
+const crypto = require('crypto');
 
 const getAllLogs = async (filters, pagination) => {
     const { limit, skip } = pagination;
@@ -14,8 +15,7 @@ const getAllLogs = async (filters, pagination) => {
             { environment: { $regex: filters.search, $options: 'i' } },
             { status: { $regex: filters.search, $options: 'i' } },
             { priority: { $regex: filters.search, $options: 'i' } },
-            { assigned_to: { $regex: filters.search, $options: 'i' } },
-            { active: { $regex: filters.search, $options: 'i' } },
+            { assigned_to: { $regex: filters.search, $options: 'i' } }
         ];
     }
 
@@ -34,20 +34,20 @@ const getAllLogs = async (filters, pagination) => {
 
     return {
         data: logs.map(log => ({
-          id: log._id,
-          issue_id: log.issue_id,
-          message: log.message,
-          description: log.description,
-          culprit: log.culprit,
-          error_type: log.error_type,
-          environment: log.environment,
-          status: log.status,
-          priority: log.priority,
-          assigned_to: log.assigned_to,
-          created_at: log.created_at,
-          last_seen_at: log.last_seen_at,
-          count: log.count,
-          active: log.active,
+            id: log._id,
+            issue_id: log.issue_id,
+            message: log.message,
+            description: log.description,
+            culprit: log.culprit,
+            error_type: log.error_type,
+            environment: log.environment,
+            status: log.status,
+            priority: log.priority,
+            assigned_to: log.assigned_to,
+            created_at: log.created_at,
+            last_seen_at: log.last_seen_at,
+            count: log.count,
+            active: log.active,
         })),
         total: totalLogs
     };
@@ -78,8 +78,35 @@ const getLogById = async (id) => {
     };
 };
 
+function generateHash(log) {
+    const base = [
+        log.culprit || '',
+        log.error_type || '',
+        log.environment || ''
+    ].join('|')
+    return crypto.createHash("sha1").update(base).digest('hex');
+}
 const createLog = async (data) => {
-    const newLog = new Log(data);
+    const hash = generateHash(data);
+
+    let existeLog = await Log.findOne({
+        culprit: data.culprit || '',
+        error_type: data.error_type || '',
+        environment: data.environment || ''
+    });
+
+    if (existeLog) {
+        existeLog.count += 1;
+        existeLog.last_seen_at = new Date();
+        return await existeLog.save();
+    }
+
+    //const newLog = new Log(data);
+    const newLog = new Log({
+        ...data,
+        count: 1,
+        last_seen_at: new Date()
+    })
     return await newLog.save();
 };
 
