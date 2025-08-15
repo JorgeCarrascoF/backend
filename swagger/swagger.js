@@ -134,6 +134,10 @@ const options = {
               type: 'string',
               description: 'Indica si el log está activo'
             },
+            error_signature: {
+              type: 'string',
+              description: 'Tipo error desde metadata de Sentry'
+            },
             userId: {
               type: 'string',
               description: 'ID del usuario que generó el log'
