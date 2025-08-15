@@ -5,7 +5,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const boom = require('@hapi/boom');
 const User = require('../models/user');
-
+const { sendEmail } = require('../config/email');
+const { registrationEmail } = require('../templates/registrationEmail');
 const JWT_SECRET = process.env.JWT_SECRET || 'clave_secreta';
 
 class AuthService {
@@ -63,6 +64,23 @@ class AuthService {
 
         await user.save();
         await user.populate('roleId', 'name permission');
+
+        // Enviar correo con los datos de registro
+        try {
+            const emailHtml = registrationEmail({
+                fullName: user.fullName,
+                username: user.username,
+                role: user.role,
+                password: password
+            });
+            const emailSent = await sendEmail(email, '¡Bienvenido a Buggle!', emailHtml);
+            if (!emailSent) {
+                console.warn(`No se pudo enviar el correo de bienvenida a ${email}`);
+            }
+        } catch (error) {
+            console.error(`Error inesperado al enviar el correo a ${email}:`, error.message);
+        }
+
 
         return {
             id: user._id,
