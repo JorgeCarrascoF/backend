@@ -87,23 +87,27 @@ function generateHash(log) {
     return crypto.createHash("sha1").update(base).digest('hex');
 }
 const createLog = async (data) => {
+
+    let errorSignature = data.error_signature;
+    if (!errorSignature && data.json_sentry?.metadata?.type) {
+        errorSignature = data.json_sentry.metadata.type;
+    }
+
     const hash = generateHash(data);
 
-    let existeLog = await Log.findOne({
-        culprit: data.culprit || '',
-        error_type: data.error_type || '',
-        environment: data.environment || ''
-    });
+    let existeLog = await Log.findOne({ hash });
 
     if (existeLog) {
         existeLog.count += 1;
         existeLog.last_seen_at = new Date();
-        return await existeLog.save();
+        //return await existeLog.save();
+        return { ...existeLog.toObject(), update: true }
     }
 
     //const newLog = new Log(data);
     const newLog = new Log({
         ...data,
+        hash,
         count: 1,
         last_seen_at: new Date()
     })

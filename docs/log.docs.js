@@ -57,6 +57,9 @@
  *         active:
  *           type: boolean
  *           description: Indica si el log está activo (para borrado lógico)
+ *         hash:
+ *           type:string
+ *           description: Identificador único generado por culprit, error_type, y environment
  *         json_sentry:
  *           type: object
  *           description: Payload completo de Sentry
@@ -129,6 +132,11 @@
  *         schema:
  *           type: boolean
  *         description: Filtrar por logs activos/inactivos
+ *       - in: query
+ *         name: hash
+ *         schema:
+ *           type: string
+ *         description: Identificador único generado por culprit, error_type, y environment
  *     responses:
  *       200:
  *         description: Logs retrieved successfully

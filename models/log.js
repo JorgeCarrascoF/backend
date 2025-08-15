@@ -1,3 +1,4 @@
+const { required } = require('joi');
 const mongoose = require('mongoose');
 
 const logSchema = new mongoose.Schema({
@@ -61,6 +62,14 @@ const logSchema = new mongoose.Schema({
         default: true
     },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    hash: {
+        type: String,
+        unique: true,
+        required: true
+    },
+    error_signature: {
+        type: String
+    },
     json_sentry: { type: Object }
     ,
 },
