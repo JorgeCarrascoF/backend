@@ -69,10 +69,6 @@ const options = {
           type: 'object',
           required: ['issue_id', 'message', 'created_at', 'active', 'userId'],
           properties: {
-            _id: {
-              type: 'string',
-              description: 'ID único del log'
-            },
             issue_id: {
               type: 'string',
               description: 'ID único del incidente'
@@ -116,16 +112,6 @@ const options = {
               type: 'string',
               description: 'Usuario asignado para resolver el log'
             },
-            created_at: {
-              type: 'string',
-              format: 'date-time',
-              description: 'Fecha y hora en que se registró el log'
-            },
-            last_seen_at: {
-              type: 'string',
-              format: 'date-time',
-              description: 'Última vez que se detectó este incidente'
-            },
             count: {
               type: 'string',
               description: 'Número de veces que ha ocurrido este incidente'
@@ -137,10 +123,6 @@ const options = {
             error_signature: {
               type: 'string',
               description: 'Tipo error desde metadata de Sentry'
-            },
-            userId: {
-              type: 'string',
-              description: 'ID del usuario que generó el log'
             }
           }
         },

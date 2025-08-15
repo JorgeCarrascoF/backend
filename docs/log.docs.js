@@ -100,11 +100,6 @@
  *           type: string
  *         description: Filtrar por mensaje de log
  *       - in: query
- *         name: message
- *         schema:
- *           type: string
- *         description: Filtrar por mensaje de log
- *       - in: query
  *         name: environment
  *         schema:
  *           type: string
@@ -132,11 +127,6 @@
  *         schema:
  *           type: boolean
  *         description: Filtrar por logs activos/inactivos
- *       - in: query
- *         name: hash
- *         schema:
- *           type: string
- *         description: Identificador único generado por culprit, error_type, y environment
  *     responses:
  *       200:
  *         description: Logs retrieved successfully
