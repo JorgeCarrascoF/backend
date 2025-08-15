@@ -6,10 +6,8 @@
  *       type: object
  *       required:
  *         - message
- *         - event_id
  *         - sentry_timestamp
  *         - created_at
- *         - userId
  *       properties:
  *         _id:
  *           type: string
@@ -59,198 +57,33 @@
  *           description: Comentarios de los usuarios
  *         status:
  *           type: string
- *           enum: ['unresolved', 'solved'],
+ *           enum: ['unresolved', 'solved']
  *           description: Estado del log
  *         userId:
  *           type: string
  *           description: ID del usuario que generó el log
- */
-
-/**
- * @swagger
- * /logs:
- *   get:
- *     summary: Obtener todos los Logs (con filtros y paginación)
- *     tags: [Logs]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *       - in: query
- *         name: search
- *         schema:
+ *         // NUEVOS CAMPOS
+ *         source:
  *           type: string
- *         description: Búsqueda global por múltiples campos
- *       - in: query
- *         name: link_sentry
- *         schema:
+ *           enum: ['sentry', 'sentry-transaction', 'manual', 'system']
+ *           description: Fuente del log
+ *         level:
  *           type: string
- *         description: Enlace al error en Sentry
- *       - in: query
- *         name: culprit
- *         schema:
+ *           enum: ['fatal', 'error', 'warning', 'info', 'debug']
+ *           description: Nivel del log
+ *         category:
  *           type: string
- *         description: Causa principal del error
- *       - in: query
- *         name: filename
- *         schema:
+ *           enum: ['database', 'authentication', 'validation', 'authorization', 'performance', 'general']
+ *           description: Categoría del log
+ *         severity:
  *           type: string
- *         description: Nombre del archivo donde ocurrió el error
- *       - in: query
- *         name: function_name
- *         schema:
+ *           enum: ['critical', 'high', 'medium', 'low']
+ *           description: Severidad del log
+ *         metadata:
+ *           type: object
+ *           description: Metadatos adicionales del evento
+ *         timestamp:
  *           type: string
- *         description: Función donde ocurrió el error
- *       - in: query
- *         name: error_type
- *         schema:
- *           type: string
- *           enum: ['error', 'warning', 'info']
- *         description: Tipo de error
- *       - in: query
- *         name: environment
- *         schema:
- *           type: string
- *           enum: ['staging', 'development', 'production']
- *         description: Entorno de ejecución
- *       - in: query
- *         name: comments
- *         schema:
- *           type: string
- *         description: Comentarios de los usuarios
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: ['unresolved', 'solved']
- *         description: Estado del log
- *     responses:
- *       200:
- *         description: Lista de Logs obtenida correctamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 page:
- *                   type: integer
- *                 limit:
- *                   type: integer
- *                 total:
- *                   type: integer
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Log'
- *       401:
- *         description: Token no proporcionado o inválido
- *       403:
- *         description: Acceso denegado
- *       500:
- *         description: Error del servidor
- */
-
-/**
- * @swagger
- * /logs/{id}:
- *   get:
- *     summary: Obtener un Log por ID
- *     tags: [Logs]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Log encontrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Log'
- *       404:
- *         description: Log no encontrado
- */
-
-/**
- * @swagger
- * /logs:
- *   post:
- *     summary: Crear un nuevo log
- *     tags: [Logs]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Log'
- *     responses:
- *       201:
- *         description: Log creado exitosamente
- *       400:
- *         description: Datos inválidos
- */
-
-/**
- * @swagger
- * /logs/{id}:
- *   patch:
- *     summary: Actualizar un log existente
- *     tags: [Logs]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Log'
- *     responses:
- *       200:
- *         description: Log actualizado
- *       404:
- *         description: Log no encontrado
- */
-
-/**
- * @swagger
- * /logs/{id}:
- *   delete:
- *     summary: Eliminar un log
- *     tags: [Logs]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Log eliminado
- *       404:
- *         description: Log no encontrado
+ *           format: date-time
+ *           description: Timestamp del evento
  */

@@ -1,18 +1,8 @@
 // Import with `import * as Sentry from "@sentry/node"` if you are using ESM
 const Sentry = require("@sentry/node");
-const Tracing = require("@sentry/tracing");
 
 Sentry.init({
     dsn: "https://a65bc44a10076d753ea318403e0cb269@o4509827685220352.ingest.us.sentry.io/4509827686400000",
-    
-    // Configuración de tracing
-    integrations: [
-        new Tracing.Integrations.Express({ app: require('./app') }),
-    ],
-    
-    // Configuración de muestreo
-    tracesSampleRate: 0.1, // 10% de las transacciones
-    sendDefaultPii: true,
     
     // Configuración de entorno
     environment: process.env.NODE_ENV || 'development',

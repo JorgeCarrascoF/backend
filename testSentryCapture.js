@@ -58,9 +58,10 @@ async function testSentryCapture() {
         console.log(`📊 Logs de Sentry encontrados: ${sentryLogs.length}`);
         
         sentryLogs.forEach((log, index) => {
-            console.log(`  ${index + 1}. [${log.level.toUpperCase()}] ${log.message}`);
-            console.log(`     Categoría: ${log.category} | Severidad: ${log.severity}`);
-            console.log(`     Fuente: ${log.source} | Timestamp: ${log.timestamp.toLocaleString()}`);
+            console.log(`  ${index + 1}. [${log.level?.toUpperCase() || log.error_type?.toUpperCase() || 'UNKNOWN'}] ${log.message}`);
+            console.log(`     Categoría: ${log.category || 'N/A'} | Severidad: ${log.severity || 'N/A'}`);
+            console.log(`     Fuente: ${log.source || 'N/A'} | Timestamp: ${(log.timestamp || log.sentry_timestamp || log.created_at).toLocaleString()}`);
+            console.log(`     Event ID: ${log.sentry_event_id || 'N/A'}`);
             console.log('');
         });
 
@@ -85,7 +86,7 @@ async function testSentryCapture() {
 
         console.log('📈 Eventos por categoría:');
         statsByCategory.forEach(stat => {
-            console.log(`  ${stat._id}: ${stat.count} eventos`);
+            console.log(`  ${stat._id || 'Sin categoría'}: ${stat.count} eventos`);
         });
 
         // 6. Verificar estadísticas por nivel
@@ -109,7 +110,7 @@ async function testSentryCapture() {
 
         console.log('📊 Eventos por nivel:');
         statsByLevel.forEach(stat => {
-            console.log(`  ${stat._id}: ${stat.count} eventos`);
+            console.log(`  ${stat._id || 'Sin nivel'}: ${stat.count} eventos`);
         });
 
         // 7. Verificar que los metadatos se guardaron correctamente
@@ -117,11 +118,29 @@ async function testSentryCapture() {
         if (sentryLogs.length > 0) {
             const sampleLog = sentryLogs[0];
             console.log('📋 Muestra de metadatos:');
-            console.log('  - EventId:', sampleLog.metadata?.eventId || 'N/A');
+            console.log('  - EventId:', sampleLog.sentry_event_id || 'N/A');
             console.log('  - Platform:', sampleLog.metadata?.platform || 'N/A');
             console.log('  - Tags:', Object.keys(sampleLog.metadata?.tags || {}).length, 'tags');
-            console.log('  - Raw data:', sampleLog.metadata?.raw ? '✅ Disponible' : '❌ No disponible');
+            console.log('  - Raw data:', sampleLog.json_sentry ? '✅ Disponible' : '❌ No disponible');
+            console.log('  - Culprit:', sampleLog.culprit || 'N/A');
+            console.log('  - Filename:', sampleLog.filename || 'N/A');
+            console.log('  - Function:', sampleLog.function_name || 'N/A');
         }
+
+        // 8. Verificar compatibilidad con campos antiguos
+        console.log('\n8️⃣ Verificando compatibilidad con campos antiguos...');
+        const oldFieldLogs = await Log.find({
+            $or: [
+                { error_type: { $exists: true } },
+                { sentry_timestamp: { $exists: true } },
+                { sentry_event_id: { $exists: true } }
+            ]
+        }).limit(5);
+
+        console.log(`📊 Logs con campos antiguos encontrados: ${oldFieldLogs.length}`);
+        oldFieldLogs.forEach((log, index) => {
+            console.log(`  ${index + 1}. error_type: ${log.error_type || 'N/A'}, sentry_timestamp: ${log.sentry_timestamp || 'N/A'}`);
+        });
 
         console.log('\n🎯 Prueba de captura automática completada exitosamente!');
         console.log('💡 Los eventos se han capturado automáticamente y guardado en la base de datos.');
