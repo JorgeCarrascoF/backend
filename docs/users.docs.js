@@ -259,15 +259,43 @@
  *               properties:
  *                 msg:
  *                   type: string
- *                   example: "Usuario actualizado."
+ *                   example: "Usuario actualizado exitosamente."
  *                 user:
  *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Error de validación (ej formato de email inválido)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "El email no es válido."
  *       401:
  *         description: Token no proporcionado o inválido
  *       403:
  *         description: Acceso denegado (solo admin o dueño del perfil)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "Acceso denegado para actualizar este usuario."
  *       404:
  *         description: Usuario no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "Usuario no encontrado."
+ *       409:
+ *         description: El email ya está en uso por otro usuario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "El email ya está en uso por otro usuario."
  *       500:
  *         description: Error del servidor
  */
@@ -322,4 +350,81 @@
  *         description: Usuario no encontrado
  *       500:
  *         description: Error del servidor
+ */
+
+/**
+ * @swagger
+ * /users/change-password:
+ *   post:
+ *     summary: Cambiar la contraseña del usuario actual
+ *     description: >
+ *       Permite al usuario autenticado cambiar su contraseña.
+ *       Se requiere proporcionar la contraseña actual y la nueva contraseña.
+ *       La nueva contraseña debe cumplir con los requisitos de seguridad.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *         description: Token JWT en formato "Bearer {token}"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: "Contraseña actual del usuario"
+ *               newPassword:
+ *                 type: string
+ *                 description: "Nueva contraseña del usuario"
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *           example:
+ *             currentPassword: "contraseña_antigua"
+ *             newPassword: "nueva_contraseña_segura"
+ *     responses:
+ *       200:
+ *         description: Contraseña cambiada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "Contraseña cambiada exitosamente."
+ *       400:
+ *         description: Error de validación o datos incorrectos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               currentPasswordIncorrect:
+ *                 value:
+ *                   msg: "La contraseña actual es incorrecta."
+ *               newPasswordInvalid:
+ *                 value:
+ *                   msg: "La nueva contraseña debe tener al menos 6 caracteres."
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */

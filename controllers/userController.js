@@ -2,6 +2,8 @@
 const userService = require('../services/userServices');
 const { updateUserSchema } = require('../validations/userSchema');
 const mongoose = require('mongoose');
+const Boom = require('@hapi/boom');
+const User = require('../models/user');
 
 // Las definiciones de Swagger no cambian, por lo que se omiten por brevedad...
 const Sentry = require('../instrument'); // Importar Sentry
@@ -60,8 +62,6 @@ const getUserById = async (req, res) => {
         }
 
         const user = await userService.getUserById(req.params.id);
-        res.status(200).json(user);
-
         // Enviar respuesta HTTP
         res.status(200).json(user);
     } catch (err) {
@@ -95,11 +95,6 @@ const updateUser = async (req, res) => {
             }
         }
 
-        const { error } = updateUserSchema.validate(updateData, { abortEarly: false });
-        if (error) {
-            return res.status(400).json({ msg: 'Error de validación', details: error.details.map(d => d.message) });
-        }
-
         // Solo superadmin puede cambiar roles
         if (req.user.role !== 'superadmin') {
             delete updateData.role;
@@ -114,12 +109,17 @@ const updateUser = async (req, res) => {
         });
 
     } catch (err) {
-        Sentry.captureException(err);
         console.error('Error en controller updateUser:', err);
-        if (err.message === 'Usuario no encontrado.') {
-            return res.status(404).json({ msg: err.message });
+        if (err.isBoom) { // Todos los errores ahora son Boom
+            return res.status(err.output.statusCode).json({
+                msg: err.output.payload.message,
+                details: err.data?.details,
+            });
         }
-        res.status(500).json({ msg: 'Error del servidor al actualizar el usuario', error: err.message });
+        // Error genérico (no debería ocurrir si todo está bien)
+        res.status(500).json({
+            msg: 'Error del servidor al actualizar el usuario',
+        });
     }
 };
 
@@ -152,9 +152,50 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const changePassword = async (req, res) => {
+    try {
+        const { id } = req.user;
+        const { currentPassword, newPassword } = req.body;
+
+        // Validar que se proporcionen las contraseñas
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ msg: 'Debe proporcionar la contraseña actual y la nueva contraseña.' });
+        }
+
+        // Validar que la nueva contraseña cumpla con los requisitos
+        const { error } = updateUserSchema.validate({ password: newPassword });
+        if (error) {
+            return res.status(400).json({ msg: error.details[0].message });
+        }
+
+        // Verificar que la contraseña actual es correcta
+        const user = await userService.getUserById(id);
+        const isMatch = await userService.comparePassword(currentPassword, id);
+        if (!isMatch) {
+            return res.status(400).json({ msg: 'La contraseña actual es incorrecta.' });
+        }
+
+        // Actualizar la contraseña
+        await userService.updatePassword(id, newPassword);
+
+        res.status(200).json({ msg: 'Contraseña cambiada exitosamente.' });
+
+    } catch (err) {
+        console.error('Error en controller changePassword:', err);
+        if (err.isBoom) {
+            return res.status(err.output.statusCode).json({
+                msg: err.output.payload.message,
+                details: err.data?.details,
+            });
+        }
+        res.status(500).json({ msg: 'Error del servidor al cambiar la contraseña', error: err.message });
+    }
+};
+
 module.exports = {
     getUsersByFilter,
     getUserById,
     updateUser,
     deleteUser,
+    changePassword,
 };
