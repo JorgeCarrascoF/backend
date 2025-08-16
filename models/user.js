@@ -60,18 +60,19 @@ userSchema.virtual('displayName').get(function () {
 userSchema.set('toJSON', { virtuals: true });
 
 // Middleware para hashear la contraseña antes de guardar
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) {
-        return next();
-    }
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (err) {
-        next(err);
-    }
-});
+// ¡Eliminado por dar error de doble hash al guardar la contraseña!
+// userSchema.pre('save', async function (next) {
+//     if (!this.isModified('password')) {
+//         return next();
+//     }
+//     try {
+//         const salt = await bcrypt.genSalt(10);
+//         this.password = await bcrypt.hash(this.password, salt);
+//         next();
+//     } catch (err) {
+//         next(err);
+//     }
+// });
 
 // Método para comparar contraseñas
 userSchema.methods.comparePassword = function (candidatePassword) {
