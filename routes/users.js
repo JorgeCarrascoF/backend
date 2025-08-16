@@ -2,9 +2,9 @@
 // routes/users.js (ACTUALIZADO)
 // ============================================
 const express = require('express');
-const { 
-    getAllUsers, 
-    getUserById, 
+const {
+    getAllUsers,
+    getUserById,
     updateUser,     // Importar nueva función
     deleteUser,      // Importar nueva función
     getUsersByFilter

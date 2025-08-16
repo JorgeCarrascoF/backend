@@ -58,7 +58,7 @@
  *           type: boolean
  *           description: Indica si el log está activo (para borrado lógico)
  *         hash:
- *           type:string
+ *           type: string
  *           description: Identificador único generado por culprit, error_type, y environment
  *         json_sentry:
  *           type: object

@@ -85,23 +85,20 @@ const updateUser = async (userId, updateData) => {
     // Validar con Joi
     const { error } = updateUserSchema.validate(updateData);
     if (error) {
-        const validationError = new Error('Error de validación');
-        validationError.statusCode = 400;
-        validationError.details = error.details.map((d) => ({
-            message: d.message,
-            path: d.path.join('.'),
-            type: d.type,
-        }));
-        throw validationError;
+        throw Boom.badRequest('Error de validación', {
+            details: error.details.map((d) => ({
+                message: d.message,
+                path: d.path.join('.'),
+                type: d.type,
+            })),
+        });
     }
 
     // Verificar email duplicado
     if (updateData.email) {
         const emailExists = await User.findOne({ email: updateData.email, _id: { $ne: userId } });
         if (emailExists) {
-            const conflictError = new Error('El email ya está en uso por otro usuario.');
-            conflictError.statusCode = 409; // Conflict
-            throw conflictError;
+            throw Boom.conflict('El email ya está en uso por otro usuario.');
         }
     }
 
@@ -113,9 +110,7 @@ const updateUser = async (userId, updateData) => {
         .select('-password');
 
     if (!user) {
-        const notFoundError = new Error('Usuario no encontrado.');
-        notFoundError.statusCode = 404;
-        throw notFoundError;
+        throw Boom.notFound('Usuario no encontrado.');
     }
 
     return _formatUserData(user);
@@ -169,7 +164,7 @@ const deleteUser = async (userId) => {
     ).select('-password');
 
     if (!user) {
-        throw new Error('Usuario no encontrado.');
+        throw Boom.notFound('Usuario no encontrado.');
     }
 
     return _formatUserData(user);

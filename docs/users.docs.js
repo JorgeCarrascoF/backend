@@ -259,15 +259,43 @@
  *               properties:
  *                 msg:
  *                   type: string
- *                   example: "Usuario actualizado."
+ *                   example: "Usuario actualizado exitosamente."
  *                 user:
  *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Error de validación (ej formato de email inválido)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "El email no es válido."
  *       401:
  *         description: Token no proporcionado o inválido
  *       403:
  *         description: Acceso denegado (solo admin o dueño del perfil)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "Acceso denegado para actualizar este usuario."
  *       404:
  *         description: Usuario no encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "Usuario no encontrado."
+ *       409:
+ *         description: El email ya está en uso por otro usuario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "El email ya está en uso por otro usuario."
  *       500:
  *         description: Error del servidor
  */
