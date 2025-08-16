@@ -100,11 +100,6 @@
  *           type: string
  *         description: Filtrar por mensaje de log
  *       - in: query
- *         name: message
- *         schema:
- *           type: string
- *         description: Filtrar por mensaje de log
- *       - in: query
  *         name: environment
  *         schema:
  *           type: string
