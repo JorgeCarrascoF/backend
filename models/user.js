@@ -1,4 +1,5 @@
 const mongoose = require('../connections/db');
+const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
     fullName: {
@@ -57,5 +58,24 @@ userSchema.virtual('displayName').get(function () {
 
 // Incluir virtuals en JSON
 userSchema.set('toJSON', { virtuals: true });
+
+// Middleware para hashear la contraseña antes de guardar
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) {
+        return next();
+    }
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
+
+// Método para comparar contraseñas
+userSchema.methods.comparePassword = function (candidatePassword) {
+    return bcrypt.compare(candidatePassword, this.password);
+};
 
 module.exports = mongoose.model('User', userSchema);

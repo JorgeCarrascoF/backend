@@ -170,9 +170,33 @@ const deleteUser = async (userId) => {
     return _formatUserData(user);
 };
 
+// Función para comparar contraseñas
+const comparePassword = async (candidatePassword, userId) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw Boom.notFound('Usuario no encontrado.');
+    }
+    return await user.comparePassword(candidatePassword);
+};
+
+// Función para actualizar la contraseña
+const updatePassword = async (userId, newPassword) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw Boom.notFound('Usuario no encontrado.');
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return _formatUserData(user);
+};
+
 module.exports = {
     getUsersByFilter,
     getUserById,
     updateUser,
     deleteUser,
+    comparePassword,
+    updatePassword,
 };
