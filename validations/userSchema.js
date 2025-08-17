@@ -11,7 +11,7 @@ const updateUserSchema = Joi.object({
         'string.min': 'El nombre de usuario debe tener al menos 3 caracteres.',
         'string.max': 'El nombre de usuario no puede tener más de 50 caracteres.'
     }),
-    password: Joi.string().min(8).required().pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])')).messages({
+    password: Joi.string().min(8).optional().pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])')).messages({
         'string.base': 'El campo password debe ser una cadena de texto.',
         'string.min': 'La contraseña debe tener al menos 8 caracteres.',
         'string.pattern.base': 'La contraseña debe incluir mayúsculas, minúsculas, números y símbolos (!@#$%^&*).',
