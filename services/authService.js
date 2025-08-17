@@ -23,10 +23,10 @@ class AuthService {
         existingUser.username === username ||
         existingUser.userName === username
       ) {
-        throw boom.conflict("El nombre de usuario ya existe");
+        throw boom.conflict("Username already exists");
       }
       if (existingUser.email === email) {
-        throw boom.conflict("El email ya está registrado");
+        throw boom.conflict("Email is already registered");
       }
     }
 
@@ -41,7 +41,7 @@ class AuthService {
       const Role = require("../models/role");
       const roleExists = await Role.findById(roleId);
       if (!roleExists) {
-        throw boom.badRequest("El rol especificado no existe");
+        throw boom.badRequest("The specified role does not exist");
       }
       // Mapear nombres de roles a códigos internos
       if (roleExists.name === "Administrador") {
@@ -74,15 +74,15 @@ class AuthService {
       });
       const emailSent = await sendEmail(
         email,
-        "¡Bienvenido a Buggle!",
+        "Welcome to Buggle!",
         emailHtml
       );
       if (!emailSent) {
-        console.warn(`No se pudo enviar el correo de bienvenida a ${email}`);
+        console.warn(`Failed to send welcome email to ${email}`);
       }
     } catch (error) {
       console.error(
-        `Error inesperado al enviar el correo a ${email}:`,
+        `Unexpected error sending email to ${email}:`,
         error.message
       );
     }
@@ -108,21 +108,21 @@ class AuthService {
     });
 
     if (!user) {
-      console.log("Usuario no encontrado");
-      throw boom.unauthorized("Credenciales inválidas");
+      console.log("User not found");
+      throw boom.unauthorized("Invalid credentials");
     }
 
     // Verificar contraseña
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log("Malas credenciales ");
-      throw boom.unauthorized("Credenciales inválidas");
+      console.log("Invalid credentials");
+      throw boom.unauthorized("Invalid credentials");
     }
 
     // Poblar información del rol
     await user.populate("roleId", "name permission");
 
-    console.log("- Rol del usuario:", user.role);
+    console.log("- User role:", user.role);
 
     // Generar token JWT
     const token = jwt.sign(
@@ -159,7 +159,7 @@ class AuthService {
   async getUserProfile(userId) {
     const user = await User.findById(userId).select("-password");
     if (!user) {
-      throw boom.notFound("Usuario no encontrado");
+      throw boom.notFound("User not found");
     }
     return user;
   }

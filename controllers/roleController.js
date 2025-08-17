@@ -35,13 +35,13 @@ const createRole = async (req, res) => {
     const { name, permission } = req.body;
 
     if (!name || !permission) {
-        return res.status(400).json({ msg: 'Name y permission son requeridos' });
+        return res.status(400).json({ msg: 'Name and permission are required' });
     }
 
     try {
         const existingRole = await Role.findOne({ name });
         if (existingRole) {
-            return res.status(400).json({ msg: 'El rol ya existe' });
+            return res.status(400).json({ msg: 'Role already exists' });
         }
 
         const newRole = new Role({
@@ -50,9 +50,9 @@ const createRole = async (req, res) => {
         });
 
         await newRole.save();
-        res.status(201).json({ msg: 'Rol creado exitosamente', role: newRole });
+        res.status(201).json({ msg: 'Role created successfully', role: newRole });
     } catch (err) {
-        res.status(500).json({ msg: 'Error creando rol', error: err.message });
+        res.status(500).json({ msg: 'Error creating role', error: err.message });
     }
 };
 
@@ -99,7 +99,7 @@ const getAllRoles = async (req, res) => {
             roles
         });
     } catch (err) {
-        res.status(500).json({ msg: 'Error obteniendo roles', error: err.message });
+        res.status(500).json({ msg: 'Error obtaining roles', error: err.message });
     }
 };
 
