@@ -1,9 +1,9 @@
 // services/userService.js
-const Boom = require("@hapi/boom");
-const User = require("../models/user");
-const { updateUserSchema } = require("../validations/userSchema");
-const mongoose = require("mongoose");
-const bcrypt = require('bcrypt');
+const Boom = require('@hapi/boom');
+const User = require('../models/user');
+const { updateUserSchema } = require('../validations/userSchema');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 // Opcional: para capturar errores en Sentry antes de forzar crash
 // const Sentry = require('../instrument');
@@ -190,9 +190,11 @@ const updatePassword = async (userId, newPassword) => {
     throw Boom.notFound("User not found.");
   }
 
-  const salt = await bcrypt.genSalt(10);
-  user.password = await bcrypt.hash(newPassword, salt);
-  await user.save();
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    
+    //user.password = newPassword;
+    await user.save();
 
   return _formatUserData(user);
 };
