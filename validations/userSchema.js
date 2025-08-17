@@ -2,29 +2,28 @@ const Joi = require('joi');
 
 const updateUserSchema = Joi.object({
     fullName: Joi.string().min(3).max(100).optional().messages({
-        'string.base': 'El nombre completo debe ser una cadena de texto.',
-        'string.min': 'El nombre completo debe tener al menos 3 caracteres.',
-        'string.max': 'El nombre completo no puede tener más de 100 caracteres.'
+        'string.base': 'Name must be a string.',
+        'string.min': 'Name must be at least 3 characters long.',
+        'string.max': 'Name must be at most 100 characters long.'
     }),
     username: Joi.string().min(3).max(50).optional().messages({
-        'string.base': 'El nombre de usuario debe ser una cadena de texto.',
-        'string.min': 'El nombre de usuario debe tener al menos 3 caracteres.',
-        'string.max': 'El nombre de usuario no puede tener más de 50 caracteres.'
+        'string.base': 'Username must be a string.',
+        'string.min': 'Username must be at least 3 characters long.',
+        'string.max': 'Username must be at most 50 characters long.'
     }),
-    password: Joi.string().min(8).required().pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])')).messages({
-        'string.base': 'El campo password debe ser una cadena de texto.',
-        'string.min': 'La contraseña debe tener al menos 8 caracteres.',
-        'string.pattern.base': 'La contraseña debe incluir mayúsculas, minúsculas, números y símbolos (!@#$%^&*).',
-        'any.required': 'El campo password es obligatorio.'
+    password: Joi.string().min(8).optional().pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])')).messages({
+        'string.base': 'Password must be a string.',
+        'string.min': 'Password must be at least 8 characters long.',
+        'string.pattern.base': 'Password must include uppercase letters, lowercase letters, numbers, and symbols (!@#$%^&*).'
     }),
     email: Joi.string().email({
         minDomainSegments: 2,
         tlds: { allow: false } // Permite dominios personalizados
     }).optional().messages({
-        'string.email': 'Por favor, ingresa un correo electrónico válido.'
+        'string.email': 'Please enter a valid email address.'
     }),
     role: Joi.string().valid('superadmin', 'admin', 'user').optional().messages({
-        'any.only': 'El rol debe ser uno de los siguientes: superadmin, admin, user.'
+        'any.only': 'Role must be one of the following: superadmin, admin, user.'
     }),
     roleId: Joi.string().optional(),
     isActive: Joi.boolean().optional()

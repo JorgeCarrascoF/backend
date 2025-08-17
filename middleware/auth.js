@@ -9,7 +9,7 @@ async function authMiddleware(req, res, next) { // La función debe ser async
     const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
 
     if (!token) {
-        return res.status(401).json({ msg: 'Token no proporcionado, acceso denegado' });
+        return res.status(401).json({ msg: 'Token not provided, access denied' });
     }
 
     try {
@@ -22,7 +22,7 @@ async function authMiddleware(req, res, next) { // La función debe ser async
 
         // 3. Verificar si el usuario todavía existe
         if (!freshUser) {
-            return res.status(401).json({ msg: 'Usuario no encontrado, token inválido' });
+            return res.status(401).json({ msg: 'User not found, invalid token' });
         }
 
         // 4. Adjuntar el objeto de usuario FRESCO de la DB a la petición
@@ -31,7 +31,7 @@ async function authMiddleware(req, res, next) { // La función debe ser async
         next();
 
     } catch (err) {
-        return res.status(403).json({ msg: 'Token inválido o expirado' });
+        return res.status(403).json({ msg: 'Token invalid or expired' });
     }
 }
 
@@ -39,12 +39,12 @@ async function authMiddleware(req, res, next) { // La función debe ser async
 function requireRole(roles) {
     return (req, res, next) => {
         if (!req.user) {
-            return res.status(401).json({ msg: 'Usuario no autenticado' });
+            return res.status(401).json({ msg: 'User not authenticated' });
         }
 
         if (!roles.includes(req.user.role)) {
             return res.status(403).json({ 
-                msg: 'Acceso denegado. Rol no autorizado.',
+                msg: 'Access denied. Unauthorized role.',
                 requiredRoles: roles,
                 currentRole: req.user.role
             });

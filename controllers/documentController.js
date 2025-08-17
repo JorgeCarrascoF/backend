@@ -18,7 +18,7 @@ const createDocument = async (req, res, next) => {
         await document.save();
 
         res.status(201).json({
-            message: 'Documento creado exitosamente',
+            message: 'Document created successfully',
             document
         });
     } catch (err) {
@@ -39,7 +39,7 @@ const getDocumentById = async (req, res, next) => {
     try {
         const document = await Document.findById(req.params.id).populate('log');
         if (!document) {
-            throw boom.notFound('Documento no encontrado');
+            throw boom.notFound('Document not found');
         }
         res.status(200).json(document);
     } catch (err) {
@@ -61,10 +61,10 @@ const updateDocument = async (req, res, next) => {
         const { id } = req.params;
         const document = await Document.findByIdAndUpdate(id, req.body, { new: true }).populate('log');
         if (!document) {
-            throw boom.notFound('Documento no encontrado');
+            throw boom.notFound('Document not found');
         }
         res.status(200).json({
-            message: 'Documento actualizado exitosamente',
+            message: 'Document updated successfully',
             document
         });
     } catch (err) {
@@ -77,10 +77,10 @@ const deleteDocument = async (req, res, next) => {
         const { id } = req.params;
         const document = await Document.findByIdAndDelete(id);
         if (!document) {
-            throw boom.notFound('Documento no encontrado');
+            throw boom.notFound('Document not found');
         }
         res.status(200).json({
-            message: 'Documento eliminado exitosamente'
+            message: 'Document deleted successfully'
         });
     } catch (err) {
         next(err);

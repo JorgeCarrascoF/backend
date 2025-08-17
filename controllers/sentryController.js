@@ -75,7 +75,7 @@ exports.handleSentryWebhook = async (req, res) => {
     if (!eventPayload) {
       return res
         .status(400)
-        .json({ msg: "Faltan datos en el payload de Sentry" });
+        .json({ msg: "Data missing in Sentry payload" });
     }
 
     // Buscar o crear Event relacionado
@@ -102,7 +102,7 @@ exports.handleSentryWebhook = async (req, res) => {
       });
       console.log(`Log creado: ${log._id}`);
       res.status(201).json({
-        msg: "Log creado desde webhook de Sentry",
+        msg: "Log created from Sentry webhook",
         log: log,
       });
     } else {
@@ -114,16 +114,16 @@ exports.handleSentryWebhook = async (req, res) => {
         },
         { new: true }
       );
-      console.log(`Log actualizado: ${log._id}`);
+      console.log(`Log updated: ${log._id}`);
       res.status(200).json({
-        msg: "Log actualizado desde webhook de Sentry",
+        msg: "Log updated from Sentry webhook",
         log: log,
       });
     }
   } catch (err) {
-    console.error("Error procesando webhook de Sentry:", err);
+    console.error("Error processing Sentry webhook:", err);
     res
       .status(500)
-      .json({ msg: "Error procesando webhook de Sentry", error: err.message });
+      .json({ msg: "Error processing Sentry webhook", error: err.message });
   }
 };

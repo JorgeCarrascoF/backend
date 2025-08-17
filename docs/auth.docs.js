@@ -44,9 +44,9 @@
  *                 example: "user"
  *     responses:
  *       201:
- *         description: Usuario registrado exitosamente
+ *         description: User registered successfully
  *       400:
- *         description: Error en los datos
+ *         description: Data validation error
  */
 
 /**
@@ -77,7 +77,7 @@
  *                 example: "123456"
  *     responses:
  *       200:
- *         description: Login exitoso
+ *         description: Login successful
  *         content:
  *           application/json:
  *             schema:
@@ -85,7 +85,7 @@
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Login exitoso"
+ *                   example: "Login successful"
  *                 token:
  *                   type: string
  *                   description: "JWT token"
@@ -103,7 +103,7 @@
  *                     roleInfo:
  *                       type: object
  *       401:
- *         description: Credenciales inválidas
+ *         description: Invalid credentials
  */
 
 /**
@@ -114,7 +114,7 @@
  *     tags: [Auth]
  *     responses:
  *       200:
- *         description: Logout exitoso
+ *         description: Logout successful
  */
 
 /**
@@ -127,7 +127,7 @@
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Datos del usuario
+ *         description: User data
  *       401:
- *         description: No autorizado
+ *         description: Unauthorized
  */

@@ -13,7 +13,7 @@ const getUsersByFilter = async (req, res) => {
     // Solo superadmin, admin y usuarios pueden ver la lista de usuarios
     if (!["superadmin", "admin", "user"].includes(req.user.role)) {
       return res.status(403).json({
-        msg: "Acceso denegado. Rol no autorizado.",
+        msg: "Access denied. Unauthorized role.",
       });
     }
 
@@ -44,11 +44,11 @@ const getUsersByFilter = async (req, res) => {
     });
   } catch (err) {
     Sentry.captureException(err);
-    console.error("Error en controller getUsersByFilter:", err);
+    console.error("Error in controller getUsersByFilter:", err);
     res
       .status(500)
       .json({
-        msg: "Error del servidor al filtrar usuarios",
+        msg: "Server error while filtering users",
         error: err.message,
       });
   }
@@ -58,13 +58,13 @@ const getUserById = async (req, res) => {
   try {
     // Validar formato del ID
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ msg: "El ID proporcionado no es válido." });
+      return res.status(400).json({ msg: "Invalid ID" });
     }
     // Superadmin puede ver cualquier usuario
     // Admin puede ver cualquier usuario
     // Usuario normal solo puede verse a sí mismo
     if (req.user.role === "user" && req.user.id !== req.params.id) {
-      return res.status(403).json({ msg: "Acceso denegado." });
+      return res.status(403).json({ msg: "Access denied." });
     }
 
     const user = await userService.getUserById(req.params.id);
@@ -72,14 +72,14 @@ const getUserById = async (req, res) => {
     res.status(200).json(user);
   } catch (err) {
     Sentry.captureException(err);
-    console.error("Error en controller getUserById:", err);
-    if (err.message === "Usuario no encontrado.") {
+    console.error("Error in controller getUserById:", err);
+    if (err.message === "User not found.") {
       return res.status(404).json({ msg: err.message });
     }
     res
       .status(500)
       .json({
-        msg: "Error del servidor al obtener el usuario",
+        msg: "Server error while retrieving user",
         error: err.message,
       });
   }
@@ -96,7 +96,7 @@ const updateUser = async (req, res) => {
     if (req.user.role === "user" && req.user.id !== id) {
       return res
         .status(403)
-        .json({ msg: "Acceso denegado para actualizar este usuario." });
+        .json({ msg: "Access denied to update this user." });
     }
 
     if (req.user.role === "admin") {
@@ -106,7 +106,7 @@ const updateUser = async (req, res) => {
         return res
           .status(403)
           .json({
-            msg: "Los administradores no pueden modificar usuarios superadmin.",
+            msg: "Administrators cannot modify superadmin users.",
           });
       }
     }
@@ -120,11 +120,11 @@ const updateUser = async (req, res) => {
     const updatedUser = await userService.updateUser(id, updateData);
 
     res.status(200).json({
-      msg: "Usuario actualizado exitosamente.",
+      msg: "User updated successfully.",
       user: updatedUser,
     });
   } catch (err) {
-    console.error("Error en controller updateUser:", err);
+    console.error("Error in controller updateUser:", err);
     if (err.isBoom) {
       // Todos los errores ahora son Boom
       return res.status(err.output.statusCode).json({
@@ -134,7 +134,7 @@ const updateUser = async (req, res) => {
     }
     // Error genérico (no debería ocurrir si todo está bien)
     res.status(500).json({
-      msg: "Error del servidor al actualizar el usuario",
+      msg: "Server error while updating user",
     });
   }
 };
@@ -146,7 +146,7 @@ const deleteUser = async (req, res) => {
       return res
         .status(403)
         .json({
-          msg: "Solo los superadministradores pueden eliminar usuarios.",
+          msg: "Only superadmins can delete users.",
         });
     }
 
@@ -154,25 +154,25 @@ const deleteUser = async (req, res) => {
     if (req.user.id === req.params.id) {
       return res
         .status(400)
-        .json({ msg: "No puedes eliminar tu propia cuenta." });
+        .json({ msg: "You cannot delete your own account." });
     }
 
     const deletedUser = await userService.deleteUser(req.params.id);
 
     res.status(200).json({
-      msg: "Usuario eliminado exitosamente.",
+      msg: "User deleted successfully.",
       deletedUser: deletedUser,
     });
   } catch (err) {
     Sentry.captureException(err);
-    console.error("Error en controller deleteUser:", err);
-    if (err.message === "Usuario no encontrado.") {
+    console.error("Error in controller deleteUser:", err);
+    if (err.message === "User not found.") {
       return res.status(404).json({ msg: err.message });
     }
     res
       .status(500)
       .json({
-        msg: "Error del servidor al eliminar el usuario",
+        msg: "Server error while deleting user",
         error: err.message,
       });
   }
@@ -188,7 +188,7 @@ const changePassword = async (req, res) => {
       return res
         .status(400)
         .json({
-          msg: "Debe proporcionar la contraseña actual y la nueva contraseña.",
+          msg: "You must provide the current password and the new password.",
         });
     }
 
@@ -204,15 +204,15 @@ const changePassword = async (req, res) => {
     if (!isMatch) {
       return res
         .status(400)
-        .json({ msg: "La contraseña actual es incorrecta." });
+        .json({ msg: "Current password is incorrect." });
     }
 
-    // Actualizar la contraseña
+    // Update the password
     await userService.updatePassword(id, newPassword);
 
-    res.status(200).json({ msg: "Contraseña cambiada exitosamente." });
+    res.status(200).json({ msg: "Password changed successfully." });
   } catch (err) {
-    console.error("Error en controller changePassword:", err);
+    console.error("Error in controller changePassword:", err);
     if (err.isBoom) {
       return res.status(err.output.statusCode).json({
         msg: err.output.payload.message,
@@ -222,7 +222,7 @@ const changePassword = async (req, res) => {
     res
       .status(500)
       .json({
-        msg: "Error del servidor al cambiar la contraseña",
+        msg: "Server error while changing password",
         error: err.message,
       });
   }

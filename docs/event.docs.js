@@ -110,11 +110,11 @@
  *                   items:
  *                     $ref: '#/components/schemas/Event'
  *       401:
- *         description: Token no proporcionado o inválido
+ *         description: Unprovided or invalid token
  *       403:
- *         description: Acceso denegado
+ *         description: Access denied
  *       500:
- *         description: Error del servidor
+ *         description: Server error
  */
 
 /**
@@ -133,13 +133,13 @@
  *           type: string
  *     responses:
  *       200:
- *         description: Event encontrado
+ *         description: Event found
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Event'
  *       404:
- *         description: Event no encontrado
+ *         description: Event not found
  */
 
 /**
@@ -158,9 +158,9 @@
  *             $ref: '#/components/schemas/Event'
  *     responses:
  *       201:
- *         description: Event creado exitosamente
+ *         description: Event created successfully
  *       400:
- *         description: Datos inválidos
+ *         description: Invalid data
  */
 
 /**
@@ -185,9 +185,9 @@
  *             $ref: '#/components/schemas/Event'
  *     responses:
  *       200:
- *         description: Event actualizado
+ *         description: Event updated successfully
  *       404:
- *         description: Event no encontrado
+ *         description: Event not found
  */
 
 /**
@@ -206,7 +206,7 @@
  *           type: string
  *     responses:
  *       200:
- *         description: Event eliminado
+ *         description: Event deleted successfully
  *       404:
- *         description: Event no encontrado
+ *         description: Event not found
  */
