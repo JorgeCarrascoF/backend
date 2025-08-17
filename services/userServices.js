@@ -4,6 +4,8 @@ const User = require('../models/user');
 const { updateUserSchema } = require('../validations/userSchema');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+
+
 // Opcional: para capturar errores en Sentry antes de forzar crash
 // const Sentry = require('../instrument');
 
