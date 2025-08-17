@@ -11,7 +11,7 @@ const getAllLogs = async (req, res) => {
         const roles = ['superadmin', 'admin', 'user'];
         if (!roles.includes(req.user.role)) {
             return res.status(403).json({
-                msg: 'Acceso denegado. Se requiere rol de administrador, desarrollador o QA.',
+                msg: 'Access denied. Superadmin, admin, or user role required.',
                 userRole: req.user.role,
                 required: roles
             });
@@ -34,7 +34,7 @@ const getAllLogs = async (req, res) => {
             data: result.data
         });
     } catch (err) {
-        res.status(500).json({ msg: 'Error del servidor al obtener Logs', error: err.message });
+        res.status(500).json({ msg: 'Error obtaining logs', error: err.message });
     }
 };
 
@@ -48,27 +48,27 @@ const getLogById = async (req, res) => {
         const roles = ['superadmin', 'admin', 'user'];
         if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
             return res.status(403).json({
-                msg: 'Acceso denegado.',
-                detail: 'Solo los adminstradores, desarrolladores y QA pueden ver los logs por ID'
+                msg: 'Access denied.',
+                detail: 'Only superadmin, administrators, and users can view logs by ID'
             });
         }
 
         const log = await logService.getLogById(req.params.id);
 
         if (!log) {
-            return res.status(404).json({ msg: 'Log no encontrado.' });
+            return res.status(404).json({ msg: 'Log not found.' });
         }
 
         res.status(200).json(log);
     } catch (err) {
-        res.status(500).json({ msg: 'Error del servidor al obtener el Log', error: err.message });
+        res.status(500).json({ msg: 'Error obtaining log', error: err.message });
     }
 };
 
 const createLog = async (req, res) => {
     try {
         if (!rolAdmin.includes(req.user.role)) {
-            return res.status(403).json({ msg: 'Acceso denegado para crear logs.' });
+            return res.status(403).json({ msg: 'Access denied to create logs.' });
         }
 
         const newLog = await logService.createLog(req.body);
@@ -94,18 +94,18 @@ const updateLog = async (req, res) => {
         console.log('- Datos a actualizar:', req.body);
 
         if (!rolAdmin.includes(req.user.role) && req.user.id !== req.params.id) {
-            return res.status(403).json({ msg: 'Acceso denegado para actualizar este log.' });
+            return res.status(403).json({ msg: 'Access denied to update this log.' });
         }
 
         const log = await logService.updateLog(req.params.id, req.body);
 
         if (!log) {
-            return res.status(404).json({ msg: 'Log no encontrado.' });
+            return res.status(404).json({ msg: 'Log not found.' });
         }
 
-        res.status(200).json({ msg: 'Log actualizado exitosamente.', log });
+        res.status(200).json({ msg: 'Log updated successfully.', log });
     } catch (err) {
-        res.status(500).json({ msg: 'Error del servidor al actualizar el Log', error: err.message });
+        res.status(500).json({ msg: 'Error updating log', error: err.message });
     }
 };
 
@@ -116,18 +116,18 @@ const deleteLog = async (req, res) => {
         console.log('- ID a eliminar:', req.params.id);
 
         if (!rolAdmin.includes(req.user.role) && req.user.id !== req.params.id) {
-            return res.status(403).json({ msg: 'Acceso denegado para eliminar este log.' });
+            return res.status(403).json({ msg: 'Access denied to delete this log.' });
         }
 
         const log = await logService.deleteLog(req.params.id);
 
         if (!log) {
-            return res.status(404).json({ msg: 'Log no encontrado.' });
+            return res.status(404).json({ msg: 'Log not found.' });
         }
 
-        res.status(200).json({ msg: 'Log eliminado exitosamente.', deletedLog: { id: log._id } });
+        res.status(200).json({ msg: 'Log deleted successfully.', deletedLog: { id: log._id } });
     } catch (err) {
-        res.status(500).json({ msg: 'Error del servidor al eliminar el Log', error: err.message });
+        res.status(500).json({ msg: 'Error deleting log', error: err.message });
     }
 };
 

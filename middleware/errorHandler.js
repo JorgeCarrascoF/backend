@@ -27,7 +27,7 @@ const errorHandler = (err, req, res, next) => {
     return res.status(409).json({
       statusCode: 409,
       error: 'Conflict',
-      message: `${field} ya existe.`,
+      message: `${field} already exists.`,
       details: err.keyValue
     });
   }
@@ -37,7 +37,7 @@ const errorHandler = (err, req, res, next) => {
     return res.status(400).json({
       statusCode: 400,
       error: 'Bad Request',
-      message: `Formato inválido para ${err.path}`
+      message: `Invalid format for ${err.path}`
     });
   }
 
@@ -46,7 +46,7 @@ const errorHandler = (err, req, res, next) => {
   res.status(statusCode).json({
     statusCode,
     error: err.name || 'Internal Server Error',
-    message: err.message || 'Error inesperado'
+    message: err.message || 'Unexpected error'
   });
 };
 

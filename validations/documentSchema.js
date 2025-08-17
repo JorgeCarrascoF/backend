@@ -2,25 +2,25 @@ const Joi = require('joi');
 
 const createDocumentSchema = Joi.object({
     title: Joi.string().required().max(100).messages({
-        'any.required': 'El título es obligatorio.',
-        'string.max': 'El título no puede tener más de 100 caracteres.'
+        'any.required': 'Title is required.',
+        'string.max': 'Title must be at most 100 characters long.'
     }),
     content: Joi.string().required().messages({
-        'any.required': 'El contenido es obligatorio.'
+        'any.required': 'Content is required.'
     }),
     log: Joi.string().required().messages({
-        'any.required': 'El log es obligatorio.',
-        'string.base': 'El ID del log debe ser una cadena de texto.'
+        'any.required': 'Log is required.',
+        'string.base': 'Log ID must be a string.'
     })
 });
 
 const updateDocumentSchema = Joi.object({
     title: Joi.string().max(100).optional().messages({
-        'string.max': 'El título no puede tener más de 100 caracteres.'
+        'string.max': 'Title must be at most 100 characters long.'
     }),
     content: Joi.string().optional(),
     log: Joi.string().optional().messages({
-        'string.base': 'El ID del log debe ser una cadena de texto.'
+        'string.base': 'Log ID must be a string.'
     })
 });
 
