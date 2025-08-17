@@ -14,8 +14,7 @@ const updateUserSchema = Joi.object({
     password: Joi.string().min(8).optional().pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])')).messages({
         'string.base': 'El campo password debe ser una cadena de texto.',
         'string.min': 'La contraseña debe tener al menos 8 caracteres.',
-        'string.pattern.base': 'La contraseña debe incluir mayúsculas, minúsculas, números y símbolos (!@#$%^&*).',
-        'any.required': 'El campo password es obligatorio.'
+        'string.pattern.base': 'La contraseña debe incluir mayúsculas, minúsculas, números y símbolos (!@#$%^&*).'
     }),
     email: Joi.string().email({
         minDomainSegments: 2,
