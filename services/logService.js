@@ -1,5 +1,6 @@
 const Log = require('../models/log');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 
 const getAllLogs = async (filters, pagination) => {
     const { limit, skip } = pagination;
@@ -9,7 +10,12 @@ const getAllLogs = async (filters, pagination) => {
 
 
     if (filters.search) {
-        query.$or = [
+        const orFilters = [];
+        if (mongoose.Types.ObjectId.isValid(filters.search)){
+            orFilters.push({_id: filters.search});
+        }
+        orFilters.push = (
+            { _id: { $regex: filters.search, $options: 'i' } },
             { issue_id: { $regex: filters.search, $options: 'i' } },
             { message: { $regex: filters.search, $options: 'i' } },
             { description: { $regex: filters.search, $options: 'i' } },
@@ -19,10 +25,11 @@ const getAllLogs = async (filters, pagination) => {
             { status: { $regex: filters.search, $options: 'i' } },
             { priority: { $regex: filters.search, $options: 'i' } },
             { assigned_to: { $regex: filters.search, $options: 'i' } }
-        ];
+        );
+        query.$or = orFilters;
     }
 
-    ['issue_id', 'message', 'description', 'culprit', 'error_type', 'environment',
+    ['_id', 'issue_id', 'message', 'description', 'culprit', 'error_type', 'environment',
         'status', 'priority', 'assigned_to', 'active']
         .forEach(field => {
             if (filters[field]) query[field] = filters[field];
