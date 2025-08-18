@@ -5,6 +5,9 @@ const getAllLogs = async (filters, pagination) => {
     const { limit, skip } = pagination;
     const query = {};
 
+    console.log("filters.search:", filters.search, typeof filters.search);
+
+
     if (filters.search) {
         query.$or = [
             { issue_id: { $regex: filters.search, $options: 'i' } },
