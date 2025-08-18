@@ -1,163 +1,177 @@
-const Log = require('../models/log');
-const crypto = require('crypto');
-const mongoose = require('mongoose');
+const Log = require("../models/log");
+const crypto = require("crypto");
+const mongoose = require("mongoose");
 
 const getAllLogs = async (filters, pagination) => {
-    const { limit, skip } = pagination;
-    const query = {};
+  const { limit, skip } = pagination;
+  const query = {};
 
-    console.log("filters.search:", filters.search, typeof filters.search);
+  console.log("filters.search:", filters.search, typeof filters.search);
 
-
-    if (filters.search) {
-        const orFilters = [];
-        if (mongoose.Types.ObjectId.isValid(filters.search)){
-            orFilters.push({_id: filters.search});
-        }
-        orFilters.push = (
-            { _id: { $regex: filters.search, $options: 'i' } },
-            { issue_id: { $regex: filters.search, $options: 'i' } },
-            { message: { $regex: filters.search, $options: 'i' } },
-            { description: { $regex: filters.search, $options: 'i' } },
-            { culprit: { $regex: filters.search, $options: 'i' } },
-            { error_type: { $regex: filters.search, $options: 'i' } },
-            { environment: { $regex: filters.search, $options: 'i' } },
-            { status: { $regex: filters.search, $options: 'i' } },
-            { priority: { $regex: filters.search, $options: 'i' } },
-            { assigned_to: { $regex: filters.search, $options: 'i' } }
-        );
-        query.$or = orFilters;
+  if (filters.search) {
+    const orFilters = [];
+    orFilters.push(
+      { issue_id: { $regex: filters.search, $options: "i" } },
+      { message: { $regex: filters.search, $options: "i" } },
+      { description: { $regex: filters.search, $options: "i" } },
+      { culprit: { $regex: filters.search, $options: "i" } },
+      { error_type: { $regex: filters.search, $options: "i" } },
+      { environment: { $regex: filters.search, $options: "i" } },
+      { status: { $regex: filters.search, $options: "i" } },
+      { priority: { $regex: filters.search, $options: "i" } },
+      { assigned_to: { $regex: filters.search, $options: "i" } }
+    );
+    if (mongoose.Types.ObjectId.isValid(filters.search)) {
+      orFilters.push({ _id: new mongoose.Types.ObjectId(filters.search) });
     }
+    query.$or = orFilters;
+  }
 
-    ['_id', 'issue_id', 'message', 'description', 'culprit', 'error_type', 'environment',
-        'status', 'priority', 'assigned_to', 'active']
-        .forEach(field => {
-            if (filters[field]) query[field] = filters[field];
-        });
+  [
+    "_id",
+    "issue_id",
+    "message",
+    "description",
+    "culprit",
+    "error_type",
+    "environment",
+    "status",
+    "priority",
+    "assigned_to",
+    "active",
+  ].forEach((field) => {
+    if (filters[field])
+      if (query.$or) {
+        query.$and = (query.$and || []).concat({ [field]: filters[field] });
+      } else {
+        query[field] = filters[field];
+      }
+  });
 
-    const logs = await Log.find(query)
-        .populate('userId', 'username email')
-        .skip(skip)
-        .limit(limit)
-        .sort({ created_at: -1 });
-    const totalLogs = await Log.countDocuments(query);
+  const logs = await Log.find(query)
+    .populate("userId", "username email")
+    .skip(skip)
+    .limit(limit)
+    .sort({ created_at: -1 });
+  const totalLogs = await Log.countDocuments(query);
 
-    return {
-        data: logs.map(log => ({
-            id: log._id,
-            issue_id: log.issue_id,
-            message: log.message,
-            description: log.description,
-            culprit: log.culprit,
-            error_type: log.error_type,
-            environment: log.environment,
-            status: log.status,
-            priority: log.priority,
-            assigned_to: log.assigned_to,
-            created_at: log.created_at,
-            last_seen_at: log.last_seen_at,
-            count: log.count,
-            active: log.active,
-        })),
-        total: totalLogs
-    };
+  return {
+    data: logs.map((log) => ({
+      id: log._id,
+      issue_id: log.issue_id,
+      message: log.message,
+      description: log.description,
+      culprit: log.culprit,
+      error_type: log.error_type,
+      environment: log.environment,
+      status: log.status,
+      priority: log.priority,
+      assigned_to: log.assigned_to,
+      created_at: log.created_at,
+      last_seen_at: log.last_seen_at,
+      count: log.count,
+      active: log.active,
+    })),
+    total: totalLogs,
+  };
 };
 
 const getLogById = async (id) => {
-    const log = await Log.findById(id)
-        .populate('userId', 'username email')
-        .select('-password');
+  const log = await Log.findById(id)
+    .populate("userId", "username email")
+    .select("-password");
 
-    if (!log) return null;
+  if (!log) return null;
 
-    return {
-        id: log._id,
-        issue_id: log.issue_id,
-        message: log.message,
-        description: log.description,
-        culprit: log.culprit,
-        error_type: log.error_type,
-        environment: log.environment,
-        status: log.status,
-        priority: log.priority,
-        assigned_to: log.assigned_to,
-        created_at: log.created_at,
-        last_seen_at: log.last_seen_at,
-        count: log.count,
-        active: log.active,
-    };
+  return {
+    id: log._id,
+    issue_id: log.issue_id,
+    message: log.message,
+    description: log.description,
+    culprit: log.culprit,
+    error_type: log.error_type,
+    environment: log.environment,
+    status: log.status,
+    priority: log.priority,
+    assigned_to: log.assigned_to,
+    created_at: log.created_at,
+    last_seen_at: log.last_seen_at,
+    count: log.count,
+    active: log.active,
+  };
 };
 
 function generateHash(log) {
-    const base = [
-        log.culprit || '',
-        log.error_type || '',
-        log.environment || ''
-    ].join('|')
-    return crypto.createHash("sha1").update(base).digest('hex');
+  const base = [
+    log.culprit || "",
+    log.error_type || "",
+    log.environment || "",
+  ].join("|");
+  return crypto.createHash("sha1").update(base).digest("hex");
 }
 const createLog = async (data) => {
+  let errorSignature = data.error_signature;
+  if (!errorSignature && data.json_sentry?.metadata?.type) {
+    errorSignature = data.json_sentry.metadata.type;
+  }
 
-    let errorSignature = data.error_signature;
-    if (!errorSignature && data.json_sentry?.metadata?.type) {
-        errorSignature = data.json_sentry.metadata.type;
-    }
+  const hash = generateHash(data);
 
-    const hash = generateHash(data);
+  let existeLog = await Log.findOne({ hash });
 
-    let existeLog = await Log.findOne({ hash });
+  if (existeLog) {
+    existeLog.count += 1;
+    existeLog.last_seen_at = new Date();
+    //return await existeLog.save();
+    return { ...existeLog.toObject(), update: true };
+  }
 
-    if (existeLog) {
-        existeLog.count += 1;
-        existeLog.last_seen_at = new Date();
-        //return await existeLog.save();
-        return { ...existeLog.toObject(), update: true }
-    }
-
-    //const newLog = new Log(data);
-    const newLog = new Log({
-        ...data,
-        hash,
-        count: 1,
-        last_seen_at: new Date()
-    })
-    return await newLog.save();
+  //const newLog = new Log(data);
+  const newLog = new Log({
+    ...data,
+    hash,
+    count: 1,
+    last_seen_at: new Date(),
+  });
+  return await newLog.save();
 };
 
 const updateLog = async (id, data) => {
-    const log = await Log.findByIdAndUpdate(id, data, {
-        new: true,
-        runValidators: true,
-    }).populate('userId', 'username email').select('-password');
+  const log = await Log.findByIdAndUpdate(id, data, {
+    new: true,
+    runValidators: true,
+  })
+    .populate("userId", "username email")
+    .select("-password");
 
-    if (!log) return null;
+  if (!log) return null;
 
-    return {
-        id: log._id,
-        issue_id: log.issue_id,
-        message: log.message,
-        description: log.description,
-        culprit: log.culprit,
-        error_type: log.error_type,
-        environment: log.environment,
-        status: log.status,
-        priority: log.priority,
-        assigned_to: log.assigned_to,
-        created_at: log.created_at,
-        lst_aseen_at: log.lst_aseen_at,
-        count: log.count,
-        active: log.active,
-    };
+  return {
+    id: log._id,
+    issue_id: log.issue_id,
+    message: log.message,
+    description: log.description,
+    culprit: log.culprit,
+    error_type: log.error_type,
+    environment: log.environment,
+    status: log.status,
+    priority: log.priority,
+    assigned_to: log.assigned_to,
+    created_at: log.created_at,
+    lst_aseen_at: log.lst_aseen_at,
+    count: log.count,
+    active: log.active,
+  };
 };
 
 const deleteLog = async (id) => {
-    return await Log.findByIdAndDelete(id);
+  return await Log.findByIdAndDelete(id);
 };
 
 module.exports = {
-    getAllLogs,
-    getLogById,
-    createLog,
-    updateLog,
-    deleteLog
+  getAllLogs,
+  getLogById,
+  createLog,
+  updateLog,
+  deleteLog,
 };
