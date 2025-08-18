@@ -29,7 +29,7 @@ const getUsersByFilter = async (req, res) => {
       page: parseInt(req.query.page) || 1,
     };
 
-    const { data, count } = await userService.getUsersByFilter(
+    const { data, total } = await userService.getUsersByFilter(
       filters,
       pagination
     );
@@ -39,7 +39,7 @@ const getUsersByFilter = async (req, res) => {
       page: pagination.page,
       limit: pagination.limit,
       count: data.length,
-      total: count,
+      total: total,
       data: data,
     });
   } catch (err) {
@@ -53,7 +53,7 @@ const getUsersByFilter = async (req, res) => {
       });
   }
 };
-
+// 
 const getUserById = async (req, res) => {
   try {
     // Validar formato del ID
