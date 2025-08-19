@@ -106,6 +106,7 @@ function generateHash(log) {
     log.culprit || "",
     log.error_type || "",
     log.environment || "",
+    log.message || ""
   ].join("|");
   return crypto.createHash("sha1").update(base).digest("hex");
 }
