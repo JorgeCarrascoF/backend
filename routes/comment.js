@@ -8,6 +8,7 @@ const {authMiddleware} = require('../middleware/auth');
 router.post('/', authMiddleware, commentController.createComment);
 router.get('/', authMiddleware,  commentController.getAllComments);
 router.get('/:id', authMiddleware,  commentController.getCommentById);
+router.get('/log/:logId', authMiddleware,  commentController.getCommentsByLog);
 router.patch('/:id', authMiddleware,  commentController.updateComment);
 router.delete('/:id', authMiddleware,  commentController.deleteComment);
 
