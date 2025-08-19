@@ -54,9 +54,9 @@
  *                         format: date-time
  *     responses:
  *       201:
- *         description: Log creado desde webhook de Sentry
+ *         description: Log created from Sentry webhook
  *       400:
- *         description: Faltan datos en el payload
+ *         description: Missing data in payload
  *       500:
- *         description: Error del servidor
+ *         description: Server error
  */

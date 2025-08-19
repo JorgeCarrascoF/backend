@@ -31,7 +31,7 @@ const register = async (req, res, next) => {
         });
 
         res.status(201).json({
-            message: 'Usuario registrado exitosamente',
+            message: 'User registered successfully',
             user
         });
     } catch (err) {
@@ -53,7 +53,7 @@ const login = async (req, res, next) => {
         });
 
         res.json({
-            message: 'Login exitoso',
+            message: 'Login successful',
             token,
             user
         });
@@ -64,7 +64,7 @@ const login = async (req, res, next) => {
 
 const logout = (req, res) => {
     res.clearCookie('token');
-    res.status(200).json({ message: 'Logout exitoso' });
+    res.status(200).json({ message: 'Logout successful' });
 };
 
 const getProfile = async (req, res, next) => {

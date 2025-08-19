@@ -7,7 +7,7 @@
 function hasPermission(permission) {
     return (req, res, next) => {
         if (!req.user) {
-            return res.status(401).json({ msg: 'Usuario no autenticado' });
+            return res.status(401).json({ msg: 'User not authenticated' });
         }
 
         // Superadmin tiene todos los permisos
@@ -43,7 +43,7 @@ function hasPermission(permission) {
         }
 
         return res.status(403).json({ 
-            msg: 'Permiso insuficiente para realizar esta operación',
+            msg: 'Insufficient permission to perform this operation',
             requiredPermission: permission,
             currentRole: req.user.role
         });

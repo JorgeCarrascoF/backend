@@ -108,11 +108,11 @@
  *                   items:
  *                     $ref: '#/components/schemas/Project'
  *       401:
- *         description: Token no proporcionado o inválido
+ *         description: Unprovided or invalid token
  *       403:
- *         description: Acceso denegado
+ *         description: Access denied
  *       500:
- *         description: Error del servidor
+ *         description: Server error
  */
 
 /**
@@ -131,13 +131,13 @@
  *           type: string
  *     responses:
  *       200:
- *         description: Proyecto encontrado
+ *         description: Project found
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Project'
  *       404:
- *         description: Proyecto no encontrado
+ *         description: Project not found
  */
 
 /**
@@ -156,9 +156,9 @@
  *             $ref: '#/components/schemas/Project'
  *     responses:
  *       201:
- *         description: Proyecto creado exitosamente
+ *         description: Project created successfully
  *       400:
- *         description: Datos inválidos
+ *         description: Invalid data
  */
 
 /**
@@ -183,9 +183,9 @@
  *             $ref: '#/components/schemas/Project'
  *     responses:
  *       200:
- *         description: Proyecto actualizado
+ *         description: Project updated successfully
  *       404:
- *         description: Proyecto no encontrado
+ *         description: Project not found
  */
 
 /**
@@ -204,7 +204,7 @@
  *           type: string
  *     responses:
  *       200:
- *         description: Proyecto eliminado
+ *         description: Project deleted successfully
  *       404:
- *         description: Proyecto no encontrado
+ *         description: Project not found
  */

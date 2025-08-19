@@ -80,13 +80,13 @@
  *             $ref: '#/components/schemas/DocumentInput'
  *     responses:
  *       201:
- *         description: Documento creado exitosamente
+ *         description: Documento created successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Document'
  *       400:
- *         description: Error en los datos de entrada
+ *         description: Error in data validation
  *   get:
  *     summary: Obtener todos los documentos
  *     tags: [Documents]
@@ -120,13 +120,13 @@
  *         description: ID del documento
  *     responses:
  *       200:
- *         description: Documento encontrado
+ *         description: Document found
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Document'
  *       404:
- *         description: Documento no encontrado
+ *         description: Document not found
  *   patch:
  *     summary: Actualizar un documento
  *     tags: [Documents]
@@ -147,13 +147,13 @@
  *             $ref: '#/components/schemas/DocumentInput'
  *     responses:
  *       200:
- *         description: Documento actualizado exitosamente
+ *         description: Document updated successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Document'
  *       404:
- *         description: Documento no encontrado
+ *         description: Document not found
  *   delete:
  *     summary: Eliminar un documento
  *     tags: [Documents]
@@ -168,7 +168,7 @@
  *         description: ID del documento
  *     responses:
  *       200:
- *         description: Documento eliminado exitosamente
+ *         description: Document deleted successfully
  *       404:
- *         description: Documento no encontrado
+ *         description: Document not found
  */

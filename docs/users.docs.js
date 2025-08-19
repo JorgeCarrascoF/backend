@@ -125,7 +125,7 @@
  *         description: Cantidad de resultados por página
  *     responses:
  *       200:
- *         description: Lista de usuarios obtenida correctamente
+ *         description: Userlist obtained successfully
  *         content:
  *           application/json:
  *             schema:
@@ -148,19 +148,19 @@
  *                   items:
  *                     $ref: '#/components/schemas/User'
  *       401:
- *         description: Token no válido o no proporcionado
+ *         description: Unprovided or invalid token
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       403:
- *         description: Acceso denegado – solo roles admin o user
+ *         description: Access denied – only admin or user roles
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       500:
- *         description: Error interno del servidor
+ *         description: Server error
  *         content:
  *           application/json:
  *             schema:
@@ -191,31 +191,31 @@
  *         description: ID del usuario
  *     responses:
  *       200:
- *         description: Datos del usuario obtenidos correctamente
+ *         description: User retrieved successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/User'
  *       401:
- *         description: Token no proporcionado o inválido
+ *         description: Unprovided or invalid token
  *       403:
- *         description: Acceso denegado
+ *         description: Access denied
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               msg: "Acceso denegado."
+ *               msg: "Access denied."
  *       404:
- *         description: Usuario no encontrado
+ *         description: User not found
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               msg: "Usuario no encontrado."
+ *               msg: "User not found."
  *       500:
- *         description: Error del servidor
+ *         description: Server error
  */
 
 /**
@@ -251,7 +251,7 @@
  *             $ref: '#/components/schemas/UserUpdate'
  *     responses:
  *       200:
- *         description: Usuario actualizado exitosamente
+ *         description: User updated successfully
  *         content:
  *           application/json:
  *             schema:
@@ -259,45 +259,45 @@
  *               properties:
  *                 msg:
  *                   type: string
- *                   example: "Usuario actualizado exitosamente."
+ *                   example: "User updated successfully."
  *                 user:
  *                   $ref: '#/components/schemas/User'
  *       400:
- *         description: Error de validación (ej formato de email inválido)
+ *         description: Validation error (e.g., invalid email format)
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               msg: "El email no es válido."
+ *               msg: "The email is not valid."
  *       401:
- *         description: Token no proporcionado o inválido
+ *         description: Unprovided or invalid token
  *       403:
- *         description: Acceso denegado (solo admin o dueño del perfil)
+ *         description: Access denied (only admin or user owner)
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               msg: "Acceso denegado para actualizar este usuario."
+ *               msg: "Access denied to update this user."
  *       404:
- *         description: Usuario no encontrado
+ *         description: User not found
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               msg: "Usuario no encontrado."
+ *               msg: "User not found."
  *       409:
- *         description: El email ya está en uso por otro usuario
+ *         description: Email already in use by another user
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               msg: "El email ya está en uso por otro usuario."
+ *               msg: "Email already in use by another user."
  *       500:
- *         description: Error del servidor
+ *         description: Server error
  */
 
 /**
@@ -324,7 +324,7 @@
  *         description: ID del usuario a eliminar
  *     responses:
  *       200:
- *         description: Usuario eliminado exitosamente
+ *         description: User deleted successfully
  *         content:
  *           application/json:
  *             schema:
@@ -332,7 +332,7 @@
  *               properties:
  *                 msg:
  *                   type: string
- *                   example: "Usuario eliminado exitosamente."
+ *                   example: "User deleted successfully."
  *                 deletedUser:
  *                   type: object
  *                   properties:
@@ -343,13 +343,13 @@
  *                     email:
  *                       type: string
  *       401:
- *         description: Token no proporcionado o inválido
+ *         description: Unprovided or invalid token
  *       403:
- *         description: Acceso denegado
+ *         description: Access denied
  *       404:
- *         description: Usuario no encontrado
+ *         description: User not found
  *       500:
- *         description: Error del servidor
+ *         description: Server error
  */
 
 /**
@@ -393,7 +393,7 @@
  *             newPassword: "nueva_contraseña_segura"
  *     responses:
  *       200:
- *         description: Contraseña cambiada exitosamente
+ *         description: Password changed successfully
  *         content:
  *           application/json:
  *             schema:
@@ -401,9 +401,9 @@
  *               properties:
  *                 msg:
  *                   type: string
- *                   example: "Contraseña cambiada exitosamente."
+ *                   example: "Password changed successfully."
  *       400:
- *         description: Error de validación o datos incorrectos
+ *         description: Validation error or incorrect data
  *         content:
  *           application/json:
  *             schema:
@@ -411,18 +411,18 @@
  *             examples:
  *               currentPasswordIncorrect:
  *                 value:
- *                   msg: "La contraseña actual es incorrecta."
+ *                   msg: "Current password is incorrect."
  *               newPasswordInvalid:
  *                 value:
- *                   msg: "La nueva contraseña debe tener al menos 6 caracteres."
+ *                   msg: "New password must be at least 6 characters long."
  *       401:
- *         description: Token no proporcionado o inválido
+ *         description: Unprovided or invalid token
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       500:
- *         description: Error del servidor
+ *         description: Server error
  *         content:
  *           application/json:
  *             schema:
