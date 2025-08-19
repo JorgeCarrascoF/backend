@@ -1,111 +1,80 @@
 // services/userService.js
-const Boom = require("@hapi/boom");
-const User = require("../models/user");
-const { updateUserSchema } = require("../validations/userSchema");
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
-
+const Boom = require('@hapi/boom');
+const User = require('../models/user');
+const { updateUserSchema } = require('../validations/userSchema');
+const mongoose = require('mongoose');
 // Opcional: para capturar errores en Sentry antes de forzar crash
 // const Sentry = require('../instrument');
 
 const _formatUserData = (user) => {
-  if (!user) return null;
-  return {
-    id: user._id,
-    fullName: user.fullName,
-    username: user.username || user.userName,
-    email: user.email,
-    role: user.role || "user",
-    roleInfo: user.roleId
-      ? {
-          id: user.roleId._id,
-          name: user.roleId.name,
-          permission: user.roleId.permission,
-        }
-      : null,
-    isActive: user.isActive,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-  };
+    if (!user) return null;
+    return {
+        id: user._id,
+        fullName: user.fullName,
+        username: user.username || user.userName,
+        email: user.email,
+        role: user.role || 'user',
+        roleInfo: user.roleId ? {
+            id: user.roleId._id,
+            name: user.roleId.name,
+            permission: user.roleId.permission
+        } : null,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+    };
 };
 
 const getUsersByFilter = async (filters, pagination) => {
-  const { page, limit } = pagination;
-  const skip = (page - 1) * limit;
-  //const { search, username, email, role, isActive } = filters;
+    const { page, limit } = pagination;
+    const skip = (page - 1) * limit;
+    const { search, username, email, role, isActive } = filters;
 
-  const query = {};
-  if (filters.search) {
-    query.$or = [
-      { username: { $regex: filters.search, $options: "i" } },
-      { email: { $regex: filters.search, $options: "i" } },
-      { role: { $regex: filters.search, $options: "i" } },
-    ];
-  }
+    const query = {};
+    if (search) {
+        query.$or = [
+            { username: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } },
+            { role: { $regex: search, $options: 'i' } },
+        ];
+    }
 
-  ["username", "email", "role", "active"].forEach((field) => {
-    if (filters[field]) query[field] = filters[field];
-  });
 
-  /*if (username) query.username = username;
+    if (username) query.username = username;
     if (email) query.email = email;
     if (role) query.role = role;
-    if (isActive !== undefined) query.isActive = isActive;*/
+    if (isActive !== undefined) query.isActive = isActive;
 
-  const users = await User.find(query)
-    .populate("roleId", "name permission")
-    .select("-password")
-    .skip(skip)
-    .limit(limit)
-    .sort({ lastSeen: -1 });
+    const users = await User.find(query)
+        .populate('roleId', 'name permission')
+        .select('-password')
+        .skip(skip)
+        .limit(limit)
+        .sort({ lastSeen: -1 });
 
-  const totalUsers = await User.countDocuments(query);
-  console.log("totalUsers:", totalUsers);
+    const totalUsers = await User.countDocuments(query);
 
-  const response = {
-    data: users.map((user) => ({
-      id: user._id,
-      fullName: user.fullName,
-      username: user.username,
-      email: user.email,
-      password: user.password,
-      role: user.role,
-      active: user.active,
-    })),
-    total: totalUsers,
-  };
-  console.log(response);
-  return {
-    data: users.map((user) => ({
-      id: user._id,
-      fullName: user.fullName,
-      username: user.username,
-      email: user.email,
-      password: user.password,
-      role: user.role,
-      active: user.active,
-    })),
-    total: totalUsers,
-  };
-  //const formattedUsers = users.map(_formatUserData);
-  //return { data: formattedUsers, count: totalUsers };
+    const formattedUsers = users.map(_formatUserData);
+
+    return { data: formattedUsers, count: totalUsers };
 };
 
 const getUserById = async (userId) => {
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    throw Boom.badRequest("El ID proporcionado no es válido.");
-  }
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw Boom.badRequest('El ID proporcionado no es válido.');
+    }
 
-  const user = await User.findById(userId)
-    .populate("roleId", "name permission")
-    .select("-password");
+    const user = await User.findById(userId)
+        .populate('roleId', 'name permission')
+        .select('-password');
 
-  if (!user) {
-    throw Boom.notFound("Usuario no encontrado.");
-  }
+    if (!user) {
+        throw Boom.notFound('Usuario no encontrado.');
+    }
 
-  return _formatUserData(user);
+    return _formatUserData(user);
 };
+
 
 /* -------------------------
    VERSIÓN ORIGINAL (correcta)
@@ -113,45 +82,48 @@ const getUserById = async (userId) => {
 ------------------------- */
 
 const updateUser = async (userId, updateData) => {
-  // Validar con Joi
-  const { error } = updateUserSchema.validate(updateData);
-  if (error) {
-    throw Boom.badRequest("Error de validación", {
-      details: error.details.map((d) => ({
-        message: d.message,
-        path: d.path.join("."),
-        type: d.type,
-      })),
-    });
-  }
-
-  // Verificar email duplicado
-  if (updateData.email) {
-    const emailExists = await User.findOne({
-      email: updateData.email,
-      _id: { $ne: userId },
-    });
-    if (emailExists) {
-      throw Boom.conflict("El email ya está en uso por otro usuario.");
+    // Validar con Joi
+    const { error } = updateUserSchema.validate(updateData);
+    if (error) {
+        throw Boom.badRequest('Error de validación', {
+            details: error.details.map((d) => ({
+                message: d.message,
+                path: d.path.join('.'),
+                type: d.type,
+            })),
+        });
     }
-  }
 
-  const user = await User.findByIdAndUpdate(userId, updateData, {
-    new: true,
-    runValidators: true,
-  })
-    .populate("roleId", "name permission")
-    .select("-password");
+    // Verificar email duplicado
+    if (updateData.email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(updateData.email)) {
+            throw Boom.badRequest('El formato del email no es válido.');
+        }
 
-  if (!user) {
-    throw Boom.notFound("Usuario no encontrado.");
-  }
+        const emailExists = await User.findOne({ email: updateData.email, _id: { $ne: userId } });
+        if (emailExists) {
+            throw Boom.conflict('El email ya está en uso por otro usuario.');
+        }
+    }
 
-  return _formatUserData(user);
+    const user = await User.findByIdAndUpdate(userId, updateData, {
+        new: true,
+        runValidators: true,
+    })
+        .populate('roleId', 'name permission')
+        .select('-password');
+
+    if (!user) {
+        throw Boom.notFound('Usuario no encontrado.');
+    }
+
+    return _formatUserData(user);
 };
 
+
 // /* -------------------------
-//    VERSIÓN QUE FORZA ERROR / TUMBA EL SERVIDOR
+//    VERSIÓN QUE FORZA ERROR / TUMBA EL SERVIDOR 
 //    NOTA: Esto forzará un crash asíncrono del proceso.
 //    usarlo solo en desarrollo para probar el sdk de sentry SOLO en desarrollo. Para desactivar, reemplaza por la versión original arriba.
 // ------------------------- */
@@ -190,49 +162,46 @@ const updateUser = async (userId, updateData) => {
    deleteUser (sin cambios)
 ------------------------- */
 const deleteUser = async (userId) => {
-  const user = await User.findByIdAndUpdate(
-    userId,
-    { isActive: false },
-    { new: true }
-  ).select("-password");
+    const user = await User.findByIdAndUpdate(
+        userId,
+        { isActive: false },
+        { new: true }
+    ).select('-password');
 
-  if (!user) {
-    throw Boom.notFound("Usuario no encontrado.");
-  }
+    if (!user) {
+        throw Boom.notFound('Usuario no encontrado.');
+    }
 
-  return _formatUserData(user);
+    return _formatUserData(user);
 };
 
 // Función para comparar contraseñas
 const comparePassword = async (candidatePassword, userId) => {
-  const user = await User.findById(userId);
-  if (!user) {
-    throw Boom.notFound("Usuario no encontrado.");
-  }
-  return await user.comparePassword(candidatePassword);
+    const user = await User.findById(userId);
+    if (!user) {
+        throw Boom.notFound('Usuario no encontrado.');
+    }
+    return await user.comparePassword(candidatePassword);
 };
 
 // Función para actualizar la contraseña
 const updatePassword = async (userId, newPassword) => {
-  const user = await User.findById(userId);
-  if (!user) {
-    throw Boom.notFound("Usuario no encontrado.");
-  }
+    const user = await User.findById(userId);
+    if (!user) {
+        throw Boom.notFound('Usuario no encontrado.');
+    }
 
-  const salt = await bcrypt.genSalt(10);
-  user.password = await bcrypt.hash(newPassword, salt);
+    user.password = newPassword;
+    await user.save();
 
-  //user.password = newPassword;
-  await user.save();
-
-  return _formatUserData(user);
+    return _formatUserData(user);
 };
 
 module.exports = {
-  getUsersByFilter,
-  getUserById,
-  updateUser,
-  deleteUser,
-  comparePassword,
-  updatePassword,
+    getUsersByFilter,
+    getUserById,
+    updateUser,
+    deleteUser,
+    comparePassword,
+    updatePassword,
 };
