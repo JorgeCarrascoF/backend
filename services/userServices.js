@@ -95,7 +95,7 @@ const updateUser = async (userId, updateData) => {
     }
 
     // Verificar email duplicado
-    if (updateData.email) {
+    if (updateData.email) { 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(updateData.email)) {
             throw Boom.badRequest('El formato del email no es válido.');
