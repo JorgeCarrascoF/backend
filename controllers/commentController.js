@@ -1,4 +1,5 @@
 const Comment = require('../models/comment');
+const CommentService = require('../services/commentService');
 const { createCommentSchema, updateCommentSchema } = require('../validations/commentSchema.js');
 const boom = require('@hapi/boom');
 
@@ -13,7 +14,7 @@ const createComment = async (req, res, next) => {
             });
         }
 
-        const { text, logId  } = req.body;
+        const { text, logId } = req.body;
         const userId = req.user.id;
         const comment = new Comment({ text, userId, logId });
         await comment.save();
@@ -29,10 +30,23 @@ const createComment = async (req, res, next) => {
 
 const getAllComments = async (req, res, next) => {
     try {
-        const comments = await Comment.find()
-        .populate('userId', 'fullName email')
-        .populate('logId');
-        res.status(200).json(comments);
+        const limit = parseInt(req.query.limit) || 5;
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page - 1) * limit;
+        const sortBy = req.query.sortBy || 'create_at';
+        const sortOrder = req.query.sortOrder || 'desc';
+
+        const result = await CommentService.getAllComments(req.query, 
+            { limit, skip, sortBy, sortOrder });
+
+        res.status(200).json({
+            success: true,
+            page,
+            limit,
+            count: result.data.length,
+            total: result.total,
+            data: result.data
+        });
     } catch (err) {
         next(err);
     }
@@ -41,8 +55,8 @@ const getAllComments = async (req, res, next) => {
 const getCommentById = async (req, res, next) => {
     try {
         const comment = await Comment.findById(req.params.id)
-        .populate('userId', 'fullName email')
-        .populate('logId');
+            .populate('userId', 'fullName email')
+            .populate('logId');
         if (!comment) {
             throw boom.notFound('Comentario no encontrado');
         }
@@ -50,6 +64,28 @@ const getCommentById = async (req, res, next) => {
     } catch (err) {
         next(err);
     }
+};
+
+const getCommentsByLog = async (req, res, next) => {
+  try {
+    const { logId } = req.params;
+    const limit = parseInt(req.query.limit) || 5;
+    const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * limit;
+
+    const result = await CommentService.getCommentsByLog(logId, { limit, skip });
+
+    res.status(200).json({
+      success: true,
+      page,
+      limit,
+      count: result.data.length,
+      total: result.total,
+      data: result.data
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 const updateComment = async (req, res, next) => {
@@ -65,8 +101,8 @@ const updateComment = async (req, res, next) => {
 
         const { id } = req.params;
         const comment = await Comment.findByIdAndUpdate(id, req.body, { new: true })
-        .populate('userId', 'fullName email')
-        .populate('logId');
+            .populate('userId', 'fullName email')
+            .populate('logId');
         if (!comment) {
             throw boom.notFound('Comment no encontrado');
         }
@@ -98,6 +134,7 @@ module.exports = {
     createComment,
     getAllComments,
     getCommentById,
+    getCommentsByLog,
     updateComment,
     deleteComment
 };

@@ -61,6 +61,113 @@
 /**
  * @swagger
  * /comments:
+ *   get:
+ *     summary: Obtener todos los comentarios (con filtros y paginación)
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *     responses:
+ *       200:
+ *         description: Comments retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comment'
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Access denied
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /comments/log/{logId}:
+ *   get:
+ *     summary: Obtener comentarios de un log específico
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: logId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del log asociado
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página para la paginación
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *         description: Número de comentarios por página
+ *     responses:
+ *       200:
+ *         description: Lista de comentarios del log solicitado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 count:
+ *                   type: integer
+ *                   description: Número de comentarios devueltos en esta página
+ *                 total:
+ *                   type: integer
+ *                   description: Total de comentarios para este log
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comment'
+ *       401:
+ *         description: Token inválido o no proporcionado
+ *       404:
+ *         description: No se encontraron comentarios para este log
+ *       500:
+ *         description: Error en el servidor
+ */
+
+
+/**
+ * @swagger
+ * /comments:
  *   post:
  *     summary: Crear un nuevo comentario
  *     tags: [Comments]
@@ -81,21 +188,7 @@
  *               $ref: '#/components/schemas/Comment'
  *       400:
  *         description: Error en los datos de entrada
- *   get:
- *     summary: Obtener todos los comentarios
- *     tags: [Comments]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista de comentarios
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Comment'
- */
+
 
 /**
  * @swagger
