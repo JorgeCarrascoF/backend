@@ -1,7 +1,15 @@
+const { boolean } = require('joi');
 const mongoose = require('mongoose');
 
 const commentSchema = new mongoose.Schema({
-  text: String,
+  text: {
+    type: String,
+    required: true
+  },
+  pinned: {
+    type: Boolean,
+    default: false
+  },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   logId: { type: mongoose.Schema.Types.ObjectId, ref: 'Log' },
   create_at: {

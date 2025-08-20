@@ -18,6 +18,10 @@
  *         text:
  *           type: string
  *           description: Texto del comentario
+ *         pinned:
+ *           type: boolean
+ *           description: Indica si el comentario está fijado
+ *           example: false
  *         date:
  *           type: string
  *           format: date-time
@@ -52,11 +56,41 @@
  *           type: string
  *           description: Texto del comentario
  *           example: "Texto del Comentario"
+ *         pinned:
+ *           type: boolean
+ *           description: Indica si el comentario está fijado
+ *           example: false
  *         logId:
  *           type: string
  *           description: ID del log asociado
  *           example: "60d5ec9f8c3da2b348d27e4a"
  */
+
+/**
+ * @swagger
+ * /comments:
+ *   post:
+ *     summary: Crear un nuevo comentario
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CommentInput'
+ *     responses:
+ *       201:
+ *         description: Comments creado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Comment'
+ *       400:
+ *         description: Error en los datos de entrada
+*/
+
 
 /**
  * @swagger
@@ -109,7 +143,7 @@
  * @swagger
  * /comments/log/{logId}:
  *   get:
- *     summary: Obtener comentarios de un log específico
+ *     summary: Obtener comentarios de un log específico (con filtros y paginación)
  *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
@@ -163,31 +197,6 @@
  *       500:
  *         description: Error en el servidor
  */
-
-
-/**
- * @swagger
- * /comments:
- *   post:
- *     summary: Crear un nuevo comentario
- *     tags: [Comments]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CommentInput'
- *     responses:
- *       201:
- *         description: Comments creado exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Comment'
- *       400:
- *         description: Error en los datos de entrada
 
 
 /**
