@@ -24,6 +24,7 @@ class CommentService {
             data: comments.map((comment) => ({
                 id: comment._id,
                 text: comment.text,
+                pinned: comment.pinned,
                 userId: comment.userId,
                 logId: comment.logId,
                 create_at: comment.create_at
@@ -59,6 +60,7 @@ class CommentService {
             data: comments.map(c => ({
                 id: c._id,
                 text: c.text,
+                pinned: c.pinned,
                 user: c.userId,
                 log: c.logId,
                 create_at: c.create_at
