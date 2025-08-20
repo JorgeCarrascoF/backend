@@ -2,6 +2,7 @@
 const Boom = require('@hapi/boom');
 const User = require('../models/user');
 const { updateUserSchema } = require('../validations/userSchema');
+const { validateEmailDomain } = require("../utils/emailValidator");
 const mongoose = require('mongoose');
 // Opcional: para capturar errores en Sentry antes de forzar crash
 // const Sentry = require('../instrument');
@@ -14,12 +15,12 @@ const _formatUserData = (user) => {
         username: user.username || user.userName,
         email: user.email,
         role: user.role || 'user',
+        isActive: user.isActive,
         roleInfo: user.roleId ? {
             id: user.roleId._id,
             name: user.roleId.name,
             permission: user.roleId.permission
         } : null,
-        isActive: user.isActive,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
     };
@@ -43,7 +44,10 @@ const getUsersByFilter = async (filters, pagination) => {
     if (username) query.username = username;
     if (email) query.email = email;
     if (role) query.role = role;
-    if (isActive !== undefined) query.isActive = isActive;
+    if (isActive !== undefined) {
+        const activeValue = isActive === 'true' ? true : isActive === 'false' ? false : isActive;
+        query.isActive = activeValue;
+    }
 
     const users = await User.find(query)
         .populate('roleId', 'name permission')
@@ -94,11 +98,18 @@ const updateUser = async (userId, updateData) => {
         });
     }
 
-    // Verificar email duplicado
-    if (updateData.email) { 
+    // Verificar email duplicado y dominio valido
+    if (updateData.email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(updateData.email)) {
             throw Boom.badRequest('El formato del email no es válido.');
+        }
+
+        // Validar el dominio del correo
+        try {
+            await validateEmailDomain(updateData.email);
+        } catch (error) {
+            throw Boom.badRequest(error.message);
         }
 
         const emailExists = await User.findOne({ email: updateData.email, _id: { $ne: userId } });

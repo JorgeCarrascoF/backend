@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 
 const getAllLogs = async (filters, pagination) => {
-  const { limit, skip } = pagination;
+  const { limit, skip, sortBy = 'last_seen_at', sortOrder = 'desc' } = pagination;
   const query = {};
 
   console.log("filters.search:", filters.search, typeof filters.search);
@@ -48,11 +48,27 @@ const getAllLogs = async (filters, pagination) => {
       }
   });
 
+  // Filtros de fecha
+  if (filters.startDate || filters.endDate) {
+    const dateQuery = {};
+    if (filters.startDate) {
+      dateQuery.$gte = new Date(filters.startDate);
+    }
+    if (filters.endDate) {
+      dateQuery.$lte = new Date(filters.endDate);
+    }
+    query.created_at = dateQuery;
+  }
+
+  // Ordenamiento
+  const sort = {};
+  sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
   const logs = await Log.find(query)
     .populate("userId", "username email")
     .skip(skip)
     .limit(limit)
-    .sort({ created_at: -1 });
+    .sort(sort);
   const totalLogs = await Log.countDocuments(query);
 
   return {
