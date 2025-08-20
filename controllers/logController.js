@@ -23,7 +23,15 @@ const getAllLogs = async (req, res) => {
         const sortBy = req.query.sortBy || 'last_seen_at';
         const sortOrder = req.query.sortOrder || 'desc';
 
-        // Pasar los filtros de fecha al servicio
+        let dateFilter = req.query.date;
+        if (dateFilter) {
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!dateRegex.test(dateFilter)) {
+                return res.status(400).json({ msg: 'Invalid date format. Use YYYY-MM-DD.' });
+            }
+        }
+
+        // Pasar todos los filtros al servicio
         const filters = {
             search: req.query.search,
             issue_id: req.query.issue_id,
@@ -31,14 +39,14 @@ const getAllLogs = async (req, res) => {
             description: req.query.description,
             culprit: req.query.culprit,
             error_type: req.query.error_type,
+            error_signature: req.query.error_signature,
             environment: req.query.environment,
             status: req.query.status,
             priority: req.query.priority,
             assigned_to: req.query.assigned_to,
             active: req.query.active,
             hash: req.query.hash,
-            startDate: req.query.startDate,
-            endDate: req.query.endDate
+            date: req.query.date
         };
 
 
