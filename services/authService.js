@@ -7,6 +7,7 @@ const boom = require("@hapi/boom");
 const User = require("../models/user");
 const { sendEmail } = require("../config/email");
 const { registrationEmail } = require("../templates/registrationEmail");
+const { recoveryPasswordEmail } = require("../templates/recoveryPasswordEmail");
 const JWT_SECRET = process.env.JWT_SECRET || "clave_secreta";
 const { validateEmailDomain } = require("../utils/emailValidator");
 
@@ -178,6 +179,58 @@ class AuthService {
     }
     return user;
   }
+
+  async recoverPassword(email) {
+    // Buscar usuario por email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return { success: false, message: "There is no account linked to this email." };
+    }
+
+    // Generar una nueva contraseña aleatoria
+    const newPassword = this.generateRandomPassword();
+
+    // Actualizar la contraseña del usuario
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    // Enviar correo con la nueva contraseña
+    try {
+      const emailHtml = recoveryPasswordEmail({
+        fullName: user.fullName,
+        email: user.email,
+        newPassword: newPassword,
+      });
+
+      const emailSent = await sendEmail(
+        user.email,
+        "Password Recovery",
+        emailHtml
+      );
+
+      if (!emailSent) {
+        console.warn(`Failed to send recovery email to ${user.email}`);
+      }
+    } catch (error) {
+      console.error(`Unexpected error sending recovery email to ${user.email}:`, error.message);
+    }
+
+    return { success: true };
+  }
+
+  // Función para generar una contraseña aleatoria
+  generateRandomPassword() {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * charset.length);
+      password += charset[randomIndex];
+    }
+    return password;
+  }
+
 }
 
 module.exports = new AuthService();
