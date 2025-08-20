@@ -104,6 +104,8 @@
  *                       type: object
  *       401:
  *         description: Invalid credentials
+ *       403:
+ *         description: User account is inactive
  */
 
 /**

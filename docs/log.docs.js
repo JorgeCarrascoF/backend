@@ -124,6 +124,37 @@
  *         schema:
  *           type: boolean
  *         description: Filtrar por logs activos/inactivos
+ *       - in: query
+ *         name: hash
+ *         schema:
+ *           type: string
+ *         description: Identificador único generado por culprit, error_type, y environment
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: "Filtrar logs creados después de esta fecha (formato: YYYY-MM-DD)"
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: "Filtrar logs creados antes de esta fecha (formato: YYYY-MM-DD)"
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           default: last_seen_at
+ *         description: "Campo por el cual ordenar [ej: created_at, last_seen_at]"
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Orden de clasificación (ascendente o descendente)
+
  *     responses:
  *       200:
  *         description: Logs retrieved successfully
