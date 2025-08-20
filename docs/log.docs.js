@@ -130,23 +130,16 @@
  *           type: string
  *         description: Identificador único generado por culprit, error_type, y environment
  *       - in: query
- *         name: startDate
+ *         name: error_signature
  *         schema:
  *           type: string
- *           format: date-time
- *         description: "Filtrar logs creados después de esta fecha (formato: YYYY-MM-DD)"
+ *         description: Filtrar por firma de error
  *       - in: query
- *         name: endDate
+ *         name: date
  *         schema:
  *           type: string
- *           format: date-time
- *         description: "Filtrar logs creados antes de esta fecha (formato: YYYY-MM-DD)"
- *       - in: query
- *         name: sortBy
- *         schema:
- *           type: string
- *           default: last_seen_at
- *         description: "Campo por el cual ordenar [ej: created_at, last_seen_at]"
+ *           format: date
+ *         description: "Filtrar logs por fecha específica (formato: YYYY-MM-DD)"
  *       - in: query
  *         name: sortOrder
  *         schema:

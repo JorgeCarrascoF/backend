@@ -16,6 +16,7 @@ const getAllLogs = async (filters, pagination) => {
       { description: { $regex: filters.search, $options: "i" } },
       { culprit: { $regex: filters.search, $options: "i" } },
       { error_type: { $regex: filters.search, $options: "i" } },
+      { error_signature: { $regex: filters.search, $options: "i" } },
       { environment: { $regex: filters.search, $options: "i" } },
       { status: { $regex: filters.search, $options: "i" } },
       { priority: { $regex: filters.search, $options: "i" } },
@@ -34,6 +35,7 @@ const getAllLogs = async (filters, pagination) => {
     "description",
     "culprit",
     "error_type",
+    "error_signature",
     "environment",
     "status",
     "priority",
@@ -49,15 +51,15 @@ const getAllLogs = async (filters, pagination) => {
   });
 
   // Filtros de fecha
-  if (filters.startDate || filters.endDate) {
-    const dateQuery = {};
-    if (filters.startDate) {
-      dateQuery.$gte = new Date(filters.startDate);
-    }
-    if (filters.endDate) {
-      dateQuery.$lte = new Date(filters.endDate);
-    }
-    query.created_at = dateQuery;
+  if (filters.date) {
+    const date = new Date(filters.date + 'T00:00:00.000Z');
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    query.created_at = {
+      $gte: date,
+      $lt: nextDay
+    };
   }
 
   // Ordenamiento
@@ -79,6 +81,7 @@ const getAllLogs = async (filters, pagination) => {
       description: log.description,
       culprit: log.culprit,
       error_type: log.error_type,
+      error_signature: log.error_signature,
       environment: log.environment,
       status: log.status,
       priority: log.priority,
@@ -106,6 +109,7 @@ const getLogById = async (id) => {
     description: log.description,
     culprit: log.culprit,
     error_type: log.error_type,
+    error_signature: log.error_signature,
     environment: log.environment,
     status: log.status,
     priority: log.priority,
