@@ -60,7 +60,7 @@ const getUsersByFilter = async (filters, pagination) => {
 
     const formattedUsers = users.map(_formatUserData);
 
-    return { data: formattedUsers, count: totalUsers };
+    return { data: formattedUsers, total: totalUsers };
 };
 
 const getUserById = async (userId) => {

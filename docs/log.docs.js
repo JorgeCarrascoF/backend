@@ -57,9 +57,6 @@
  *         active:
  *           type: boolean
  *           description: Indica si el log está activo (para borrado lógico)
- *         hash:
- *           type: string
- *           description: Identificador único generado por culprit, error_type, y environment
  *         json_sentry:
  *           type: object
  *           description: Payload completo de Sentry
@@ -157,6 +154,7 @@
  *           enum: [asc, desc]
  *           default: desc
  *         description: Orden de clasificación (ascendente o descendente)
+
  *     responses:
  *       200:
  *         description: Logs retrieved successfully

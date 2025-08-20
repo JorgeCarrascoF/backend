@@ -1,9 +1,9 @@
 const Joi = require('joi');
 
 const createDocumentSchema = Joi.object({
-    title: Joi.string().required().max(100).messages({
+    title: Joi.string().required().max(5000).messages({
         'any.required': 'Title is required.',
-        'string.max': 'Title must be at most 100 characters long.'
+        'string.max': 'Title must be at most 5000 characters long.'
     }),
     content: Joi.string().required().messages({
         'any.required': 'Content is required.'
@@ -15,8 +15,8 @@ const createDocumentSchema = Joi.object({
 });
 
 const updateDocumentSchema = Joi.object({
-    title: Joi.string().max(100).optional().messages({
-        'string.max': 'Title must be at most 100 characters long.'
+    title: Joi.string().max(5000).optional().messages({
+        'string.max': 'Title must be at most 5000 characters long.'
     }),
     content: Joi.string().optional(),
     log: Joi.string().optional().messages({
