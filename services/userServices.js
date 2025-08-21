@@ -16,6 +16,7 @@ const _formatUserData = (user) => {
         email: user.email,
         role: user.role || 'user',
         isActive: user.isActive,
+        isFirstLogin: user.isFirstLogin,
         roleInfo: user.roleId ? {
             id: user.roleId._id,
             name: user.roleId.name,
