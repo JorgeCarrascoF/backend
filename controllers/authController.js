@@ -76,9 +76,43 @@ const getProfile = async (req, res, next) => {
     }
 };
 
+const recoverPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                statusCode: 400,
+                error: "Bad Request",
+                message: "Email is required."
+            });
+        }
+
+        const result = await authService.recoverPassword(email);
+
+        if (!result.success) {
+            return res.status(404).json({
+                statusCode: 404,
+                error: "Not Found",
+                message: result.message
+            });
+        }
+
+        res.status(200).json({
+            statusCode: 200,
+            message: "If the email is registered, a new password has been sent."
+        });
+
+    } catch (err) {
+        next(err);
+    }
+};
+
+
 module.exports = {
     register,
     login,
     logout,
-    getProfile
+    getProfile,
+    recoverPassword,
 };

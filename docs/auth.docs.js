@@ -133,3 +133,41 @@
  *       401:
  *         description: Unauthorized
  */
+
+/**
+ * @swagger
+ * /auth/recover-password:
+ *   post:
+ *     summary: Recover password
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email
+ *     responses:
+ *       200:
+ *         description: If the email is registered, a new password has been sent.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 statusCode:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "If the email is registered, a new password has been sent."
+ *       400:
+ *         description: Email is required.
+ *       404:
+ *         description: There is no account linked to this email.
+ */
+
