@@ -75,10 +75,29 @@ const getProfile = async (req, res, next) => {
         next(err);
     }
 };
+// Controlador para authController.js
+const recoverPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        
+        const result = await authService.recoverPassword(email);
+        
+        res.status(200).json({
+            success: true,
+            message: result.message,
+            email: result.email,
+            newPassword: result.newPassword
+        });
+    } catch (err) {
+        next(err);
+    }
+};
 
+// Actualizar el module.exports para incluir la nueva función:
 module.exports = {
     register,
     login,
     logout,
-    getProfile
+    getProfile,
+    recoverPassword
 };

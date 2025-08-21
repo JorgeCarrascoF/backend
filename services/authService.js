@@ -147,10 +147,10 @@ class AuthService {
         role: user.role || "user",
         roleInfo: user.roleId
           ? {
-              id: user.roleId._id,
-              name: user.roleId.name,
-              permission: user.roleId.permission,
-            }
+            id: user.roleId._id,
+            name: user.roleId.name,
+            permission: user.roleId.permission,
+          }
           : null,
       },
     };
@@ -163,6 +163,55 @@ class AuthService {
     }
     return user;
   }
+
+  // Método simplificado para authService.js
+  async recoverPassword(email) {
+    // Buscar usuario por email
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      throw boom.notFound('There is no account linked to this email');
+    }
+
+    // Generar nueva contraseña aleatoria
+    const newPassword = this.generateRandomPassword();
+
+    // Hashear la nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar la contraseña en la base de datos
+    await User.findByIdAndUpdate(user._id, {
+      password: hashedPassword
+    });
+
+    return {
+      message: 'Password has been updated successfully',
+      email: email,
+      newPassword: newPassword // Solo para desarrollo/testing
+    };
+  }
+
+  generateRandomPassword(length = 12) {
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
+
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    const symbols = '!@#$%^&*';
+
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += symbols[Math.floor(Math.random() * symbols.length)];
+
+    for (let i = 4; i < length; i++) {
+      password += charset[Math.floor(Math.random() * charset.length)];
+    }
+
+    return password.split('').sort(() => 0.5 - Math.random()).join('');
+  }
+
 }
 
 module.exports = new AuthService();

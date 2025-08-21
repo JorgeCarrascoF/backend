@@ -43,7 +43,17 @@ const loginSchema = Joi.object({
   }),
 });
 
+const recoverPasswordSchema = Joi.object({
+    email: Joi.string().email().required().messages({
+        'string.base': 'El campo email debe ser una cadena de texto.',
+        'string.email': 'El formato del campo email es inválido.',
+        'any.required': 'El campo email es obligatorio.'
+    })
+});
+
+// Actualizar el module.exports para incluir el nuevo schema:
 module.exports = {
-  registerSchema,
-  loginSchema,
+    registerSchema,
+    loginSchema,
+    recoverPasswordSchema
 };
