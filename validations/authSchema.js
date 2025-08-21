@@ -5,7 +5,8 @@ const registerSchema = Joi.object({
     "string.base": "Full name must be a string.",
     "any.required": "Full name is required.",
   }),
-  username: Joi.string().required().messages({
+  username: Joi.string().required().regex(/^\S+$/).messages({
+    'string.pattern.base': 'Username cannot contain spaces.',
     "string.base": "Username must be a string.",
     "any.required": "Username is required.",
   }),

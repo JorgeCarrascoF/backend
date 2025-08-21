@@ -18,6 +18,10 @@
  *         text:
  *           type: string
  *           description: Texto del comentario
+ *         pinned:
+ *           type: boolean
+ *           description: Indica si el comentario está fijado
+ *           example: false
  *         date:
  *           type: string
  *           format: date-time
@@ -52,6 +56,10 @@
  *           type: string
  *           description: Texto del comentario
  *           example: "Texto del Comentario"
+ *         pinned:
+ *           type: boolean
+ *           description: Indica si el comentario está fijado
+ *           example: false
  *         logId:
  *           type: string
  *           description: ID del log asociado
@@ -81,21 +89,115 @@
  *               $ref: '#/components/schemas/Comment'
  *       400:
  *         description: Error en los datos de entrada
+*/
+
+
+/**
+ * @swagger
+ * /comments:
  *   get:
- *     summary: Obtener todos los comentarios
+ *     summary: Obtener todos los comentarios (con filtros y paginación)
  *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 5
  *     responses:
  *       200:
- *         description: Lista de comentarios
+ *         description: Comments retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Comment'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comment'
+ *       401:
+ *         description: Missing or invalid token
+ *       403:
+ *         description: Access denied
+ *       500:
+ *         description: Server error
  */
+
+/**
+ * @swagger
+ * /comments/log/{logId}:
+ *   get:
+ *     summary: Obtener comentarios de un log específico (con filtros y paginación)
+ *     tags: [Comments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: logId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del log asociado
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página para la paginación
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 5
+ *         description: Número de comentarios por página
+ *     responses:
+ *       200:
+ *         description: Lista de comentarios del log solicitado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 count:
+ *                   type: integer
+ *                   description: Número de comentarios devueltos en esta página
+ *                 total:
+ *                   type: integer
+ *                   description: Total de comentarios para este log
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comment'
+ *       401:
+ *         description: Token inválido o no proporcionado
+ *       404:
+ *         description: No se encontraron comentarios para este log
+ *       500:
+ *         description: Error en el servidor
+ */
+
 
 /**
  * @swagger

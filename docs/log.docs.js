@@ -124,6 +124,30 @@
  *         schema:
  *           type: boolean
  *         description: Filtrar por logs activos/inactivos
+ *       - in: query
+ *         name: hash
+ *         schema:
+ *           type: string
+ *         description: Identificador único generado por culprit, error_type, y environment
+ *       - in: query
+ *         name: error_signature
+ *         schema:
+ *           type: string
+ *         description: Filtrar por firma de error
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: "Filtrar logs por fecha específica (formato: YYYY-MM-DD)"
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Orden de clasificación (ascendente o descendente)
+
  *     responses:
  *       200:
  *         description: Logs retrieved successfully

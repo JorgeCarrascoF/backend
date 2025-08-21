@@ -8,10 +8,18 @@ const User = require("../models/user");
 const { sendEmail } = require("../config/email");
 const { registrationEmail } = require("../templates/registrationEmail");
 const JWT_SECRET = process.env.JWT_SECRET || "clave_secreta";
+const { validateEmailDomain } = require("../utils/emailValidator");
 
 class AuthService {
   async registerUser(userData) {
     const { fullName, username, email, password, role, roleId } = userData;
+
+    // Validar el dominio del correo
+    try {
+      await validateEmailDomain(email);
+    } catch (error) {
+      throw boom.badRequest(error.message);
+    }
 
     // Verificar si el usuario ya existe
     const existingUser = await User.findOne({
@@ -111,6 +119,13 @@ class AuthService {
       console.log("User not found");
       throw boom.unauthorized("Invalid credentials");
     }
+
+    // Verificar si el usuario está activo
+    if (!user.isActive) {
+      console.log("User account is inactive");
+      throw boom.forbidden("User account is inactive. Please contact the administrator.");
+    }
+
 
     // Verificar contraseña
     const isMatch = await bcrypt.compare(password, user.password);
