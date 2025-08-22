@@ -2,7 +2,7 @@
 // middleware/auth.js (SOLUCIÓN)
 // ============================================
 const jwt = require('jsonwebtoken');
-const User = require('../models/user'); // ¡Importante! Necesitas el modelo de Usuario
+const User = require('../models/user');
 const SECRET = process.env.JWT_SECRET || 'clave_secreta';
 
 async function authMiddleware(req, res, next) { // La función debe ser async
