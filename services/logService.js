@@ -131,6 +131,7 @@ function generateHash(log) {
   return crypto.createHash("sha1").update(base).digest("hex");
 }
 const createLog = async (data) => {
+  console.log("creating log with data:", data);
   let errorSignature = data.error_signature;
   if (!errorSignature && data.json_sentry?.metadata?.type) {
     errorSignature = data.json_sentry.metadata.type;

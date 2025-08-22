@@ -69,7 +69,6 @@ exports.handleSentryWebhook = async (req, res) => {
       "Webhook recibido desde Sentry:",
       JSON.stringify(req.body, null, 2)
     );
-
     const eventPayload = req.body?.data?.event;
 
     if (!eventPayload) {
