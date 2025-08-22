@@ -25,6 +25,7 @@ const updateUserSchema = Joi.object({
     role: Joi.string().valid('superadmin', 'admin', 'user').optional().messages({
         'any.only': 'Role must be one of the following: superadmin, admin, user.'
     }),
+    isFirstLogin: Joi.boolean().optional(),
     roleId: Joi.string().optional(),
     isActive: Joi.boolean().optional()
 });

@@ -68,6 +68,7 @@ class AuthService {
       password: hashedPassword,
       role: finalRole,
       roleId: finalRoleId,
+      isFirstLogin: true
     });
 
     await user.save();
@@ -103,6 +104,7 @@ class AuthService {
       email: user.email,
       role: user.role,
       roleInfo: user.roleId,
+      isFirstLogin: user.isFirstLogin
     };
   }
 
@@ -168,6 +170,7 @@ class AuthService {
             permission: user.roleId.permission,
           }
           : null,
+        isFirstLogin: user.isFirstLogin
       },
     };
   }

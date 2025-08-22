@@ -61,7 +61,17 @@
 // };
 
 const Log = require("../models/log");
-const Event = require("../models/event");
+const crypto = require("crypto")
+
+function generateHash(log) {
+  const base = [
+    log.culprit || "",
+    log.error_type || "",
+    log.environment || "",
+    log.message || ""
+  ].join("|");
+  return crypto.createHash("sha1").update(base).digest("hex");
+}
 
 exports.handleSentryWebhook = async (req, res) => {
   try {
@@ -69,7 +79,8 @@ exports.handleSentryWebhook = async (req, res) => {
       "Webhook recibido desde Sentry:",
       JSON.stringify(req.body, null, 2)
     );
-    const eventPayload = req.body?.data?.event;
+
+    const eventPayload = req.body?.data?.event || req.body.event;
 
     if (!eventPayload) {
       return res
@@ -83,12 +94,12 @@ exports.handleSentryWebhook = async (req, res) => {
     let log;
     if (!relatedLog) {
       log = await Log.create({
-        message: eventPayload.title,
-        issue_id: eventPayload.issue_id,
-        description: "",
-        culprit: eventPayload.culprit,
-        error_type: eventPayload.type,
-        environment: eventPayload.environment || "staging",
+        message: eventPayload.title || "",
+        issue_id: eventPayload.issue_id || eventPayload.event_id,
+        description: eventPayload.message || "",
+        culprit: eventPayload.culprit || "",
+        error_type: eventPayload.type || "error",
+        environment: eventPayload.environment || "development",
         priority: "medium",
         assigned_to: "",
         status: "unresolved",
@@ -97,6 +108,11 @@ exports.handleSentryWebhook = async (req, res) => {
         count: 1,
         active: true,
         userId: null,
+        hash: generateHash({
+          culprit: eventPayload.culprit,
+          error_type: eventPayload.type,
+          environment: eventPayload.environment,
+        }),
         json_sentry: req.body,
       });
       console.log(`Log creado: ${log._id}`);
