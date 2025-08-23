@@ -2,9 +2,9 @@ const Joi = require('joi');
 
 const updateUserSchema = Joi.object({
     fullName: Joi.string().min(3).max(100).optional().messages({
-        'string.base': 'Name must be a string.',
-        'string.min': 'Name must be at least 3 characters long.',
-        'string.max': 'Name must be at most 100 characters long.'
+        'string.base': 'Full name must be a text string.',
+        'string.min': 'Full name must be at least 3 characters long.',
+        'string.max': 'Full name cannot exceed 100 characters.'
     }),
     username: Joi.string().min(3).max(50).optional().messages({
         'string.base': 'Username must be a string.',
@@ -20,7 +20,7 @@ const updateUserSchema = Joi.object({
         minDomainSegments: 2,
         tlds: { allow: false } // Permite dominios personalizados
     }).optional().messages({
-        'string.email': 'Please enter a valid email address.'
+        'string.email': 'Email address is not valid. Please enter a correct format.'
     }),
     role: Joi.string().valid('superadmin', 'admin', 'user').optional().messages({
         'any.only': 'Role must be one of the following: superadmin, admin, user.'
