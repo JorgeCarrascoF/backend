@@ -20,7 +20,7 @@ const createComment = async (req, res, next) => {
         await comment.save();
 
         res.status(201).json({
-            message: 'Comentario creado exitosamente',
+            message: 'Comment created successfully',
             comment
         });
     } catch (err) {
@@ -58,7 +58,7 @@ const getCommentById = async (req, res, next) => {
             .populate('userId', 'fullName email')
             .populate('logId');
         if (!comment) {
-            throw boom.notFound('Comentario no encontrado');
+            throw boom.notFound('Comment not found');
         }
         res.status(200).json(comment);
     } catch (err) {
@@ -104,10 +104,10 @@ const updateComment = async (req, res, next) => {
             .populate('userId', 'fullName email')
             .populate('logId');
         if (!comment) {
-            throw boom.notFound('Comment no encontrado');
+            throw boom.notFound('Comment not found');
         }
         res.status(200).json({
-            message: 'Comment actualizado exitosamente',
+            message: 'Comment updated successfully',
             comment
         });
     } catch (err) {
@@ -120,10 +120,10 @@ const deleteComment = async (req, res, next) => {
         const { id } = req.params;
         const comment = await Comment.findByIdAndDelete(id);
         if (!comment) {
-            throw boom.notFound('Comment no encontrado');
+            throw boom.notFound('Comment not found');
         }
         res.status(200).json({
-            message: 'Comment eliminado exitosamente'
+            message: 'Comment deleted successfully'
         });
     } catch (err) {
         next(err);

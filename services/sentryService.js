@@ -174,7 +174,7 @@ async function evaluateAndCreateIncident(sentryEvent, eventRecord, triggeredRule
         by: incidentData.created_by,
         from_id: null,
         to_id: incidentData.state_id,
-        note: `Incidencia creada automáticamente desde regla: ${triggeredRule}`,
+        note: `Incident created automatically from rule: ${triggeredRule}`,
         at: new Date()
     });
 

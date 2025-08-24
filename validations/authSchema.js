@@ -13,7 +13,7 @@ const registerSchema = Joi.object({
   email: Joi.string().email().required().messages({
     "string.base": "Email must be a string.",
     "string.email": "Email format is invalid.",
-    "any.required": "Email is required.",
+    "any.required": "Email is required to register.",
   }),
   password: Joi.string()
     .min(8)
@@ -24,7 +24,7 @@ const registerSchema = Joi.object({
       "string.min": "Password must be at least 8 characters long.",
       "string.pattern.base":
         "Password must include uppercase letters, lowercase letters, numbers, and symbols (!@#$%^&*).",
-      "any.required": "Password is required.",
+      "any.required": "Password is required to secure your account.",
     }),
   role: Joi.string().valid("admin", "user", "superadmin").optional().messages({
     "string.base": "Role must be a string.",
@@ -37,10 +37,10 @@ const registerSchema = Joi.object({
 
 const loginSchema = Joi.object({
   email: Joi.string().required().messages({
-    "any.required": "Email is required.",
+    "any.required": "Email is required to log in.",
   }),
   password: Joi.string().required().messages({
-    "any.required": "Password is required.",
+    "any.required": "Password is required to log in.",
   }),
 });
 

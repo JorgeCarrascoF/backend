@@ -97,6 +97,12 @@
  *           type: string
  *         description: Filtrar por mensaje de log
  *       - in: query
+ *         name: error_type
+ *         schema:
+ *           type: string
+ *           enum: ['error', 'warning', 'info']
+ *         description: Tipo de error
+ *       - in: query
  *         name: environment
  *         schema:
  *           type: string
