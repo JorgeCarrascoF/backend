@@ -22,6 +22,7 @@ var documentRoutes = require('./routes/document');
 var sentryRoutes = require('./routes/sentry');
 var commentRoutes = require('./routes/comment');
 var statusRegisterRoutes = require('./routes/status-register');
+var suggestedUserRoutes = require('./routes/suggested-user')
 //var eventsRouter = require('./routes/events');
 //var projectsRouter = require('./routes/projects');
 var swaggerDocs = require('./swagger/swagger');
@@ -57,6 +58,7 @@ app.use('/api/logs', logsRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/status-register', statusRegisterRoutes);
+app.use('/api/suggested-user', suggestedUserRoutes);
 //app.use('/api/events', eventsRouter);
 //app.use('/api/projects', projectsRouter);
 app.use('/api/webhook', sentryRoutes);

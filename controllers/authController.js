@@ -84,7 +84,7 @@ const recoverPassword = async (req, res, next) => {
             return res.status(400).json({
                 statusCode: 400,
                 error: "Bad Request",
-                message: "Email is required."
+                message: "Email is required to recover password."
             });
         }
 
