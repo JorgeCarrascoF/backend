@@ -45,7 +45,7 @@ class CommentService {
     }
 
     async getCommentsByLog(logId, { limit, skip }) {
-        const query = { logId }; // 👈 filtramos por logId
+        const query = { logId }; // filtrar por logId
 
         const comments = await Comment.find(query)
             .populate("userId", "fullName email")

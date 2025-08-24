@@ -115,7 +115,7 @@
  *         description: Orden de clasificación (ascendente o descendente)
  *     responses:
  *       200:
- *         description: List of status records obtained successfully
+ *         description: List of status change record obtained successfully
  *         content:
  *           application/json:
  *             schema:
@@ -150,9 +150,60 @@
 
 /**
  * @swagger
+ * /status-register/log/{logId}:
+ *   get:
+ *     summary: Obtener registro de cambio de estado de un log específico
+ *     tags: [StatusRegister]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: logId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del log asociado
+ *     responses:
+ *       200:
+ *         description: List of status change record requested
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 count:
+ *                   type: integer
+ *                   description: Status change record number returned on this page
+ *                 total:
+ *                   type: integer
+ *                   description: Total status change record for this log
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comment'
+ *       401:
+ *         description: Invalid token
+ *       403:
+ *         description: Access denied
+ *       404:
+ *         description: No status change record was found for this log
+ *       500:
+ *         description: Server error
+ */
+
+
+
+/**
+ * @swagger
  * /status-register/{id}:
  *   get:
- *     summary: Obtener un registro de cambio de estado por ID
+ *     summary: Obtener registro de cambio de estado por ID
  *     tags: [StatusRegister]
  *     security:
  *       - bearerAuth: []
@@ -165,7 +216,7 @@
  *         description: ID del registro de estado a obtener
  *     responses:
  *       200:
- *         description: Status record obtained successfully
+ *         description: Status change record obtained successfully
  *         content:
  *           application/json:
  *             schema:
@@ -175,7 +226,7 @@
  *       403:
  *         description: Access denied
  *       404:
- *         description: Status record not found
+ *         description: status change record not found
  *       500:
  *         description: Server error
  */
