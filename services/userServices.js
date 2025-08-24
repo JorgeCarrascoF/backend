@@ -66,7 +66,7 @@ const getUsersByFilter = async (filters, pagination) => {
 
 const getUserById = async (userId) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-        throw Boom.badRequest('El ID proporcionado no es válido.');
+        throw Boom.badRequest('The provided ID is not valid.');
     }
 
     const user = await User.findById(userId)
@@ -74,7 +74,7 @@ const getUserById = async (userId) => {
         .select('-password');
 
     if (!user) {
-        throw Boom.notFound('Usuario no encontrado.');
+        throw Boom.notFound('The requested user could not be found in the system.');
     }
 
     return _formatUserData(user);
@@ -90,7 +90,7 @@ const updateUser = async (userId, updateData) => {
     // Validar con Joi
     const { error } = updateUserSchema.validate(updateData);
     if (error) {
-        throw Boom.badRequest('Error de validación', {
+        throw Boom.badRequest('One or more fields failed validation.', {
             details: error.details.map((d) => ({
                 message: d.message,
                 path: d.path.join('.'),
@@ -103,7 +103,7 @@ const updateUser = async (userId, updateData) => {
     if (updateData.email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(updateData.email)) {
-            throw Boom.badRequest('El formato del email no es válido.');
+            throw Boom.badRequest('Invalid email format. Please provide a valid email address.');
         }
 
         // Validar el dominio del correo
@@ -115,7 +115,7 @@ const updateUser = async (userId, updateData) => {
 
         const emailExists = await User.findOne({ email: updateData.email, _id: { $ne: userId } });
         if (emailExists) {
-            throw Boom.conflict('El email ya está en uso por otro usuario.');
+            throw Boom.conflict('The email address is already associated with another user account.');
         }
     }
 
@@ -127,7 +127,7 @@ const updateUser = async (userId, updateData) => {
         .select('-password');
 
     if (!user) {
-        throw Boom.notFound('Usuario no encontrado.');
+        throw Boom.notFound('User not found.');
     }
 
     return _formatUserData(user);
@@ -181,7 +181,7 @@ const deleteUser = async (userId) => {
     ).select('-password');
 
     if (!user) {
-        throw Boom.notFound('Usuario no encontrado.');
+        throw Boom.notFound('User not found. The user may have been deleted or deactivated.');
     }
 
     return _formatUserData(user);
@@ -191,7 +191,7 @@ const deleteUser = async (userId) => {
 const comparePassword = async (candidatePassword, userId) => {
     const user = await User.findById(userId);
     if (!user) {
-        throw Boom.notFound('Usuario no encontrado.');
+        throw Boom.notFound('User not found during password comparison.');
     }
     return await user.comparePassword(candidatePassword);
 };
@@ -200,7 +200,7 @@ const comparePassword = async (candidatePassword, userId) => {
 const updatePassword = async (userId, newPassword) => {
     const user = await User.findById(userId);
     if (!user) {
-        throw Boom.notFound('Usuario no encontrado.');
+        throw Boom.notFound('User not found. Cannot update password for non-existent user.');
     }
 
     user.password = newPassword;

@@ -3,7 +3,7 @@ const { authMiddleware } = require('../middleware/auth');
 const router = express.Router();
 
 router.get('/dashboard', authMiddleware, (req, res) => {
-  res.json({ msg: `Bienvenido ${req.user.userName}` });
+  res.json({ msg: `Welcome ${req.user.userName}` });
 });
 
 module.exports = router;

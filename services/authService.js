@@ -92,7 +92,7 @@ class AuthService {
       }
     } catch (error) {
       console.error(
-        `Unexpected error sending email to ${email}:`,
+        `Unexpected error sending welcome email to ${email}:`,
         error.message
       );
     }
@@ -119,8 +119,8 @@ class AuthService {
     });
 
     if (!user) {
-      console.log("User not found");
-      throw boom.unauthorized("Invalid credentials");
+      console.log("User not found during login attempt");
+      throw boom.unauthorized("Authentication failed. Invalid credentials");
     }
 
     // Verificar si el usuario está activo
@@ -133,8 +133,8 @@ class AuthService {
     // Verificar contraseña
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log("Invalid credentials");
-      throw boom.unauthorized("Invalid credentials");
+      console.log("Invalid password attempt for user:");
+      throw boom.unauthorized("Authentication failed. Invalid credentials.");
     }
 
     // Poblar información del rol
@@ -178,7 +178,7 @@ class AuthService {
   async getUserProfile(userId) {
     const user = await User.findById(userId).select("-password");
     if (!user) {
-      throw boom.notFound("User not found");
+      throw boom.notFound("User profile not found.");
     }
     return user;
   }
@@ -188,7 +188,7 @@ class AuthService {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return { success: false, message: "There is no account linked to this email." };
+      return { success: false, message: "No user account is associated with the provided email address." };
     }
 
     // Generar una nueva contraseña aleatoria

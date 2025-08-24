@@ -39,7 +39,7 @@ class CommentService {
             .populate('userId', 'fullName email')
             .populate('logId');
         if (!comment) {
-            throw boom.notFound('Comment no encontrado');
+            throw boom.notFound('Comment not found');
         }
         return document;
     }
@@ -75,7 +75,7 @@ class CommentService {
             .populate('userId', 'fullName email')
             .populate('logId', 'message');
         if (!comment) {
-            throw boom.notFound('Comment no encontrado');
+            throw boom.notFound('Comment not found');
         }
         return comment;
     }
@@ -83,7 +83,7 @@ class CommentService {
     async deleteComment(id) {
         const comment = await Comment.findByIdAndDelete(id);
         if (!comment) {
-            throw boom.notFound('Comment no encontrado');
+            throw boom.notFound('Comment not found');
         }
         return comment;
     }

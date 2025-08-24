@@ -15,7 +15,7 @@ class DocumentService {
     async getDocumentById(id) {
         const document = await Document.findById(id).populate('log');
         if (!document) {
-            throw boom.notFound('Document not found');
+            throw boom.notFound('The requested document could not be found.');
         }
         return document;
     }
@@ -23,7 +23,7 @@ class DocumentService {
     async updateDocument(id, updateData) {
         const document = await Document.findByIdAndUpdate(id, updateData, { new: true }).populate('log');
         if (!document) {
-            throw boom.notFound('Document not found');
+            throw boom.notFound('The document could not be updated because it does not exist.');
         }
         return document;
     }
@@ -31,7 +31,7 @@ class DocumentService {
     async deleteDocument(id) {
         const document = await Document.findByIdAndDelete(id);
         if (!document) {
-            throw boom.notFound('Document not found');
+            throw boom.notFound('The document could not be deleted because it was not found.');
         }
         return document;
     }

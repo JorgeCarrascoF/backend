@@ -94,9 +94,9 @@ const getLogById = async (req, res) => {
 
 const createLog = async (req, res) => {
     try {
-        if (!rolAdmin.includes(req.user.role)) {
-            return res.status(403).json({ msg: 'Access denied to create logs.' });
-        }
+        // if (!rolAdmin.includes(req.user.role)) {
+        //     return res.status(403).json({ msg: 'Access denied to create logs.' });
+        // }
 
         const newLog = await logService.createLog(req.body);
 
@@ -120,9 +120,9 @@ const updateLog = async (req, res) => {
         console.log('- ID a actualizar:', req.params.id);
         console.log('- Datos a actualizar:', req.body);
 
-        if (!rolAdmin.includes(req.user.role) && req.user.id !== req.params.id) {
-            return res.status(403).json({ msg: 'Access denied to update this log.' });
-        }
+        // if (!rolAdmin.includes(req.user.role) && req.user.id !== req.params.id) {
+        //     return res.status(403).json({ msg: 'Access denied to update this log.' });
+        // }
 
         const log = await logService.updateLog(req.params.id, req.body);
 
@@ -142,9 +142,9 @@ const deleteLog = async (req, res) => {
         console.log('- Log solicitante:', req.Log);
         console.log('- ID a eliminar:', req.params.id);
 
-        if (!rolAdmin.includes(req.user.role) && req.user.id !== req.params.id) {
-            return res.status(403).json({ msg: 'Access denied to delete this log.' });
-        }
+        // if (!rolAdmin.includes(req.user.role) && req.user.id !== req.params.id) {
+        //     return res.status(403).json({ msg: 'Access denied to delete this log.' });
+        // }
 
         const log = await logService.deleteLog(req.params.id);
 
