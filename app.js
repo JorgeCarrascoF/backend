@@ -33,7 +33,7 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-app.use(cors());
+
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -43,6 +43,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 // const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'https://pruebas-concepto.vercel.app', '*', 'http://localhost:3000'];
+
+const corsOptions = {
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
 
 // app.use(cors({
 //   origin: allowedOrigins,
