@@ -8,8 +8,32 @@ class DocumentService {
         return document;
     }
 
-    async getAllDocuments() {
-        return await Document.find().populate('log');
+    async getAllDocuments(pagination) {
+        //return await Document.find().populate('log');
+        const { limit, skip, sortBy = 'date', sortOrder = desc } = pagination;
+        const query = {};
+
+        const sort = {};
+        sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+        const documents = await Document.find(query)
+            .populate('log')
+            .skip(skip)
+            .limit(limit)
+            .sort(sort);
+
+        const totalDocuments = await Document.countDocuments(query);
+
+        return {
+            data: documents.map((document) => ({
+                id: document._id,
+                title: document.title,
+                content: document.content,
+                date: document.logId,
+                log: document.date
+            })),
+            total: totalDocuments,
+        };
     }
 
     async getDocumentById(id) {
