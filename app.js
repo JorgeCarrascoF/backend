@@ -40,12 +40,14 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'https://pruebas-concepto.vercel.app', '*', 'http://localhost:3000'];
+// const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'https://pruebas-concepto.vercel.app', '*', 'http://localhost:3000'];
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
+// app.use(cors({
+//   origin: allowedOrigins,
+//   credentials: true,
+// }));
+
+app.use(cors());
 
 // Rutas principales
 app.use('/', indexRouter);
