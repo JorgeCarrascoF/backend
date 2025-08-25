@@ -1,4 +1,5 @@
 const Document = require('../models/document');
+const documentService = require('../services/documentService');
 const { createDocumentSchema, updateDocumentSchema } = require('../validations/documentSchema');
 const boom = require('@hapi/boom');
 
@@ -28,8 +29,25 @@ const createDocument = async (req, res, next) => {
 
 const getAllDocuments = async (req, res, next) => {
     try {
-        const documents = await Document.find().populate('log');
-        res.status(200).json(documents);
+        const limit = parseInt(req.query.limit) || 5;
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page - 1) * limit;
+        const sortBy = req.query.sortBy || 'date';
+        const sortOrder = req.query.sortOrder || 'desc';
+        //const documents = await Document.find().populate('log');
+
+        const result = await documentService.getAllDocuments(req.query,
+            { limit, skip, sortBy, sortOrder });
+
+        //res.status(200).json(documents);
+        res.status(200).json({
+            success: true,
+            page,
+            limit,
+            count: result.data.length,
+            total: result.total,
+            data: result.data
+        });
     } catch (err) {
         next(err);
     }

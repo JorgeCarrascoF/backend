@@ -2,6 +2,7 @@ const StatusRegister = require("../models/status register");
 const Log = require("../models/log");
 const mongoose = require("mongoose");
 const suggestedUserService = require("./suggestedUserService");
+const Boom = require('@hapi/boom');
 
 class StatusRegisterService {
 
@@ -26,19 +27,23 @@ class StatusRegisterService {
 
     await newStatusRegister.save();
     await suggestedUserService.trackResolution(logId);
-    
+
     return { log, statusRegister: newStatusRegister };
   };
 
   getAllStatusRegisters = async (pagination) => {
-    const { limit, skip } = pagination;
+    const { limit, skip, sortBy = 'created_at', sortOrder = desc } = pagination;
     const query = {};
+
+    const sort = {};
+    sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
     const statusRegisters = await StatusRegister.find(query)
-      .populate("userId", "fullName email")
-      .populate('logId')
+      .populate('userId', 'fullName email')
+      .populate('logId', 'issue_id message description culprit error_type environment status priority assigned_to created_at last_seen_at count active userId error_signature')
       .skip(skip)
       .limit(limit)
-      .sort({ created_at: -1 });
+      .sort(sort);
 
     const totalStatusRegisters = await StatusRegister.countDocuments(query);
 
@@ -55,15 +60,54 @@ class StatusRegisterService {
 
   };
 
+  async getStatusRegistersByLog(logId) {
+    const query = { logId }; // filtrar por logId
+
+    const statusRegister = await StatusRegister.find(query)
+      .populate('userId', 'fullName email')
+      .populate('logId', 'issue_id message description culprit error_type environment status priority assigned_to created_at last_seen_at count active userId error_signature')
+      .sort({ created_at: -1 });
+
+    const total = await StatusRegister.countDocuments(query);
+
+    if (!statusRegister) {
+      throw Boom.notFound('Status Register not found');
+    }
+
+    return {
+      data: statusRegister.map(c => ({
+        id: c._id,
+        status: c.status,
+        user: c.userId,
+        log: c.logId,
+        created_at: c.created_at
+      })),
+      total
+    };
+  }
+
   async getStatusRegisterById(id) {
+
     const statusRegister = await StatusRegister.findById(id)
       .populate('userId', 'fullName email')
-      .populate('logId');
+      .populate('logId', 'issue_id message description culprit error_type environment status priority assigned_to created_at last_seen_at count active userId error_signature')
+
     if (!statusRegister) {
-      throw boom.notFound('Status Register no encontrado');
+      throw Boom.notFound('Status Register not found');
     }
-    return statusRegister;
-  }
+
+    //return statusRegister;
+
+    return {
+        id: statusRegister._id,
+        status: statusRegister.status,
+        user: statusRegister.userId,
+        log: statusRegister.logId,
+        created_at: statusRegister.created_at
+    };
+  };
+
+  
 
 }
 

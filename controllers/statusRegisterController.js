@@ -36,7 +36,7 @@ const getAllStatusRegisters = async (req, res, next) => {
         const sortBy = req.query.sortBy || 'created_at';
         const sortOrder = req.query.sortOrder || 'desc';
 
-        const result = await statusRegisterService.getAllStatusRegisters(req.query, 
+        const result = await statusRegisterService.getAllStatusRegisters(req.query,
             { limit, skip, sortBy, sortOrder });
 
         res.status(200).json({
@@ -49,6 +49,29 @@ const getAllStatusRegisters = async (req, res, next) => {
         });
     } catch (err) {
         next(err);
+    }
+};
+
+const getStatusRegistersByLog = async (req, res) => {
+    try {
+
+        const { logId } = req.params;
+
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({
+                msg: 'Access denied.',
+                detail: 'Only superadmin, administrators, and users can view status Register by logId'
+            });
+        }
+
+        const statusRegister = await statusRegisterService.getStatusRegistersByLog(logId);
+
+        if (!statusRegister || statusRegister.data.length === 0) {
+            return res.status(404).json({ msg: 'Status Register not found.' });
+        }
+        res.status(200).json(statusRegister);
+    } catch (err) {
+        res.status(500).json({ msg: 'Error obtaining Status Register', error: err.message });
     }
 };
 
@@ -77,8 +100,11 @@ const getStatusRegisterById = async (req, res) => {
     }
 };
 
+
+
 module.exports = {
     createStatusRegister,
     getAllStatusRegisters,
-    getStatusRegisterById
+    getStatusRegisterById,
+    getStatusRegistersByLog
 };

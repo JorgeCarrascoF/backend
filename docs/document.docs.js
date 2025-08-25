@@ -92,6 +92,26 @@
  *     tags: [Documents]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           example: 5
+ *         description: Número de registros por página
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           example: desc
+ *         description: Orden de clasificación (ascendente o descendente)
  *     responses:
  *       200:
  *         description: Lista de documentos

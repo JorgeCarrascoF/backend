@@ -7,6 +7,7 @@ const {authMiddleware} = require('../middleware/auth');
 // Aplicar los middlewares a todas las rutas de comments
 router.post('/', authMiddleware, statusRegisterController.createStatusRegister);
 router.get('/', authMiddleware,  statusRegisterController.getAllStatusRegisters);
+router.get('/log/:logId', authMiddleware,  statusRegisterController.getStatusRegistersByLog);
 router.get('/:id', authMiddleware,  statusRegisterController.getStatusRegisterById);
 
 module.exports = router;
