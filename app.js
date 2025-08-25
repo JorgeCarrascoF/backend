@@ -26,7 +26,7 @@ var suggestedUserRoutes = require('./routes/suggested-user')
 //var eventsRouter = require('./routes/events');
 //var projectsRouter = require('./routes/projects');
 var swaggerDocs = require('./swagger/swagger');
-const { credentials } = require('amqplib');
+// const { credentials } = require('amqplib');
 
 var app = express();
 
@@ -43,7 +43,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'https://pruebas-concepto.vercel.app', '*', 'http://localhost:3000'];
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'https://pruebas-concepto.vercel.app', 'http://localhost:3000'];
 
 const corsOptions = {
   origin: allowedOrigins,
