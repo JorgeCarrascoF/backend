@@ -6,6 +6,7 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
+      customCssUrl: '/css/custom-swagger.css',
       title: 'API Buggle - Equipo 2 Tarde',
       description: 'Documentación de API con autenticación JWT + Cookies',
       version: '1.0.0',
@@ -157,8 +158,9 @@ const swaggerSpec = swaggerJSDoc(options);
 function swaggerDocs(app) {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     explorer: true,
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'API Buggle - Documentación'
+    //customCss: '.swagger-ui .topbar { display: none }',
+    customCssUrl: '/css/custom-swagger.css',
+    customSiteTitle: 'API Buggle - Documentación',
   }));
 
   app.get('/api-docs.json', (req, res) => {
