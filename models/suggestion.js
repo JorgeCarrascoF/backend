@@ -8,7 +8,6 @@ const suggestionSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  hola:{type:String}
 });
 
 suggestionSchema.set('toJSON', {

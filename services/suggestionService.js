@@ -1,5 +1,6 @@
 const { app } = require('../langgraph/graph');
 const { getLogById } = require('../services/logService');
+const Suggestion  = require('../models/suggestion');
 
 const suggestionReport = async (id, owner, repo, branch = 'main') => {
     const log = await getLogById(id);
@@ -18,19 +19,15 @@ const suggestionReport = async (id, owner, repo, branch = 'main') => {
 }
 
 const getReportByLog = async (logId) => {
-    const query = { logId }; 
-
-    const suggestion = await Suggestion.find(query)
-        .populate("logId");
+    const suggestion = await Suggestion.findOne({ logId });
 
     return {
-        data: suggestion.map(c => ({
-            id: c._id,
-            report: c.report,
-            log: c.logId,
-            create_at: c.create_at
-        }))
+            id: suggestion._id,
+            report: suggestion.report,
+            log: suggestion.logId,
+            created_at: suggestion.created_at
     };
 }
+
 
 module.exports = { suggestionReport, getReportByLog }

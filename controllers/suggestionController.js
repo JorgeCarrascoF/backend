@@ -5,37 +5,39 @@ const logService = require('../services/logService');
 
 const getReportById = async (req, res) => {
   try {
-    const { idLog, owner, repo, branch } = req.body;    
-      const log = await logService.getLogById(idLog);
+    const { logId, owner, repo, branch } = req.body;    
 
-      if (!log) {
-          return res.status(404).json({ msg: 'Log not found.' });
-      }
+    // 1. Validar que el log exista
+    const log = await logService.getLogById(logId);
+    if (!log) {
+      return res.status(404).json({ msg: 'Log not found.' });
+    }
 
-      const report = await suggestionService.suggestionReport(
-        idLog,
-        owner,
-        repo,
-        branch
-      )
+    const existing = await suggestionService.getReportByLog(logId);
+    if (existing && existing.report) {
+      return res.status(400).json({
+        msg: 'A report already exists for this log',
+        existing
+      });
+    }
 
-      const suggestion = new Suggestion({
-        report,
-        'idLog': '68ac242faaa9b891be62e35b',
-        'hola':'hola'
-        });
+    const report = await suggestionService.suggestionReport(
+      logId,
+      owner,
+      repo,
+      branch
+    );
 
-      console.log(suggestion)
-      await suggestion.save();
+    const suggestion = new Suggestion({ report, logId });
+    await suggestion.save();
 
-
-      res.status(200).json({
-        'message': 'Suggestion created successfully',
-        idLog,
-        report,
-  });
+    res.status(200).json({
+      message: 'Suggestion created successfully',
+      logId,
+      report
+    });
   } catch (err) {
-      res.status(500).json({ msg: 'Error general report', error: err.message });
+    res.status(500).json({ msg: 'Error general report', error: err.message });
   }
 };
 
@@ -43,7 +45,9 @@ const getReportByLog = async (req, res, next) => {
   try {
     const { logId } = req.params;
     
-    const result = await logService.getReportByLog(logId);
+    const result = await suggestionService.getReportByLog(logId);
+
+    console.log(logId);
 
     res.status(200).json({
       success: true,
