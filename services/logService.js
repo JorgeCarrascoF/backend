@@ -20,11 +20,12 @@ const getAllLogs = async (filters, pagination) => {
       { environment: { $regex: filters.search, $options: "i" } },
       { status: { $regex: filters.search, $options: "i" } },
       { priority: { $regex: filters.search, $options: "i" } },
-      { assigned_to: { $regex: filters.search, $options: "i" } }
+      { assigned_to: { $regex: filters.search, $options: "i" } },
+      { $expr: { $regexMatch: { input: { $toString: "$_id" }, regex: filters.search, options: "i" } } }
     );
-    if (mongoose.Types.ObjectId.isValid(filters.search)) {
+    /*if (mongoose.Types.ObjectId.isValid(filters.search)) {
       orFilters.push({ _id: new mongoose.Types.ObjectId(filters.search) });
-    }
+    }*/
     query.$or = orFilters;
   }
 

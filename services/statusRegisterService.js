@@ -68,21 +68,21 @@ class StatusRegisterService {
       .populate('logId', 'issue_id message description culprit error_type environment status priority assigned_to created_at last_seen_at count active userId error_signature')
       .sort({ created_at: -1 });
 
-    const total = await StatusRegister.countDocuments(query);
+    const totalStatusRegisters = await StatusRegister.countDocuments(query);
 
     if (!statusRegister) {
       throw Boom.notFound('Status Register not found');
     }
 
     return {
+      total: totalStatusRegisters,
       data: statusRegister.map(c => ({
         id: c._id,
         status: c.status,
         user: c.userId,
         log: c.logId,
         created_at: c.created_at
-      })),
-      total
+      }))
     };
   }
 

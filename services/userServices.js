@@ -4,6 +4,7 @@ const User = require('../models/user');
 const { updateUserSchema } = require('../validations/userSchema');
 const { validateEmailDomain } = require("../utils/emailValidator");
 const mongoose = require('mongoose');
+const bcrypt = require("bcryptjs");
 // Opcional: para capturar errores en Sentry antes de forzar crash
 // const Sentry = require('../instrument');
 
@@ -203,7 +204,9 @@ const updatePassword = async (userId, newPassword) => {
         throw Boom.notFound('User not found. Cannot update password for non-existent user.');
     }
 
-    user.password = newPassword;
+    user.password = await bcrypt.hash(newPassword, 10);
+    //user.password = newPassword;
+
     await user.save();
 
     return _formatUserData(user);
