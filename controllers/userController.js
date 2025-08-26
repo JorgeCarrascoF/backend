@@ -1,149 +1,237 @@
 // controllers/userController.js
-const userService = require('../services/userServices');
-const { updateUserSchema } = require('../validations/userSchema');
-const mongoose = require('mongoose');
+const userService = require("../services/userServices");
+const { updateUserSchema } = require("../validations/userSchema");
+const mongoose = require("mongoose");
+const Boom = require("@hapi/boom");
+const User = require("../models/user");
 
 // Las definiciones de Swagger no cambian, por lo que se omiten por brevedad...
+const Sentry = require("../instrument"); // Importar Sentry
 
 const getUsersByFilter = async (req, res) => {
-    try {
-        // 1. Verificación de permisos (responsabilidad del controlador)
-        if (!['admin', 'user'].includes(req.user.role)) {
-            return res.status(403).json({
-                msg: 'Acceso denegado. Rol no autorizado.',
-            });
-        }
-        
-        // 2. Preparar datos para el servicio
-        const filters = {
-            username: req.query.username,
-            email: req.query.email,
-            role: req.query.role,
-            isActive: req.query.isActive,
-            search: req.query.search,
-        };
-        const pagination = {
-            limit: parseInt(req.query.limit) || 10,
-            page: parseInt(req.query.page) || 1,
-        };
-
-        // 3. Llamar al servicio
-        const { data, count } = await userService.getUsersByFilter(filters, pagination);
-
-        // 4. Enviar respuesta HTTP
-        res.status(200).json({
-            success: true,
-            page: pagination.page,
-            limit: pagination.limit,
-            count: data.length, // Registros en la página actual
-            total: count, // Total de registros que coinciden con el filtro
-            data: data,
-        });
-
-    } catch (err) {
-        console.error('Error en controller getUsersByFilter:', err);
-        res.status(500).json({ msg: 'Error del servidor al filtrar usuarios', error: err.message });
+  try {
+    // Solo superadmin, admin y usuarios pueden ver la lista de usuarios
+    if (!["superadmin", "admin", "user"].includes(req.user.role)) {
+      return res.status(403).json({
+        msg: "Access denied. Unauthorized role.",
+      });
     }
-};
 
+    const filters = {
+      username: req.query.username,
+      email: req.query.email,
+      role: req.query.role,
+      isActive: req.query.isActive,
+      search: req.query.search,
+    };
+    const pagination = {
+      limit: parseInt(req.query.limit) || 10,
+      page: parseInt(req.query.page) || 1,
+    };
+
+    const { data, total } = await userService.getUsersByFilter(
+      filters,
+      pagination
+    );
+
+    res.status(200).json({
+      success: true,
+      page: pagination.page,
+      limit: pagination.limit,
+      count: data.length,
+      total: total,
+      data: data,
+    });
+  } catch (err) {
+    Sentry.captureException(err);
+    console.error("Error in controller getUsersByFilter:", err);
+    res
+      .status(500)
+      .json({
+        msg: "Server error while filtering users",
+        error: err.message,
+      });
+  }
+};
+// 
 const getUserById = async (req, res) => {
-    try {
-        // Verificación de permisos
-        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
-            return res.status(403).json({ msg: 'Acceso denegado.' });
-        }
-
-        // Validar formato del ID
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).json({ msg: 'El ID proporcionado no es válido.' });
-        }
-
-        // Llamar al servicio
-        const user = await userService.getUserById(req.params.id);
-
-        // Enviar respuesta HTTP
-        res.status(200).json(user);
-    } catch (err) {
-        console.error('Error en controller getUserById:', err);
-        if (err.message === 'Usuario no encontrado.') {
-            return res.status(404).json({ msg: err.message });
-        }
-        res.status(500).json({ msg: 'Error del servidor al obtener el usuario', error: err.message });
+  try {
+    // Validar formato del ID
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ msg: "Invalid ID" });
     }
-};
+    // Superadmin puede ver cualquier usuario
+    // Admin puede ver cualquier usuario
+    // Usuario normal solo puede verse a sí mismo
+    if (req.user.role === "user" && req.user.id !== req.params.id) {
+      return res.status(403).json({ msg: "Access denied." });
+    }
 
+    const user = await userService.getUserById(req.params.id);
+    // Enviar respuesta HTTP
+    res.status(200).json(user);
+  } catch (err) {
+    Sentry.captureException(err);
+    console.error("Error in controller getUserById:", err);
+    if (err.message === "User not found.") {
+      return res.status(404).json({ msg: err.message });
+    }
+    res
+      .status(500)
+      .json({
+        msg: "Server error while retrieving user",
+        error: err.message,
+      });
+  }
+};
 
 const updateUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updateData = req.body;
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
 
-        // 1. Verificación de permisos y validación de entrada
-        if (req.user.role !== 'admin' && req.user.id !== id) {
-            return res.status(403).json({ msg: 'Acceso denegado para actualizar este usuario.' });
-        }
-
-        const { error } = updateUserSchema.validate(updateData, { abortEarly: false });
-        if (error) {
-            return res.status(400).json({ msg: 'Error de validación', details: error.details.map(d => d.message) });
-        }
-
-        if (updateData.email) {
-            return res.status(400).json({ msg: 'El campo email no puede actualizarse' });
-        }
-        
-        // Un no-admin no puede cambiar su rol
-        if (req.user.role !== 'admin') {
-            delete updateData.role;
-            delete updateData.roleId;
-        }
-
-        // 2. Llamar al servicio
-        const updatedUser = await userService.updateUser(id, updateData);
-
-        // 3. Enviar respuesta HTTP
-        res.status(200).json({
-            msg: 'Usuario actualizado exitosamente.',
-            user: updatedUser,
-        });
-
-    } catch (err) {
-        console.error('Error en controller updateUser:', err);
-        if (err.message === 'Usuario no encontrado.') {
-            return res.status(404).json({ msg: err.message });
-        }
-        res.status(500).json({ msg: 'Error del servidor al actualizar el usuario', error: err.message });
+    // Solo superadmin puede actualizar cualquier usuario
+    // Admin solo puede actualizar usuarios que no sean superadmin
+    // Usuario normal solo puede actualizarse a sí mismo
+    if (req.user.role === "user" && req.user.id !== id) {
+      return res
+        .status(403)
+        .json({ msg: "Access denied to update this user." });
     }
+
+    if (req.user.role === "admin") {
+      // Verificar que no esté intentando actualizar a un superadmin
+      const targetUser = await userService.getUserById(id);
+      if (targetUser.role === "superadmin") {
+        return res
+          .status(403)
+          .json({
+            msg: "Administrators cannot modify superadmin users.",
+          });
+      }
+    }
+
+    // Solo superadmin puede cambiar roles
+    if (req.user.role !== "superadmin") {
+      delete updateData.role;
+      delete updateData.roleId;
+    }
+
+    const updatedUser = await userService.updateUser(id, updateData);
+
+    res.status(200).json({
+      msg: "User updated successfully.",
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error("Error in controller updateUser:", err);
+    if (err.isBoom) {
+      // Todos los errores ahora son Boom
+      return res.status(err.output.statusCode).json({
+        msg: err.output.payload.message,
+        details: err.data?.details,
+      });
+    }
+    // Error genérico (no debería ocurrir si todo está bien)
+    res.status(500).json({
+      msg: "Server error while updating user",
+    });
+  }
 };
 
 const deleteUser = async (req, res) => {
-    try {
-        // 1. Verificación de permisos
-        if (req.user.role !== 'admin' && req.user.id !== req.params.id) {
-            return res.status(403).json({ msg: 'Acceso denegado para eliminar este usuario.' });
-        }
-
-        // 2. Llamar al servicio
-        const deletedUser = await userService.deleteUser(req.params.id);
-
-        // 3. Enviar respuesta HTTP
-        res.status(200).json({
-            msg: 'Usuario eliminado exitosamente.',
-            deletedUser: deletedUser
+  try {
+    // Solo superadmin puede eliminar usuarios
+    if (req.user.role !== "superadmin") {
+      return res
+        .status(403)
+        .json({
+          msg: "Only superadmins can delete users.",
         });
-
-    } catch (err) {
-        console.error('Error en controller deleteUser:', err);
-        if (err.message === 'Usuario no encontrado.') {
-            return res.status(404).json({ msg: err.message });
-        }
-        res.status(500).json({ msg: 'Error del servidor al eliminar el usuario', error: err.message });
     }
+
+    // Verificar que no se esté eliminando a sí mismo
+    if (req.user.id === req.params.id) {
+      return res
+        .status(400)
+        .json({ msg: "You cannot delete your own account." });
+    }
+
+    const deletedUser = await userService.deleteUser(req.params.id);
+
+    res.status(200).json({
+      msg: "User deleted successfully.",
+      deletedUser: deletedUser,
+    });
+  } catch (err) {
+    Sentry.captureException(err);
+    console.error("Error in controller deleteUser:", err);
+    if (err.message === "User not found.") {
+      return res.status(404).json({ msg: err.message });
+    }
+    res
+      .status(500)
+      .json({
+        msg: "Server error while deleting user",
+        error: err.message,
+      });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    const { id } = req.user;
+    const { currentPassword, newPassword } = req.body;
+
+    // Validar que se proporcionen las contraseñas
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({
+          msg: "You must provide the current password and the new password.",
+        });
+    }
+
+    // Validar que la nueva contraseña cumpla con los requisitos
+    const { error } = updateUserSchema.validate({ password: newPassword });
+    if (error) {
+      return res.status(400).json({ msg: error.details[0].message });
+    }
+
+    // Verificar que la contraseña actual es correcta
+    const user = await userService.getUserById(id);
+    const isMatch = await userService.comparePassword(currentPassword, id);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ msg: "Current password is incorrect." });
+    }
+
+    // Update the password
+    await userService.updatePassword(id, newPassword);
+
+    res.status(200).json({ msg: "Password changed successfully." });
+  } catch (err) {
+    console.error("Error in controller changePassword:", err);
+    if (err.isBoom) {
+      return res.status(err.output.statusCode).json({
+        msg: err.output.payload.message,
+        details: err.data?.details,
+      });
+    }
+    res
+      .status(500)
+      .json({
+        msg: "Server error while changing password",
+        error: err.message,
+      });
+  }
 };
 
 module.exports = {
-    getUsersByFilter,
-    getUserById,
-    updateUser,
-    deleteUser,
+  getUsersByFilter,
+  getUserById,
+  updateUser,
+  deleteUser,
+  changePassword,
 };

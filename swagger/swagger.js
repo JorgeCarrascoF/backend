@@ -42,9 +42,10 @@ const options = {
           type: 'object',
           properties: {
             id: { type: 'string', description: 'ID único del usuario' },
+            fullName: { type: 'string', description: 'Nombre completo del usuario' },
             username: { type: 'string', description: 'Nombre de usuario' },
             email: { type: 'string', format: 'email', description: 'Correo electrónico' },
-            role: { type: 'string', enum: ['admin', 'user'], description: 'Rol del usuario' },
+            role: { type: 'string', enum: ['superadmin', 'admin', 'user'], description: 'Rol del usuario' },
             roleId: { type: 'string', description: 'ID del rol asignado' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
@@ -66,39 +67,23 @@ const options = {
         },
         Log: {
           type: 'object',
-          required: ['message', 'event_id', 'sentry_timestamp', 'created_at', 'userId'],
+          required: ['issue_id', 'message', 'created_at', 'active', 'userId'],
           properties: {
-            _id: {
+            issue_id: {
               type: 'string',
-              description: 'ID único del log'
-            },
-            sentry_event_id: {
-              type: 'string',
-              description: 'ID del evento en Sentry'
-            },
-            event_id: {
-              type: 'string',
-              description: 'ID del evento interno'
+              description: 'ID único del incidente'
             },
             message: {
               type: 'string',
-              description: 'Mensaje del error o log'
+              description: 'Mensaje del error'
             },
-            link_sentry: {
+            description: {
               type: 'string',
-              description: 'Enlace al error en Sentry'
+              description: 'Descripción detallada'
             },
             culprit: {
               type: 'string',
               description: 'Causa principal del error'
-            },
-            filename: {
-              type: 'string',
-              description: 'Nombre del archivo donde ocurrió el error'
-            },
-            function_name: {
-              type: 'string',
-              description: 'Función donde ocurrió el error'
             },
             error_type: {
               type: 'string',
@@ -107,26 +92,37 @@ const options = {
             },
             environment: {
               type: 'string',
-              enum: ['staging', 'development', 'production'],
+              enum: ['testing', 'development', 'production'],
               description: 'Entorno de ejecución'
             },
-            affected_user_ip: {
+            status: {
               type: 'string',
-              description: 'IP del usuario afectado'
+              enum: ['unresolved', 'in review', 'solved'],
+              description: 'Estado del log'
             },
-            sentry_timestamp: {
+            description: {
               type: 'string',
-              format: 'date-time',
-              description: 'Fecha y hora original del evento en Sentry'
+              description: 'Descripción detallada'
             },
-            created_at: {
+            priority: {
               type: 'string',
-              format: 'date-time',
-              description: 'Fecha y hora en que se registró el log en el sistema'
+              description: 'Nivel de prioridad del log'
             },
-            userId: {
+            assigned_to: {
               type: 'string',
-              description: 'ID del usuario que generó el log'
+              description: 'Usuario asignado para resolver el log'
+            },
+            count: {
+              type: 'string',
+              description: 'Número de veces que ha ocurrido este incidente'
+            },
+            active: {
+              type: 'string',
+              description: 'Indica si el log está activo'
+            },
+            error_signature: {
+              type: 'string',
+              description: 'Tipo error desde metadata de Sentry'
             }
           }
         },
@@ -144,13 +140,15 @@ const options = {
       { name: 'Users', description: 'Gestión de usuarios' },
       { name: 'Roles', description: 'Gestión de roles' },
       { name: 'Logs', description: 'Gestión de logs' },
+      //{ name: 'Events', description: 'Gestión de eventos' },
+      //{ name: 'Projects', description: 'Gestión de proyectos' },
       { name: 'General', description: 'Endpoints generales' }
     ]
   },
   apis: [
     './routes/*.js',
     './controllers/*.js',
-    './docs/*.js' // Asegúrate de incluir esta línea
+    './docs/*.js'
   ]
 };
 

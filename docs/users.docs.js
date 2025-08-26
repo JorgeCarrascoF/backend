@@ -14,13 +14,16 @@
  *       properties:
  *         id:
  *           type: string
+ *         fullName:
+ *           type: string
+ *           description: "Nombre completo del usuario"
  *         username:
  *           type: string
  *         email:
  *           type: string
  *         role:
  *           type: string
- *           enum: [admin, user]
+ *           enum: ['superadmin', 'admin', 'user']
  *         roleInfo:
  *           type: object
  *           properties:
@@ -44,6 +47,8 @@
  *     UserUpdate:
  *       type: object
  *       properties:
+ *         fullName:
+ *           type: string
  *         username:
  *           type: string
  *         email:
@@ -67,7 +72,7 @@
  *     summary: Obtener usuarios filtrados con paginación
  *     description: >
  *       Retorna usuarios según filtros avanzados (username, email, role, estado), con paginación.  
- *       Solo accesible para roles distintos de `user` (admin).
+ *       Solo accesible para roles distintos de `user` (superadmin y admin).
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -99,7 +104,7 @@
  *         name: role
  *         schema:
  *           type: string
- *           enum: [admin, user]
+ *           enum: ['superadmin', 'admin', 'user']
  *         description: Filtrar por rol exacto
  *       - in: query
  *         name: isActive
@@ -120,7 +125,7 @@
  *         description: Cantidad de resultados por página
  *     responses:
  *       200:
- *         description: Lista de usuarios obtenida correctamente
+ *         description: Userlist obtained successfully
  *         content:
  *           application/json:
  *             schema:
@@ -143,19 +148,19 @@
  *                   items:
  *                     $ref: '#/components/schemas/User'
  *       401:
- *         description: Token no válido o no proporcionado
+ *         description: Unprovided or invalid token
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       403:
- *         description: Acceso denegado – solo roles admin o user
+ *         description: Access denied – only admin or user roles
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *       500:
- *         description: Error interno del servidor
+ *         description: Server error
  *         content:
  *           application/json:
  *             schema:
@@ -186,31 +191,31 @@
  *         description: ID del usuario
  *     responses:
  *       200:
- *         description: Datos del usuario obtenidos correctamente
+ *         description: User retrieved successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/User'
  *       401:
- *         description: Token no proporcionado o inválido
+ *         description: Unprovided or invalid token
  *       403:
- *         description: Acceso denegado
+ *         description: Access denied
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               msg: "Acceso denegado."
+ *               msg: "Access denied."
  *       404:
- *         description: Usuario no encontrado
+ *         description: User not found
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               msg: "Usuario no encontrado."
+ *               msg: "User not found."
  *       500:
- *         description: Error del servidor
+ *         description: Server error
  */
 
 /**
@@ -246,7 +251,7 @@
  *             $ref: '#/components/schemas/UserUpdate'
  *     responses:
  *       200:
- *         description: Usuario actualizado exitosamente
+ *         description: User updated successfully
  *         content:
  *           application/json:
  *             schema:
@@ -254,17 +259,45 @@
  *               properties:
  *                 msg:
  *                   type: string
- *                   example: "Usuario actualizado."
+ *                   example: "User updated successfully."
  *                 user:
  *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Validation error (e.g., invalid email format)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "The email is not valid."
  *       401:
- *         description: Token no proporcionado o inválido
+ *         description: Unprovided or invalid token
  *       403:
- *         description: Acceso denegado (solo admin o dueño del perfil)
+ *         description: Access denied (only admin or user owner)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "Access denied to update this user."
  *       404:
- *         description: Usuario no encontrado
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "User not found."
+ *       409:
+ *         description: Email already in use by another user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "Email already in use by another user."
  *       500:
- *         description: Error del servidor
+ *         description: Server error
  */
 
 /**
@@ -291,7 +324,7 @@
  *         description: ID del usuario a eliminar
  *     responses:
  *       200:
- *         description: Usuario eliminado exitosamente
+ *         description: User deleted successfully
  *         content:
  *           application/json:
  *             schema:
@@ -299,7 +332,7 @@
  *               properties:
  *                 msg:
  *                   type: string
- *                   example: "Usuario eliminado exitosamente."
+ *                   example: "User deleted successfully."
  *                 deletedUser:
  *                   type: object
  *                   properties:
@@ -310,11 +343,88 @@
  *                     email:
  *                       type: string
  *       401:
- *         description: Token no proporcionado o inválido
+ *         description: Unprovided or invalid token
  *       403:
- *         description: Acceso denegado
+ *         description: Access denied
  *       404:
- *         description: Usuario no encontrado
+ *         description: User not found
  *       500:
- *         description: Error del servidor
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /users/change-password:
+ *   post:
+ *     summary: Cambiar la contraseña del usuario actual
+ *     description: >
+ *       Permite al usuario autenticado cambiar su contraseña.
+ *       Se requiere proporcionar la contraseña actual y la nueva contraseña.
+ *       La nueva contraseña debe cumplir con los requisitos de seguridad.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *         description: Token JWT en formato "Bearer {token}"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: "Contraseña actual del usuario"
+ *               newPassword:
+ *                 type: string
+ *                 description: "Nueva contraseña del usuario"
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *           example:
+ *             currentPassword: "contraseña_antigua"
+ *             newPassword: "nueva_contraseña_segura"
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "Password changed successfully."
+ *       400:
+ *         description: Validation error or incorrect data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               currentPasswordIncorrect:
+ *                 value:
+ *                   msg: "Current password is incorrect."
+ *               newPasswordInvalid:
+ *                 value:
+ *                   msg: "New password must be at least 6 characters long."
+ *       401:
+ *         description: Unprovided or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */

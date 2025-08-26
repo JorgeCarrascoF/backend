@@ -1,9 +1,10 @@
 const express = require('express');
-const { saludar, getCompletion } = require('../controllers/suggestionController');
+const { getReportById, getReportByLog } = require('../controllers/suggestionController');
 
 const router = express.Router();
 
-router.post('/', saludar);
-router.post('/completion', getCompletion)
+router.post('/', getReportById)
+router.get('/log/:logId', getReportByLog)
+
 
 module.exports = router;

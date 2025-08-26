@@ -2,14 +2,14 @@
 // middleware/auth.js (SOLUCIÓN)
 // ============================================
 const jwt = require('jsonwebtoken');
-const User = require('../models/user'); // ¡Importante! Necesitas el modelo de Usuario
+const User = require('../models/user');
 const SECRET = process.env.JWT_SECRET || 'clave_secreta';
 
 async function authMiddleware(req, res, next) { // La función debe ser async
     const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
 
     if (!token) {
-        return res.status(401).json({ msg: 'Token no proporcionado, acceso denegado' });
+        return res.status(401).json({ msg: 'Token not provided, access denied' });
     }
 
     try {
@@ -22,7 +22,7 @@ async function authMiddleware(req, res, next) { // La función debe ser async
 
         // 3. Verificar si el usuario todavía existe
         if (!freshUser) {
-            return res.status(401).json({ msg: 'Usuario no encontrado, token inválido' });
+            return res.status(401).json({ msg: 'User not found, invalid token' });
         }
 
         // 4. Adjuntar el objeto de usuario FRESCO de la DB a la petición
@@ -31,8 +31,42 @@ async function authMiddleware(req, res, next) { // La función debe ser async
         next();
 
     } catch (err) {
-        return res.status(403).json({ msg: 'Token inválido o expirado' });
+        return res.status(403).json({ msg: 'Token invalid or expired' });
     }
 }
 
-module.exports = authMiddleware;
+// Middleware para verificar si el usuario tiene un rol específico
+function requireRole(roles) {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ msg: 'User not authenticated' });
+        }
+
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ 
+                msg: 'Access denied. Unauthorized role.',
+                requiredRoles: roles,
+                currentRole: req.user.role
+            });
+        }
+
+        next();
+    };
+}
+
+// Middleware para verificar si el usuario es superadmin
+function requireSuperAdmin(req, res, next) {
+    return requireRole(['superadmin'])(req, res, next);
+}
+
+// Middleware para verificar si el usuario es admin o superadmin
+function requireAdminOrSuper(req, res, next) {
+    return requireRole(['admin', 'superadmin'])(req, res, next);
+}
+
+module.exports = {
+    authMiddleware,
+    requireRole,
+    requireSuperAdmin,
+    requireAdminOrSuper
+};

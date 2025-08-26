@@ -1,102 +1,57 @@
-const { ChatOllama } = require('@langchain/ollama');
-const llm = new ChatOllama({
-  model: "llama3.1:latest",
-  temperature: 0,
-  maxRetries: 2,
-});
+const Suggestion = require('../models/suggestion');
+const suggestionService = require('../services/suggestionService');
+const logService = require('../services/logService');
 
-/**
- * @swagger
- * /suggestion:
- *   post:
- *     summary: Saludar a una persona
- *     tags: [Saludos]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *             properties:
- *               name:
- *                 type: string
- *                 example: jonathan
- *     responses:
- *       200:
- *         description: Saludo generado exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 mensaje:
- *                   type: string
- *                   example: hola jonathan
- *       400:
- *         description: Datos inválidos
- */
-const saludar = (req, res) => {
-    const { name } = req.body;
-    res.json({ mensaje: `hola ${name}` });
-  };
 
-/**
- * @swagger
- * /completion:
- *   post:
- *     summary: Generar respuesta usando un modelo de Ollama
- *     tags: [Ollama]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - prompt
- *             properties:
- *               prompt:
- *                 type: string
- *                 example: "Escribe un poema corto sobre la lluvia"
- *     responses:
- *       200:
- *         description: Respuesta generada exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 prompt:
- *                   type: string
- *                   example: "Escribe un poema corto sobre la lluvia"
- *                 respuesta:
- *                   type: string
- *                   example: "La lluvia susurra versos suaves en el tejado..."
- *       400:
- *         description: El campo 'prompt' es requerido
- *       500:
- *         description: Error interno del servidor
- */
-const getCompletion = async (req, res) => {
-    try {
-      const { prompt } = req.body;
-  
-      if (!prompt) {
-        return res.status(400).json({ error: "El campo 'prompt' es requerido" });
+const getReportById = async (req, res) => {
+  try {
+    const { idLog, owner, repo, branch } = req.body;    
+      const log = await logService.getLogById(idLog);
+
+      if (!log) {
+          return res.status(404).json({ msg: 'Log not found.' });
       }
-  
-      const completion = await llm.invoke(prompt);
-  
-      res.json({
-        prompt,
-        respuesta: completion,
-      });
-    } catch (error) {
-      console.error("Error al obtener respuesta de Ollama:", error);
-      res.status(500).json({ error: "Error en el servidor" });
-    }
+
+      const report = await suggestionService.suggestionReport(
+        idLog,
+        owner,
+        repo,
+        branch
+      )
+
+      const suggestion = new Suggestion({
+        report,
+        'idLog': '68ac242faaa9b891be62e35b',
+        'hola':'hola'
+        });
+
+      console.log(suggestion)
+      await suggestion.save();
+
+
+      res.status(200).json({
+        'message': 'Suggestion created successfully',
+        idLog,
+        report,
+  });
+  } catch (err) {
+      res.status(500).json({ msg: 'Error general report', error: err.message });
+  }
 };
 
-module.exports = { saludar, getCompletion};
+const getReportByLog = async (req, res, next) => {
+  try {
+    const { logId } = req.params;
+    
+    const result = await logService.getReportByLog(logId);
+
+    res.status(200).json({
+      success: true,
+      result
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getReportById, getReportByLog };

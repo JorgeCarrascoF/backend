@@ -2,37 +2,31 @@
 const Boom = require('@hapi/boom');
 const User = require('../models/user');
 const { updateUserSchema } = require('../validations/userSchema');
+const { validateEmailDomain } = require("../utils/emailValidator");
 const mongoose = require('mongoose');
+// Opcional: para capturar errores en Sentry antes de forzar crash
+// const Sentry = require('../instrument');
 
-/**
- * Formatea los datos de un usuario para la respuesta de la API.
- * @param {object} user - El objeto de usuario de Mongoose.
- * @returns {object} - El objeto de usuario formateado.
- */
 const _formatUserData = (user) => {
     if (!user) return null;
     return {
         id: user._id,
+        fullName: user.fullName,
         username: user.username || user.userName,
         email: user.email,
         role: user.role || 'user',
+        isActive: user.isActive,
+        isFirstLogin: user.isFirstLogin,
         roleInfo: user.roleId ? {
             id: user.roleId._id,
             name: user.roleId.name,
             permission: user.roleId.permission
         } : null,
-        isActive: user.isActive,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
     };
 };
 
-/**
- * Obtiene usuarios filtrados y paginados desde la base de datos.
- * @param {object} filters - Objeto con los filtros a aplicar (username, email, etc.).
- * @param {object} pagination - Objeto con { page, limit }.
- * @returns {Promise<object>} - Un objeto con la lista de usuarios y la cuenta total.
- */
 const getUsersByFilter = async (filters, pagination) => {
     const { page, limit } = pagination;
     const skip = (page - 1) * limit;
@@ -51,7 +45,10 @@ const getUsersByFilter = async (filters, pagination) => {
     if (username) query.username = username;
     if (email) query.email = email;
     if (role) query.role = role;
-    if (isActive !== undefined) query.isActive = isActive;
+    if (isActive !== undefined) {
+        const activeValue = isActive === 'true' ? true : isActive === 'false' ? false : isActive;
+        query.isActive = activeValue;
+    }
 
     const users = await User.find(query)
         .populate('roleId', 'name permission')
@@ -64,18 +61,12 @@ const getUsersByFilter = async (filters, pagination) => {
 
     const formattedUsers = users.map(_formatUserData);
 
-    return { data: formattedUsers, count: totalUsers };
+    return { data: formattedUsers, total: totalUsers };
 };
 
-/**
- * Obtiene un único usuario por su ID.
- * @param {string} userId - El ID del usuario.
- * @returns {Promise<object>} - El usuario formateado.
- * @throws {Error} - Si el usuario no se encuentra.
- */
 const getUserById = async (userId) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-        throw Boom.badRequest('El ID proporcionado no es válido.');
+        throw Boom.badRequest('The provided ID is not valid.');
     }
 
     const user = await User.findById(userId)
@@ -83,35 +74,49 @@ const getUserById = async (userId) => {
         .select('-password');
 
     if (!user) {
-        throw Boom.notFound('Usuario no encontrado.');
+        throw Boom.notFound('The requested user could not be found in the system.');
     }
 
     return _formatUserData(user);
 };
 
-/**
- * Actualiza un usuario por su ID.
- * @param {string} userId - El ID del usuario.
- * @param {object} updateData - Los datos para actualizar.
- * @returns {Promise<object>} - El usuario actualizado y formateado.
- * @throws {Error} - Si el usuario no se encuentra o si el email ya existe.
- */
-const updateUser = async (userId, updateData) => {
-    // No permitir actualizar email
-    if ('email' in updateData) {
-        throw Boom.conflict('El campo email no puede actualizarse');
-    }
 
+/* -------------------------
+   VERSIÓN ORIGINAL (correcta)
+   (Se deja comentada para referencia)
+------------------------- */
+
+const updateUser = async (userId, updateData) => {
     // Validar con Joi
     const { error } = updateUserSchema.validate(updateData);
     if (error) {
-        throw Boom.badRequest('Error de validación', {
+        throw Boom.badRequest('One or more fields failed validation.', {
             details: error.details.map((d) => ({
                 message: d.message,
                 path: d.path.join('.'),
                 type: d.type,
             })),
         });
+    }
+
+    // Verificar email duplicado y dominio valido
+    if (updateData.email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(updateData.email)) {
+            throw Boom.badRequest('Invalid email format. Please provide a valid email address.');
+        }
+
+        // Validar el dominio del correo
+        try {
+            await validateEmailDomain(updateData.email);
+        } catch (error) {
+            throw Boom.badRequest(error.message);
+        }
+
+        const emailExists = await User.findOne({ email: updateData.email, _id: { $ne: userId } });
+        if (emailExists) {
+            throw Boom.conflict('The email address is already associated with another user account.');
+        }
     }
 
     const user = await User.findByIdAndUpdate(userId, updateData, {
@@ -122,18 +127,52 @@ const updateUser = async (userId, updateData) => {
         .select('-password');
 
     if (!user) {
-        throw Boom.notFound('Usuario no encontrado.');
+        throw Boom.notFound('User not found.');
     }
 
     return _formatUserData(user);
 };
 
-/**
- * Realiza una eliminación lógica de un usuario por su ID (lo marca como inactivo).
- * @param {string} userId - El ID del usuario.
- * @returns {Promise<object>} - El usuario "eliminado" y formateado.
- * @throws {Error} - Si el usuario no se encuentra.
- */
+
+// /* -------------------------
+//    VERSIÓN QUE FORZA ERROR / TUMBA EL SERVIDOR 
+//    NOTA: Esto forzará un crash asíncrono del proceso.
+//    usarlo solo en desarrollo para probar el sdk de sentry SOLO en desarrollo. Para desactivar, reemplaza por la versión original arriba.
+// ------------------------- */
+// const updateUser = async (userId, updateData) => {
+//     // --- Validación previa (igual que la versión correcta) ---
+//     const { error } = updateUserSchema.validate(updateData);
+//     if (error) {
+//         const validationError = new Error('Error de validación');
+//         validationError.statusCode = 400;
+//         validationError.details = error.details.map((d) => ({
+//             message: d.message,
+//             path: d.path.join('.'),
+//             type: d.type,
+//         }));
+//         throw validationError;
+//     }
+
+//     // --- Forzar un crash asíncrono: esto no será atrapado por try/catch de controladores ---
+//     // Método 1: lanzar en nextTick -> uncaughtException -> crash
+//     process.nextTick(() => {
+//         throw new Error('Crash forzado desde updateUser (process.nextTick).');
+//     });
+
+//     // Alternativa (comentada): exit inmediato del proceso
+//     // setTimeout(() => process.exit(1), 100);
+
+//     // Por si acaso devuelvo algo (esto raramente llegará antes del crash)
+//     return {
+//         id: userId,
+//         username: updateData.username || 'test',
+//         note: 'Este return puede no llegar porque el proceso será crasheado asíncronamente'
+//     };
+// };
+
+/* -------------------------
+   deleteUser (sin cambios)
+------------------------- */
 const deleteUser = async (userId) => {
     const user = await User.findByIdAndUpdate(
         userId,
@@ -142,8 +181,30 @@ const deleteUser = async (userId) => {
     ).select('-password');
 
     if (!user) {
-        throw new Error('Usuario no encontrado.');
+        throw Boom.notFound('User not found. The user may have been deleted or deactivated.');
     }
+
+    return _formatUserData(user);
+};
+
+// Función para comparar contraseñas
+const comparePassword = async (candidatePassword, userId) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw Boom.notFound('User not found during password comparison.');
+    }
+    return await user.comparePassword(candidatePassword);
+};
+
+// Función para actualizar la contraseña
+const updatePassword = async (userId, newPassword) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw Boom.notFound('User not found. Cannot update password for non-existent user.');
+    }
+
+    user.password = newPassword;
+    await user.save();
 
     return _formatUserData(user);
 };
@@ -153,4 +214,6 @@ module.exports = {
     getUserById,
     updateUser,
     deleteUser,
+    comparePassword,
+    updatePassword,
 };

@@ -19,13 +19,24 @@ var usersRouter = require('./routes/users');
 var rolesRouter = require('./routes/roles');
 var logsRoutes = require('./routes/logs')
 var suggestionRoutes = require('./routes/suggestion');
+
+var documentRoutes = require('./routes/document');
+var sentryRoutes = require('./routes/sentry');
+var commentRoutes = require('./routes/comment');
+var statusRegisterRoutes = require('./routes/status-register');
+var suggestedUserRoutes = require('./routes/suggested-user')
+//var eventsRouter = require('./routes/events');
+//var projectsRouter = require('./routes/projects');
 var swaggerDocs = require('./swagger/swagger');
+// const { credentials } = require('amqplib');
 
 var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
+
+
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -34,12 +45,24 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'https://pruebas-concepto.vercel.app', '*', 'http://localhost:3000'];
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'https://pruebas-concepto.vercel.app', 'http://localhost:3000'];
 
-app.use(cors({
+const corsOptions = {
   origin: allowedOrigins,
-  credentials: true,
-}));
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+
+// app.use(cors({
+//   origin: allowedOrigins,
+//   credentials: true,
+// }));
+
+
 
 // Rutas principales
 app.use('/', indexRouter);
@@ -49,7 +72,17 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/roles', rolesRouter);
 app.use('/api/logs', logsRoutes);
+
 app.use('/api/suggestion', suggestionRoutes);
+
+app.use('/api/documents', documentRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/status-register', statusRegisterRoutes);
+app.use('/api/suggested-user', suggestedUserRoutes);
+app.use('/api/suggestions', suggestionRoutes);
+//app.use('/api/events', eventsRouter);
+//app.use('/api/projects', projectsRouter);
+app.use('/api/webhook', sentryRoutes);
 
 // TODO: Hacer el endpoint funcional
 app.post('/webhook/sentry', (req, res) => {

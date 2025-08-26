@@ -86,18 +86,18 @@ const { model, octokit, getFileFromCulprit } = require('./utils');
   
   async function generateReportNode(state) {
     const prompt = `
-  Genera un reporte del error en base a los datos:
+      Generate an error report based on the following data:
   
-  - Archivo detectado: ${state.file_detected?.path}
-  - Commits recientes (hasta fecha): ${JSON.stringify(state.commits || [], null, 2)}
-  - Último commit que modificó el archivo (con diffs): 
-  ${state.commit_files.map(f => `Archivo: ${f.filename}\nPatch:\n${f.patch}`).join("\n\n")}
-  - Responsable según CODEOWNERS: ${JSON.stringify(state.responsible)}
+      - Detected file: ${state.file_detected?.path}
+      - Recent commits (up to date): ${JSON.stringify(state.commits || [], null, 2)}
+      - Last commit that modified the file (with diffs): 
+      ${state.commit_files.map(f => `File: ${f.filename}\nPatch:\n${f.patch}`).join("\n\n")}
+      - Responsible according to CODEOWNERS: ${JSON.stringify(state.responsible)}
   
-  El reporte debe explicar:
-  1. En qué archivo ocurrió el error.
-  2. Qué fragmento del código está relacionado (según el patch).
-  `;
+      The report should explain:
+      1. In which file the error occurred.
+      2. Which code fragment is related (according to the patch).
+    `;
   
     const res = await model.invoke(prompt);
     return { ...state, report: res.content };
@@ -134,4 +134,5 @@ const { model, octokit, getFileFromCulprit } = require('./utils');
     console.log("\n📌 Reporte generado:\n", result.report);
   }
   
-  main();
+
+  module.exports = { app };

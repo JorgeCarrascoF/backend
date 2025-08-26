@@ -1,29 +1,23 @@
+const { required } = require('joi');
 const mongoose = require('mongoose');
 
 const logSchema = new mongoose.Schema({
-    sentry_event_id: {
+    issue_id: {
         type: String,
-        trim: true
+        trim: true,
+        required: true,
+        unique: true
     },
-    event_id: {type: mongoose.Schema.Types.ObjectId, ref: 'Event'},
     message: {
         type: String,
         required: true,
         trim: true
     },
-    link_sentry: {
+    description: {
         type: String,
         trim: true
     },
     culprit: {
-        type: String,
-        trim: true
-    },
-    filename:  {
-        type: String,
-        trim: true
-    },
-    function_name:  {
         type: String,
         trim: true
     },
@@ -34,22 +28,52 @@ const logSchema = new mongoose.Schema({
     },
     environment: {
         type: String,
-        enum: ['staging', 'development', 'production']
+        enum: ['testing', 'development', 'production']
     },
-    affected_user_ip: {
+    status: {
         type: String,
-        trim: true
+        enum: ['unresolved', 'in review', 'solved'],
+        default: 'unresolved'
     },
-    sentry_timestamp: {
-        type: Date,
-        required: true
+    priority: {
+        type: String,
+        enum: ['low', 'medium', 'high', 'critical'],
+    },
+    assigned_to: {
+        type: String,
+        default: null
     },
     created_at: {
         type: Date,
+        required: true,
+        default: Date.now
+    },
+    last_seen_at:
+    {
+        type: Date,
+        default: Date.now
+    },
+    count: {
+        type: Number
+    },
+    active: {
+        type: Boolean,
+        required: true,
+        default: true
+    },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    hash: {
+        type: String,
+        unique: true,
         required: true
     },
-    userId: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
-});
-        
+    error_signature: {
+        type: String
+    },
+    json_sentry: { type: Object }
+    ,
+},
+    { timestamps: false });
+
 const Log = mongoose.model('Log', logSchema);
-module.exports=Log;
+module.exports = Log;

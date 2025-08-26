@@ -3,6 +3,7 @@
 // ============================================
 const boom = require('@hapi/boom');
 const authService = require('../services/authService');
+const { registerSchema } = require('../validations/authSchema');
 
 const register = async (req, res, next) => {
     try {
@@ -18,9 +19,10 @@ const register = async (req, res, next) => {
             });
         }
 
-        const { username, email, password, role, roleId } = req.body;
+        const { fullName, username, email, password, role, roleId } = req.body;
 
         const user = await authService.registerUser({
+            fullName,
             username,
             email,
             password,
@@ -29,7 +31,7 @@ const register = async (req, res, next) => {
         });
 
         res.status(201).json({
-            message: 'Usuario registrado exitosamente',
+            message: 'User registered successfully',
             user
         });
     } catch (err) {
@@ -51,7 +53,7 @@ const login = async (req, res, next) => {
         });
 
         res.json({
-            message: 'Login exitoso',
+            message: 'Login successful',
             token,
             user
         });
@@ -62,7 +64,7 @@ const login = async (req, res, next) => {
 
 const logout = (req, res) => {
     res.clearCookie('token');
-    res.status(200).json({ message: 'Logout exitoso' });
+    res.status(200).json({ message: 'Logout successful' });
 };
 
 const getProfile = async (req, res, next) => {
@@ -74,9 +76,43 @@ const getProfile = async (req, res, next) => {
     }
 };
 
+const recoverPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                statusCode: 400,
+                error: "Bad Request",
+                message: "Email is required to recover password."
+            });
+        }
+
+        const result = await authService.recoverPassword(email);
+
+        if (!result.success) {
+            return res.status(404).json({
+                statusCode: 404,
+                error: "Not Found",
+                message: result.message
+            });
+        }
+
+        res.status(200).json({
+            statusCode: 200,
+            message: "If the email is registered, a new password has been sent."
+        });
+
+    } catch (err) {
+        next(err);
+    }
+};
+
+
 module.exports = {
     register,
     login,
     logout,
-    getProfile
+    getProfile,
+    recoverPassword,
 };

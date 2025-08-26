@@ -18,10 +18,15 @@
  *           schema:
  *             type: object
  *             required:
+ *               - fullName
  *               - username
  *               - email
  *               - password
  *             properties:
+ *               fullName:
+ *                 type: string
+ *                 description: "Nombre completo del usuario"
+ *                 example: "Juan Pérez"
  *               username:
  *                 type: string
  *                 example: "usuario123"
@@ -35,13 +40,13 @@
  *                 example: "123456"
  *               role:
  *                 type: string
- *                 enum: [admin, user]
+ *                 enum: ['superadmin', 'admin', 'user']
  *                 example: "user"
  *     responses:
  *       201:
- *         description: Usuario registrado exitosamente
+ *         description: User registered successfully
  *       400:
- *         description: Error en los datos
+ *         description: Data validation error
  */
 
 /**
@@ -72,7 +77,7 @@
  *                 example: "123456"
  *     responses:
  *       200:
- *         description: Login exitoso
+ *         description: Login successful
  *         content:
  *           application/json:
  *             schema:
@@ -80,7 +85,7 @@
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Login exitoso"
+ *                   example: "Login successful"
  *                 token:
  *                   type: string
  *                   description: "JWT token"
@@ -98,7 +103,9 @@
  *                     roleInfo:
  *                       type: object
  *       401:
- *         description: Credenciales inválidas
+ *         description: Invalid credentials
+ *       403:
+ *         description: User account is inactive
  */
 
 /**
@@ -109,7 +116,7 @@
  *     tags: [Auth]
  *     responses:
  *       200:
- *         description: Logout exitoso
+ *         description: Logout successful
  */
 
 /**
@@ -122,7 +129,45 @@
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Datos del usuario
+ *         description: User data
  *       401:
- *         description: No autorizado
+ *         description: Unauthorized
  */
+
+/**
+ * @swagger
+ * /auth/recover-password:
+ *   post:
+ *     summary: Recover password
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: User's email
+ *     responses:
+ *       200:
+ *         description: If the email is registered, a new password has been sent.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 statusCode:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "If the email is registered, a new password has been sent."
+ *       400:
+ *         description: Email is required.
+ *       404:
+ *         description: There is no account linked to this email.
+ */
+
