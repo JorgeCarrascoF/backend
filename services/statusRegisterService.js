@@ -32,7 +32,7 @@ class StatusRegisterService {
   };
 
   getAllStatusRegisters = async (pagination) => {
-    const { limit, skip, sortBy = 'created_at', sortOrder = desc } = pagination;
+    const { limit, skip, sortBy = 'created_at', sortOrder = "desc" } = pagination;
     const query = {};
 
     const sort = {};

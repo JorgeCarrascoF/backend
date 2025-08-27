@@ -26,12 +26,15 @@ var suggestedUserRoutes = require('./routes/suggested-user')
 //var eventsRouter = require('./routes/events');
 //var projectsRouter = require('./routes/projects');
 var swaggerDocs = require('./swagger/swagger');
+// const { credentials } = require('amqplib');
 
 var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
+
+
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -40,12 +43,24 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'https://pruebas-concepto.vercel.app', '*', 'http://localhost:3000'];
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'https://pruebas-concepto.vercel.app', 'http://localhost:3000'];
 
-app.use(cors({
+const corsOptions = {
   origin: allowedOrigins,
-  credentials: true,
-}));
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+
+// app.use(cors({
+//   origin: allowedOrigins,
+//   credentials: true,
+// }));
+
+
 
 // Rutas principales
 app.use('/', indexRouter);

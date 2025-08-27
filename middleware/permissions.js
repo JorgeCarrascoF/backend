@@ -33,7 +33,6 @@ function hasPermission(permission) {
                 'log:create'
             ],
             'user': [
-                'user:read',
                 'log:read'
             ]
         };

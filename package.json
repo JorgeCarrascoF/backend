@@ -31,5 +31,10 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui": "^5.27.0",
     "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "jest": "^30.0.5",
+    "nodemailer-mock": "^2.0.9",
+    "supertest": "^7.1.4"
   }
 }
