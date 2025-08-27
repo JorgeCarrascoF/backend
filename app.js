@@ -78,6 +78,10 @@ app.use('/api/suggested-user', suggestedUserRoutes);
 //app.use('/api/projects', projectsRouter);
 app.use('/api/webhook', sentryRoutes);
 
+// Rutas CSS & images
+app.use("/css", express.static("css"));
+app.use("/images", express.static("images"));
+
 // TODO: Hacer el endpoint funcional
 app.post('/webhook/sentry', (req, res) => {
   console.log('🎯 Webhook recibido de Sentry:');

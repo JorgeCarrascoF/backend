@@ -31,6 +31,41 @@ const getAllLogs = async (req, res) => {
             }
         }
 
+        const validateStatus = ['unresolved', 'in review', 'solved'];
+        if (req.query.status && !validateStatus.includes(req.query.status)){
+            return res.status(400).json({
+                msg: 'Invalid status. Status allowed: unresolved, in review, solved'
+            })
+        }
+
+        const validateActive = ['true', 'false'];
+        if (req.query.active && !validateActive.includes(req.query.active)){
+            return res.status(400).json({
+                msg: 'Invalid active. Active allowed: true, false'
+            })
+        }
+
+        const validatePriority = ['low', 'medium', 'high', 'critical'];
+        if (req.query.priority && !validatePriority.includes(req.query.priority)){
+            return res.status(400).json({
+                msg: 'Invalid priority. Priority allowed: low, medium, high, critical'
+            })
+        }
+
+        const validateErrorType = ['error', 'warning', 'info'];
+        if (req.query.error_type && !validateErrorType.includes(req.query.error_type)){
+            return res.status(400).json({
+                msg: 'Invalid Error Type. Error Type allowed: error, warning, info'
+            })
+        }
+
+        const validateEnvironment = ['testing', 'development', 'production'];
+        if (req.query.environment && !validateEnvironment.includes(req.query.environment)){
+            return res.status(400).json({
+                msg: 'Invalid Environment. Error Environment allowed: testing, development, production'
+            })
+        }
+
         // Pasar todos los filtros al servicio
         const filters = {
             search: req.query.search,
@@ -49,7 +84,6 @@ const getAllLogs = async (req, res) => {
             date: req.query.date
         };
 
-
         const result = await logService.getAllLogs(filters, { limit, skip, sortBy, sortOrder });
 
         res.status(200).json({
@@ -63,6 +97,7 @@ const getAllLogs = async (req, res) => {
     } catch (err) {
         res.status(500).json({ msg: 'Error obtaining logs', error: err.message });
     }
+
 };
 
 
@@ -128,7 +163,7 @@ const updateLog = async (req, res) => {
 
         if (!log) {
             return res.status(404).json({ msg: 'Log not found.' });
-        }
+        };
 
         res.status(200).json({ msg: 'Log updated successfully.', log });
     } catch (err) {
