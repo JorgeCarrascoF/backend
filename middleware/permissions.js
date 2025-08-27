@@ -33,6 +33,7 @@ function hasPermission(permission) {
                 'log:create'
             ],
             'user': [
+                'user:read',
                 'log:read'
             ]
         };
@@ -41,7 +42,7 @@ function hasPermission(permission) {
             return next();
         }
 
-        return res.status(403).json({ 
+        return res.status(403).json({
             msg: 'Insufficient permission to perform this operation',
             requiredPermission: permission,
             currentRole: req.user.role
