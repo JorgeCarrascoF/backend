@@ -18,6 +18,8 @@ var authRouter = require('./routes/auth');
 var usersRouter = require('./routes/users');
 var rolesRouter = require('./routes/roles');
 var logsRoutes = require('./routes/logs')
+var suggestionRoutes = require('./routes/suggestion');
+
 var documentRoutes = require('./routes/document');
 var sentryRoutes = require('./routes/sentry');
 var commentRoutes = require('./routes/comment');
@@ -70,10 +72,14 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/roles', rolesRouter);
 app.use('/api/logs', logsRoutes);
+
+app.use('/api/suggestion', suggestionRoutes);
+
 app.use('/api/documents', documentRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/status-register', statusRegisterRoutes);
 app.use('/api/suggested-user', suggestedUserRoutes);
+app.use('/api/suggestions', suggestionRoutes);
 //app.use('/api/events', eventsRouter);
 //app.use('/api/projects', projectsRouter);
 app.use('/api/webhook', sentryRoutes);

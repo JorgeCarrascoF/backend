@@ -12,7 +12,7 @@ const commentSchema = new mongoose.Schema({
   },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   logId: { type: mongoose.Schema.Types.ObjectId, ref: 'Log' },
-  create_at: {
+  created_at: {
     type: Date,
     default: Date.now
   }
