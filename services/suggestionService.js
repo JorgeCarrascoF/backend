@@ -4,7 +4,7 @@ const Suggestion  = require('../models/suggestion');
 
 const suggestionReport = async (id, owner, repo, branch = 'main') => {
     const log = await getLogById(id);
-
+    
     const input = {
         sentry_log: log,
         owner: owner,

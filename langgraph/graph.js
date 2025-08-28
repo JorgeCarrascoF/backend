@@ -22,7 +22,7 @@ const { model, octokit, getFileFromCulprit } = require('./utils');
       sha: state.branch,
       path: state.file_detected.path,
       per_page: 3,
-      until: state.sentry_log.$date || undefined, // 👈 commits hasta esa fecha
+      until: state.sentry_log.created_at || undefined, // 👈 commits hasta esa fecha
     });
   
     console.log("🔍 Commits encontrados:");
@@ -60,29 +60,6 @@ const { model, octokit, getFileFromCulprit } = require('./utils');
     return { ...state, commit_files: files };
   }
   
-  async function getCodeOwnersNode(state) {
-    try {
-      const res = await octokit.repos.getContent({
-        owner: state.owner,
-        repo: state.repo,
-        path: "CODEOWNERS",
-        ref: state.branch,
-      });
-  
-      const content = Buffer.from(res.data.content, "base64").toString("utf8");
-  
-      const lines = content.split("\n");
-      const match = lines.find(line =>
-        line &&
-        !line.startsWith("#") &&
-        state.file_detected.path.startsWith(line.split(" ")[0])
-      );
-  
-      return { ...state, responsible: match || "No encontrado en CODEOWNERS" };
-    } catch (err) {
-      return { ...state, responsible: "No se encontró archivo CODEOWNERS" };
-    }
-  }
   
   async function generateReportNode(state) {
     const prompt = `

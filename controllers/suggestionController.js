@@ -7,19 +7,20 @@ const getReportById = async (req, res) => {
   try {
     const { logId, owner, repo, branch } = req.body;    
 
-    // 1. Validar que el log exista
     const log = await logService.getLogById(logId);
+
+    console.log(log)
     if (!log) {
       return res.status(404).json({ msg: 'Log not found.' });
     }
 
-    const existing = await suggestionService.getReportByLog(logId);
-    if (existing && existing.report) {
-      return res.status(400).json({
-        msg: 'A report already exists for this log',
-        existing
-      });
-    }
+    // const existing = await suggestionService.getReportByLog(logId);
+    // if (existing) {
+    //   return res.status(400).json({
+    //     msg: 'A report already exists for this log',
+    //     existing
+    //   });
+    // }
 
     const report = await suggestionService.suggestionReport(
       logId,
