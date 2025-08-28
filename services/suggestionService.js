@@ -5,6 +5,14 @@ const Suggestion  = require('../models/suggestion');
 const suggestionReport = async (id, owner, repo, branch = 'main') => {
     const log = await getLogById(id);
 
+    log.id = log.id.toString();
+    
+    if(!log.error_signature){
+        log.error_signature = log.message.split(":")[0];
+        console.log("No error signature found", log);
+    }
+
+
     const input = {
         sentry_log: log,
         owner: owner,
@@ -21,6 +29,9 @@ const suggestionReport = async (id, owner, repo, branch = 'main') => {
 const getReportByLog = async (logId) => {
     const suggestion = await Suggestion.findOne({ logId });
 
+    if (!suggestion) {
+        return null;
+    }
     return {
             id: suggestion._id,
             report: suggestion.report,
