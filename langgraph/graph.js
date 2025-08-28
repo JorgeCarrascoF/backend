@@ -4,6 +4,12 @@ const { model, octokit, getFileFromCulprit } = require('./utils');
 
   
   async function parseCulpritNode(state) {
+
+    if (!state.sentry_log?.culprit) {
+      console.log("⚠️ No se encontró 'culprit' en el log de Sentry");
+      return { ...state, report: "No se puede generar reporte: 'culprit' vacío" };
+    }
+
     const file_detected = await getFileFromCulprit(
       state.owner,
       state.repo,
@@ -22,7 +28,7 @@ const { model, octokit, getFileFromCulprit } = require('./utils');
       sha: state.branch,
       path: state.file_detected.path,
       per_page: 3,
-      until: state.sentry_log.$date || undefined, // 👈 commits hasta esa fecha
+      until: state.sentry_log.created_at || undefined, 
     });
   
     console.log("🔍 Commits encontrados:");
@@ -60,29 +66,6 @@ const { model, octokit, getFileFromCulprit } = require('./utils');
     return { ...state, commit_files: files };
   }
   
-  async function getCodeOwnersNode(state) {
-    try {
-      const res = await octokit.repos.getContent({
-        owner: state.owner,
-        repo: state.repo,
-        path: "CODEOWNERS",
-        ref: state.branch,
-      });
-  
-      const content = Buffer.from(res.data.content, "base64").toString("utf8");
-  
-      const lines = content.split("\n");
-      const match = lines.find(line =>
-        line &&
-        !line.startsWith("#") &&
-        state.file_detected.path.startsWith(line.split(" ")[0])
-      );
-  
-      return { ...state, responsible: match || "No encontrado en CODEOWNERS" };
-    } catch (err) {
-      return { ...state, responsible: "No se encontró archivo CODEOWNERS" };
-    }
-  }
   
   async function generateReportNode(state) {
     const prompt = `
@@ -92,7 +75,6 @@ const { model, octokit, getFileFromCulprit } = require('./utils');
       - Recent commits (up to date): ${JSON.stringify(state.commits || [], null, 2)}
       - Last commit that modified the file (with diffs): 
       ${state.commit_files.map(f => `File: ${f.filename}\nPatch:\n${f.patch}`).join("\n\n")}
-      - Responsible according to CODEOWNERS: ${JSON.stringify(state.responsible)}
   
       The report should explain:
       1. In which file the error occurred.
@@ -102,18 +84,33 @@ const { model, octokit, getFileFromCulprit } = require('./utils');
     const res = await model.invoke(prompt);
     return { ...state, report: res.content };
   }
-  
+
+  async function generateReportSinGithubNode(state) {
+    const prompt = `
+      Generate an error report based on the following data:
+      - log: ${state.file_detected.sentry_log}      
+      The report should explain:
+      1. In which file the error occurred.
+      `;
+  }
   /* ------------------ Grafo ------------------ */
   const graph = new StateGraph(state)
-    .addNode("parseCulprit", parseCulpritNode)
-    .addNode("getCommits", getCommitsNode)
-    .addNode("getCommitFiles", getCommitFilesNode)
-    .addNode("generateReport", generateReportNode)
-    .addEdge("parseCulprit", "getCommits")
-    .addEdge("getCommits", "getCommitFiles")
-    .addEdge("getCommitFiles", "generateReport")
-    .addEdge("generateReport", END)
-    .setEntryPoint("parseCulprit");
+  .addNode("parseCulprit", parseCulpritNode)
+  .addNode("getCommits", getCommitsNode)
+  .addNode("getCommitFiles", getCommitFilesNode)
+  .addNode("generateReport", generateReportNode)
+  .addNode("generateReportSinGithub", generateReportSinGithubNode)
+  .addConditionalEdges("parseCulprit", (s) => {
+    // Si ya tenemos report, terminamos ahí
+    if (s.report) return END;
+    if (s.file_detected === 'Not found file') return 'generateReportSinGithub'
+    return "getCommits";
+  })
+  .addEdge("getCommits", "getCommitFiles")
+  .addEdge("getCommitFiles", "generateReport")
+  .addEdge("generateReport", END)
+  .addEdge("generateReportSinGithub", END)
+  .setEntryPoint("parseCulprit");
   
   const app = graph.compile();
   

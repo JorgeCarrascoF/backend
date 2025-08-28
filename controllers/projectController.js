@@ -1,4 +1,4 @@
-/*const projectService = require('../services/projectService');
+const projectService = require('../services/projectService');
 
 const rolAdmin = 'admin';
 
@@ -8,13 +8,13 @@ const getAllProjects = async (req, res) => {
         console.log('- Usuario en req:', req.user);
         console.log('- Rol del usuario:', req.user?.role);
         const roles = ['admin', 'user'];
-         if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ 
-                msg: 'Acceso denegado. Se requiere rol de administrador, desarrollador o QA.',
-                userRole: req.user.role,
-                required: roles
-            });
-        }
+        // if (!roles.includes(req.user.role)) {
+        //     return res.status(403).json({ 
+        //         msg: 'Acceso denegado. Se requiere rol de administrador, desarrollador o QA.',
+        //         userRole: req.user.role,
+        //         required: roles
+        //     });
+        // }
 
         const limit = parseInt(req.query.limit) || 10;
         const page = parseInt(req.query.page) || 1;
@@ -42,12 +42,12 @@ const getProjectById = async (req, res) => {
         console.log('- ID solicitado:', req.params.id);
 
         const roles = ['admin', 'user'];
-        if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
-            return res.status(403).json({ 
-                msg: 'Acceso denegado.',
-                detail: 'Solo los adminstradores, desarrolladores y QA pueden ver los proyectos por ID'
-            });
-        }
+        // if (!roles.includes(req.user.role) && req.user.id !== req.params.id) {
+        //     return res.status(403).json({ 
+        //         msg: 'Acceso denegado.',
+        //         detail: 'Solo los adminstradores, desarrolladores y QA pueden ver los proyectos por ID'
+        //     });
+        // }
 
         const project = await projectService.getProjectById(req.params.id);
 
@@ -63,9 +63,9 @@ const getProjectById = async (req, res) => {
 
 const createProject = async (req, res) => {
     try {
-        if (!rolAdmin.includes(req.user.role)) {
-            return res.status(403).json({ msg: 'Acceso denegado para crear proyectos.' });
-        }
+        // if (!rolAdmin.includes(req.user.role)) {
+        //     return res.status(403).json({ msg: 'Acceso denegado para crear proyectos.' });
+        // }
 
         const newProject = await projectService.createProject(req.body);
 
@@ -82,9 +82,9 @@ const updateProject = async (req, res) => {
         console.log('- ID a actualizar:', req.params.id);
         console.log('- Datos a actualizar:', req.body);
 
-        if (!rolAdmin.includes(req.user.role) && req.user.id !== req.params.id) {
-            return res.status(403).json({ msg: 'Acceso denegado para actualizar este proyecto.' });
-        }
+        // if (!rolAdmin.includes(req.user.role) && req.user.id !== req.params.id) {
+        //     return res.status(403).json({ msg: 'Acceso denegado para actualizar este proyecto.' });
+        // }
 
         const project = await projectService.updateProject(req.params.id, req.body);
 
@@ -104,9 +104,9 @@ const deleteProject = async (req, res) => {
         console.log('- Project solicitante:', req.Project);
         console.log('- ID a eliminar:', req.params.id);
 
-        if (!rolAdmin.includes(req.user.role) && req.user.id !== req.params.id) {
-            return res.status(403).json({ msg: 'Acceso denegado para eliminar este Proyecto.' });
-        }
+        // if (!rolAdmin.includes(req.user.role) && req.user.id !== req.params.id) {
+        //     return res.status(403).json({ msg: 'Acceso denegado para eliminar este Proyecto.' });
+        // }
 
         const project = await projectService.deleteProject(req.params.id);
 
@@ -126,4 +126,4 @@ module.exports = {
     createProject,
     updateProject,
     deleteProject
-};*/
+};

@@ -1,4 +1,4 @@
-/*const Project = require('../models/project');
+const Project = require('../models/project');
 
 const getAllProjects = async (filters, pagination) => {
     const { limit, skip } = pagination;
@@ -6,14 +6,11 @@ const getAllProjects = async (filters, pagination) => {
 
     if (filters.search) {
         query.$or = [
-            { sentry_project_id: { $regex: filters.search, $options: 'i' } },
             { name: { $regex: filters.search, $options: 'i' } },
-            { slug: { $regex: filters.search, $options: 'i' } },
-            { platform: { $regex: filters.search, $options: 'i' } },
         ];
     }
 
-    ['sentry_project_id', 'name', 'slug', 'platform']
+    ['name']
         .forEach(field => {
             if (filters[field]) query[field] = filters[field];
         });
@@ -26,29 +23,26 @@ const getAllProjects = async (filters, pagination) => {
 
     return projects.map(project => ({
         id: project._id,
-        sentry_project_id: project.sentry_project_id,
         name: project.name,
-        slug: project.slug,
-        platform: project.platform,
-        is_active: project.is_active,
+        repo: project.repo,
+        branch: project.branch,
+        github_token: project.github_token,
         created_at: project.created_at
     }));
 };
 
 const getProjectById = async (id) => {
     const project = await Project.findById(id)
-        //.populate('userId', 'username email')
-        .select('-password');
+        
 
     if (!project) return null;
 
     return {
         id: project._id,
-        sentry_project_id: project.sentry_project_id,
         name: project.name,
-        slug: project.slug,
-        platform: project.platform,
-        is_active: project.is_active,
+        repo: project.repo,
+        branch: project.branch,
+        github_token: project.github_token,
         created_at: project.created_at
     };
 };
@@ -68,11 +62,10 @@ const updateProject = async (id, data) => {
 
     return {
         id: project._id,
-        sentry_project_id: project.sentry_project_id,
         name: project.name,
-        slug: project.slug,
-        platform: project.platform,
-        is_active: project.is_active,
+        repo: project.repo,
+        branch: project.branch,
+        github_token: project.github_token,
         created_at: project.created_at
     };
 };
@@ -88,4 +81,3 @@ module.exports = {
     updateProject,
     deleteProject
 };
-*/

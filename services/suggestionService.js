@@ -11,8 +11,7 @@ const suggestionReport = async (id, owner, repo, branch = 'main') => {
         log.error_signature = log.message.split(":")[0];
         console.log("No error signature found", log);
     }
-
-
+    
     const input = {
         sentry_log: log,
         owner: owner,

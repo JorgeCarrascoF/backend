@@ -1,44 +1,70 @@
 /**
- * //@swagger
+ * @swagger
  * components:
  *   schemas:
  *     Project:
  *       type: object
  *       required:
- *         - sentry_project_id
  *         - name
- *         - slug
- *         - is_active
+ *         - repo
+ *         - github_token
  *         - created_at
  *       properties:
  *         _id:
  *           type: string
  *           description: ID único del Project
- *         sentry_project_id:
- *           type: string
- *           description: ID del proyecto en Sentry
  *         name:
  *           type: string
  *           description: Nombre del proyecto
- *         slug:
+ *         repo:
  *           type: string
- *           description: Identificador único del proyecto (slug)
- *         platform:
+ *           description: URL del proyecto
+ *         branch:
  *           type: string
- *           description: Plataforma del proyecto
- *         is_active:
- *           type: boolean
- *           enum: ['true', 'false']
- *           description: Indica si el proyecto está activo
+ *           description: Rama del repositorio
+ *         github_token:
+ *           type: string
+ *           description: Token para administrar el proyecto
  *         created_at:
  *           type: string
  *           format: date-time
  *           description: Fecha y hora de creación del proyecto
+ *
+ *     ProjectCreate:
+ *       type: object
+ *       required:
+ *         - name
+ *         - repo
+ *         - github_token
+ *       properties:
+ *         name:
+ *           type: string
+ *           description: Nombre del proyecto
+ *         repo:
+ *           type: string
+ *           description: URL del proyecto
+ *         branch:
+ *           type: string
+ *           description: Rama del repositorio
+ *         github_token:
+ *           type: string
+ *           description: Token para administrar el proyecto
+ *
+ *     ProjectUpdate:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *         repo:
+ *           type: string
+ *         branch:
+ *           type: string
+ *         github_token:
+ *           type: string
  */
 
-
 /**
- * //@swagger
+ * @swagger
  * /projects:
  *   get:
  *     summary: Obtener todos los proyectos (con filtros y paginación)
@@ -62,31 +88,10 @@
  *           type: string
  *         description: Búsqueda global por múltiples campos
  *       - in: query
- *         name: sentry_project_id
- *         schema:
- *           type: string
- *         description: ID del proyecto en Sentry
- *       - in: query
  *         name: name
  *         schema:
  *           type: string
  *         description: Nombre del proyecto
- *       - in: query
- *         name: slug
- *         schema:
- *           type: string
- *         description: Identificador único del proyecto (slug)
- *       - in: query
- *         name: platform
- *         schema:
- *           type: string
- *         description: Plataforma del proyecto
- *       - in: query
- *         name: is_active
- *         schema:
- *           type: boolean
- *           enum: ['true', 'false']
- *         description: Indica si el proyecto está activo
  *     responses:
  *       200:
  *         description: Lista de proyectos obtenida correctamente
@@ -116,7 +121,7 @@
  */
 
 /**
- * //@swagger
+ * @swagger
  * /projects/{id}:
  *   get:
  *     summary: Obtener un proyecto por ID
@@ -141,7 +146,7 @@
  */
 
 /**
- * //@swagger
+ * @swagger
  * /projects:
  *   post:
  *     summary: Crear un nuevo proyecto
@@ -153,16 +158,20 @@
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Project'
+ *             $ref: '#/components/schemas/ProjectCreate'
  *     responses:
  *       201:
  *         description: Project created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Project'
  *       400:
  *         description: Invalid data
  */
 
 /**
- * //@swagger
+ * @swagger
  * /projects/{id}:
  *   patch:
  *     summary: Actualizar un proyecto existente
@@ -180,16 +189,20 @@
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Project'
+ *             $ref: '#/components/schemas/ProjectUpdate'
  *     responses:
  *       200:
  *         description: Project updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Project'
  *       404:
  *         description: Project not found
  */
 
 /**
- * //@swagger
+ * @swagger
  * /projects/{id}:
  *   delete:
  *     summary: Eliminar un proyecto
