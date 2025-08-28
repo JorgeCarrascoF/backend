@@ -99,11 +99,10 @@ app.post('/webhook/sentry', (req, res) => {
 swaggerDocs(app);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
+//app.use(function (req, res, next) {
+  //next(createError(404));
+//});
 
-app.use(errorHandler);
 
 // error handler
 // app.use(function(err, req, res, next) {
@@ -111,7 +110,7 @@ app.use(errorHandler);
 //   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
 //   res.status(err.status || 500);
-  
+
 //   // Si es una petición API, responder con JSON
 //   if (req.path.startsWith('/api/')) {
 //     res.json({ error: err.message });
@@ -120,23 +119,34 @@ app.use(errorHandler);
 //   }
 // });
 
+app.use((req, res, next) => {
+  res.status(404).json({
+    statusCode: 404,
+    error: "Not Found",
+    message: `Endpoint ${req.originalUrl} does not exist`
+  });
+});
+
+
 app.use((err, req, res, next) => {
-    if (Boom.isBoom(err)) {
-        return res.status(err.output.statusCode).json({
-            statusCode: err.output.statusCode,
-            error: err.output.payload.error,
-            message: err.message,
-            details: err.data?.details || null
-        });
-    }
-
-    res.status(500).json({
-        statusCode: 500,
-        error: 'Internal Server Error',
-        message: err.message
+  if (Boom.isBoom(err)) {
+    return res.status(err.output.statusCode).json({
+      statusCode: err.output.statusCode,
+      error: err.output.payload.error,
+      message: err.message,
+      details: err.data?.details || null
     });
+  }
 
-    
+  res.status(500).json({
+    statusCode: 500,
+    error: 'Internal Server Error',
+    message: err.message
+  });
+
+  app.use(errorHandler);
+
+
 });
 
 

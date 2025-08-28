@@ -16,7 +16,7 @@ class CommentService {
             .populate('logId')
             .skip(skip)
             .limit(limit)
-            .sort({ create_at: -1 });
+            .sort({ created_at: -1 });
 
         const totalComments = await Comment.countDocuments(query);
 
@@ -26,8 +26,9 @@ class CommentService {
                 text: comment.text,
                 pinned: comment.pinned,
                 userId: comment.userId,
+                created_at: comment.created_at,
                 logId: comment.logId,
-                create_at: comment.create_at
+                
             })),
             total: totalComments,
         };
@@ -52,7 +53,7 @@ class CommentService {
             .populate("logId")
             .skip(skip)
             .limit(limit)
-            .sort({ create_at: -1 });
+            .sort({ created_at: -1 });
 
         const total = await Comment.countDocuments(query);
 
@@ -62,8 +63,8 @@ class CommentService {
                 text: c.text,
                 pinned: c.pinned,
                 user: c.userId,
-                log: c.logId,
-                create_at: c.create_at
+                created_at: c.created_at,
+                log: c.logId
             })),
             total
         };

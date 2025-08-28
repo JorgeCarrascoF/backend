@@ -101,7 +101,7 @@ const getAllLogs = async (req, res) => {
 };
 
 
-const getLogById = async (req, res) => {
+const getLogById = async (req, res, next) => {
     try {
         console.log('🔍 DEBUG getLogById:');
         console.log('- Usuario solicitante:', req.user);
@@ -118,12 +118,17 @@ const getLogById = async (req, res) => {
         const log = await logService.getLogById(req.params.id);
 
         if (!log) {
-            return res.status(404).json({ msg: 'Log not found.' });
+            return res.status(404).json({ 
+                statusCode: 404,
+                error: 'Not Found',
+                msg: 'Log not found.' 
+            });
         }
 
         res.status(200).json(log);
     } catch (err) {
-        res.status(500).json({ msg: 'Error obtaining log', error: err.message });
+        res.status(400).json({ msg: 'Error obtaining log', error: err.message });
+        //next(err);
     }
 };
 
