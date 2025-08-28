@@ -37,7 +37,8 @@ const errorHandler = (err, req, res, next) => {
     return res.status(400).json({
       statusCode: 400,
       error: 'Bad Request',
-      message: `Invalid format for ${err.path}`
+      //message: `Invalid format for ${err.path}`
+      message: `Invalid ${err.path}: ${err.value}`
     });
   }
 

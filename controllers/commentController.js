@@ -33,7 +33,7 @@ const getAllComments = async (req, res, next) => {
         const limit = parseInt(req.query.limit) || 5;
         const page = parseInt(req.query.page) || 1;
         const skip = (page - 1) * limit;
-        const sortBy = req.query.sortBy || 'create_at';
+        const sortBy = req.query.sortBy || 'created_at';
         const sortOrder = req.query.sortOrder || 'desc';
 
         const result = await CommentService.getAllComments(req.query, 
