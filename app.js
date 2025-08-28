@@ -29,6 +29,7 @@ var suggestedUserRoutes = require('./routes/suggested-user')
 //var projectsRouter = require('./routes/projects');
 var swaggerDocs = require('./swagger/swagger');
 // const { credentials } = require('amqplib');
+var urlRoutes = require('./routes/urlRoutes');
 
 var app = express();
 
@@ -82,6 +83,7 @@ app.use('/api/suggested-user', suggestedUserRoutes);
 app.use('/api/suggestions', suggestionRoutes);
 //app.use('/api/events', eventsRouter);
 //app.use('/api/projects', projectsRouter);
+app.use('/api/url', urlRoutes);
 app.use('/api/webhook', sentryRoutes);
 
 // Rutas CSS & images
@@ -100,7 +102,7 @@ swaggerDocs(app);
 
 // catch 404 and forward to error handler
 //app.use(function (req, res, next) {
-  //next(createError(404));
+//next(createError(404));
 //});
 
 
