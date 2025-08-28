@@ -7,6 +7,14 @@ const { registerSchema } = require('../validations/authSchema');
 
 const register = async (req, res, next) => {
     try {
+        const roles = ['superadmin', 'admin'];
+        if (!req.user || !roles.includes(req.user.role)) {
+            return res.status(403).json({
+                msg: 'Access denied. Superadmin or Admin role required.',
+                userRole: req.user?.role,
+                required: roles
+            });
+        }
         const { error } = registerSchema.validate(req.body, { abortEarly: false });
 
         if (error) {
