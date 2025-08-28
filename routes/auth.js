@@ -7,8 +7,9 @@ const { register, login, logout, getProfile, recoverPassword } = require('../con
 const validate = require('../middleware/validate');
 const { registerSchema, loginSchema } = require('../validations/authSchema');
 const authorizeAdmin = require('../middleware/authorizeAdmin');
+const { authMiddleware, requireAdminOrSuper }  = require('../middleware/auth');
 
-router.post('/register', authorizeAdmin, validate(registerSchema), register);
+router.post('/register', authMiddleware, requireAdminOrSuper, validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
 router.post('/logout', logout);
 router.get('/me', getProfile);
