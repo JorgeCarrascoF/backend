@@ -26,7 +26,7 @@ var commentRoutes = require('./routes/comment');
 var statusRegisterRoutes = require('./routes/status-register');
 var suggestedUserRoutes = require('./routes/suggested-user')
 //var eventsRouter = require('./routes/events');
-//var projectsRouter = require('./routes/projects');
+var projectsRouter = require('./routes/projects');
 var swaggerDocs = require('./swagger/swagger');
 // const { credentials } = require('amqplib');
 
@@ -81,7 +81,7 @@ app.use('/api/status-register', statusRegisterRoutes);
 app.use('/api/suggested-user', suggestedUserRoutes);
 app.use('/api/suggestions', suggestionRoutes);
 //app.use('/api/events', eventsRouter);
-//app.use('/api/projects', projectsRouter);
+app.use('/api/projects', projectsRouter);
 app.use('/api/webhook', sentryRoutes);
 
 // Rutas CSS & images
