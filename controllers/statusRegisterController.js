@@ -5,7 +5,7 @@ const roles = ['user', 'superadmin', 'admin'];
 
 const createStatusRegister = async (req, res) => {
     try {
-        const { logId, status } = req.body;
+        const { logId, status, assigned_to } = req.body;
         const userId = req.user.id;
 
         if (!roles.includes(req.user.role)) {
@@ -16,6 +16,7 @@ const createStatusRegister = async (req, res) => {
             logId,
             userId,
             status,
+            assigned_to
         });
 
         res.status(200).json({
