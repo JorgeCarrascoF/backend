@@ -68,7 +68,8 @@ const getStatusRegistersByLog = async (req, res) => {
         const statusRegister = await statusRegisterService.getStatusRegistersByLog(logId);
 
         if (!statusRegister || statusRegister.data.length === 0) {
-            return res.status(404).json({ msg: 'Status Register not found.' });
+            //return res.status(404).json({ msg: 'Status Register not found.' });
+            return res.status(200).json({ msg: 'Status Register not found.', data: []});
         }
         res.status(200).json(statusRegister);
     } catch (err) {
