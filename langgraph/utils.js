@@ -16,17 +16,15 @@ const model = new AzureChatOpenAI({
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-
-function parseCulprit(culprit) {
+async function getFileFromCulprit(owner, repo, culprit, branch = "main") {
   const regex = /\((.*?)\)/; 
   const match = culprit.match(regex);
 
-  if (!match) throw new Error("Formato de culprit inválido");
-  return match[1]; 
-}
-
-async function getFileFromCulprit(owner, repo, culprit, branch = "main") {
-  const basePath = parseCulprit(culprit);
+  if (!match) {
+    console.log('File not found')
+    return { path: 'File not found'};
+  }
+  const basePath = match[1]; 
 
   const refData = await octokit.git.getRef({ owner, repo, ref: `heads/${branch}` });
   const commitSha = refData.data.object.sha;
@@ -44,22 +42,24 @@ async function getFileFromCulprit(owner, repo, culprit, branch = "main") {
     recursive: "true",
   });
 
-  // 4️⃣ Buscar archivos que hagan match con basePath
   const candidates = treeData.data.tree.filter(
     (item) => item.type === "blob" && item.path.startsWith(basePath)
   );
 
   if (candidates.length === 0) {
-    throw new Error(`No se encontró archivo para ${basePath}`);
+    console.log('File not found')
+    return { path: 'File not found'};
   }
 
-  // 5️⃣ Si hay varios, tomamos el primero
   const file = candidates[0];
+  console.log(file)
   return { path: file.path };
 
 }
 
+hola = getFileFromCulprit('JorgeCarrascoF','frontend', '_v(assets/index-D474ht0A)')
 
+console.log(hola);
 module.exports = { 
   model,
   octokit,

@@ -1,29 +1,28 @@
-/*const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const projectSchema = new mongoose.Schema({
-    sentry_project_id: {
-        type: String,
-        required: true,
-        trim: true
-    },
+    
     name: {
         type: String,
         trim: true,
         required: true
     },
-    slug: {
+
+    repo: {
         type: String,
-        required: true,
-        trim: true
+        require: true
     },
-    platform: {
+
+    branch: {
         type: String,
-        trim: true
+        default: 'main'
     },
-    is_active: {
-        type: Boolean,
-        required: true
+
+    github_token: {
+        type: String,
+        require: true
     },
+    
     created_at: {
         type: Date,
         required: true,
@@ -32,5 +31,4 @@ const projectSchema = new mongoose.Schema({
 });
         
 const Project = mongoose.model('Project', projectSchema);
-module.exports=Project;
-*/
+module.exports = Project;
