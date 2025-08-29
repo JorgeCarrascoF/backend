@@ -17,9 +17,9 @@ class SuggestedUserService {
     if (!log) throw new Error("Log not found");
 
     // logs automáticos con error_signature
-    if (log.status === "solved" && log.error_signature && log.assigned_to?._id) {
+    if (log.status === "solved" && log.error_signature && log.assigned_to) {
       await SuggestedUser.findOneAndUpdate(
-        { error_signature: log.error_signature, developerId: log.assigned_to._id },
+        { error_signature: log.error_signature, developerId: log.assigned_to },
         {
           $inc: { resolved_count: 1 },
           $set: { last_resolved_at: new Date() }

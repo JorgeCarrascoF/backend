@@ -6,14 +6,18 @@ const Boom = require('@hapi/boom');
 
 class StatusRegisterService {
 
-  createStatusRegister = async ({ logId, userId, status }) => {
+  createStatusRegister = async ({ logId, userId, status, assigned_to }) => {
     if (!mongoose.Types.ObjectId.isValid(logId)) {
       throw new Error("Invalid logId");
     }
 
+    const updateStatus = { status };
+    if (assigned_to) updateStatus.assigned_to = assigned_to;
+
     const log = await Log.findByIdAndUpdate(
       logId,
-      { status, assigned_to: userId },
+      //{ status, assigned_to: userId },
+      updateStatus,
       { new: true, runValidators: true }
     );
 
@@ -99,15 +103,15 @@ class StatusRegisterService {
     //return statusRegister;
 
     return {
-        id: statusRegister._id,
-        status: statusRegister.status,
-        user: statusRegister.userId,
-        log: statusRegister.logId,
-        created_at: statusRegister.created_at
+      id: statusRegister._id,
+      status: statusRegister.status,
+      user: statusRegister.userId,
+      log: statusRegister.logId,
+      created_at: statusRegister.created_at
     };
   };
 
-  
+
 
 }
 
