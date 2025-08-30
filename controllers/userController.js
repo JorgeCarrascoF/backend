@@ -93,7 +93,7 @@ const updateUser = async (req, res) => {
     // Solo superadmin puede actualizar cualquier usuario
     // Admin solo puede actualizar usuarios que no sean superadmin
     // Usuario normal solo puede actualizarse a sí mismo
-    if (req.user.role === "user" || "admin" && req.user.id !== id) {
+    if (req.user.role === "user" || req.user.role === "admin" && req.user.id !== id) {
       return res
         .status(403)
         .json({ msg: "Access denied to update this user." });
