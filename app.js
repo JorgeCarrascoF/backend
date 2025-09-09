@@ -24,9 +24,7 @@ var documentRoutes = require('./routes/document');
 var sentryRoutes = require('./routes/sentry');
 var commentRoutes = require('./routes/comment');
 var statusRegisterRoutes = require('./routes/status-register');
-var suggestedUserRoutes = require('./routes/suggested-user')
-//var eventsRouter = require('./routes/events');
-var projectsRouter = require('./routes/projects');
+var suggestedUserRoutes = require('./routes/suggested-user');
 var swaggerDocs = require('./swagger/swagger');
 // const { credentials } = require('amqplib');
 var urlRoutes = require('./routes/urlRoutes');
@@ -64,7 +62,6 @@ app.options('*', cors(corsOptions));
 // }));
 
 
-
 // Rutas principales
 app.use('/', indexRouter);
 
@@ -81,11 +78,6 @@ app.use('/api/comments', commentRoutes);
 app.use('/api/status-register', statusRegisterRoutes);
 app.use('/api/suggested-user', suggestedUserRoutes);
 app.use('/api/suggestions', suggestionRoutes);
-//app.use('/api/events', eventsRouter);
-
-app.use('/api/projects', projectsRouter);
-
-//app.use('/api/projects', projectsRouter);
 app.use('/api/url', urlRoutes);
 
 app.use('/api/webhook', sentryRoutes);

@@ -21,7 +21,7 @@ const getUsersByFilter = async (req, res) => {
       username: req.query.username,
       email: req.query.email,
       role: req.query.role,
-      isActive: req.query.isActive,
+      isActive: req.query.isActive ?? "true",
       search: req.query.search,
     };
     const pagination = {

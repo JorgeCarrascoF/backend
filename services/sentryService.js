@@ -69,7 +69,7 @@ async function transformEvent(sentryEvent, projectId) {
     const eventData = {
         id: generateId(),
         issue_id: sentryEvent.issue_id, // "56076521"
-        short_id: generateShortId(sentryEvent), // Necesitas generar esto
+        short_id: generateShortId(sentryEvent), // Se necesita generar esto
         title: sentryEvent.title, // "TypeError: num.toUpperCase is not a function"
         level: sentryEvent.level, // "error"
         project_id: projectId,
