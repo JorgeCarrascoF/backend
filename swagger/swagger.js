@@ -141,8 +141,6 @@ const options = {
       { name: 'Users', description: 'Gestión de usuarios' },
       { name: 'Roles', description: 'Gestión de roles' },
       { name: 'Logs', description: 'Gestión de logs' },
-      //{ name: 'Events', description: 'Gestión de eventos' },
-      //{ name: 'Projects', description: 'Gestión de proyectos' },
       { name: 'General', description: 'Endpoints generales' }
     ]
   },
