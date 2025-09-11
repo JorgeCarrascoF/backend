@@ -428,3 +428,47 @@
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+
+/**
+ * @swagger
+ * /users/first-login/{id}:
+ *   patch:
+ *     summary: Actualizar estado de primer login
+ *     description: >
+ *       Marca el campo isFirstLogin de un usuario como false después de cambiar la contraseña en su primer inicio de sesión.
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del usuario que se actualizará
+ *     responses:
+ *       200:
+ *         description: First login updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "First login updated successfully"
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               msg: "User not found"
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
