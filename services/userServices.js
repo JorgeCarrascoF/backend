@@ -81,7 +81,6 @@ const getUserById = async (userId) => {
     return _formatUserData(user);
 };
 
-
 /* -------------------------
    VERSIÓN ORIGINAL (correcta)
    (Se deja comentada para referencia)
@@ -212,6 +211,26 @@ const updatePassword = async (userId, newPassword) => {
     return _formatUserData(user);
 };
 
+const FirstLoginFalse = async (userId) => {
+    if(!mongoose.Types.ObjectId.isValid(userId)){
+        throw Boom.badRequest('Invalid userID');
+    }
+
+    const user = await User.findByIdAndUpdate(
+        userId,
+        {isFirstLogin: false},
+        {new:true},
+
+    )
+    .populate('roleId', 'name permission')
+    .select('-password');
+
+    if(!user){
+        throw Boom.notFound('User not found');
+    }
+    return _formatUserData(user);
+}
+
 module.exports = {
     getUsersByFilter,
     getUserById,
@@ -219,4 +238,5 @@ module.exports = {
     deleteUser,
     comparePassword,
     updatePassword,
+    FirstLoginFalse
 };
