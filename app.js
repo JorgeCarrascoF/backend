@@ -108,14 +108,6 @@ swaggerDocs(app);
 
 //   res.status(err.status || 500);
 
-//   // Si es una petición API, responder con JSON
-//   if (req.path.startsWith('/api/')) {
-//     res.json({ error: err.message });
-//   } else {
-//     res.render('error');
-//   }
-// });
-
 app.use((req, res, next) => {
   res.status(404).json({
     statusCode: 404,

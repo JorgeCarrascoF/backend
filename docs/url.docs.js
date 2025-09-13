@@ -3,7 +3,7 @@
  * @swagger
  * tags:
  *   name: URL
- *   description: URL validation endpoints
+ *   description: URL validation endpoints.
  */
 
 /**

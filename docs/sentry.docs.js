@@ -2,8 +2,8 @@
  * @swagger
  * /webhook/sentry:
  *   post:
- *     summary: Recibe eventos de error desde Sentry (webhook)
- *     description: Endpoint que procesa automáticamente eventos enviados por Sentry y los guarda o actualiza como Logs.
+ *     summary: Receive error events from Sentry (webhook).
+ *     description: Endpoint that automatically processes events sent by Sentry and saves or updates them as Logs.
  *     tags:
  *       - Webhooks
  *     requestBody:
