@@ -231,8 +231,9 @@ const changePassword = async (req, res) => {
 const firstLoginWithoutProtection = async (req, res) => {
   try{
     const { id } = req.params;
+    const { status } = req.body;
 
-    const updatedUser = await userService.FirstLoginFalse(id);
+    const updatedUser = await userService.FirstLoginStatus(id, status ?? false);
 
     if (!updatedUser){
       return res.status(404).json({message: "User not found"});

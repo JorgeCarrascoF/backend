@@ -2,7 +2,7 @@
  * @swagger
  * tags:
  *   name: Users
- *   description: Endpoints para gestión de usuarios
+ *   description: Endpoints for user management.
  */
 
 /**
@@ -16,7 +16,7 @@
  *           type: string
  *         fullName:
  *           type: string
- *           description: "Nombre completo del usuario"
+ *           description: "User's full name"
  *         username:
  *           type: string
  *         email:
@@ -69,10 +69,10 @@
  * @swagger
  * /users:
  *   get:
- *     summary: Obtener usuarios filtrados con paginación
+ *     summary: Get filtered users with pagination
  *     description: >
- *       Retorna usuarios según filtros avanzados (username, email, role, estado), con paginación.  
- *       Solo accesible para roles distintos de `user` (superadmin y admin).
+ *       Returns users based on advanced filters (username, email, role, status), with pagination  
+ *       Only accessible to roles other than `user` (superadmin and admin)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -83,46 +83,46 @@
  *         schema:
  *           type: string
  *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *         description: Token JWT en formato "Bearer {token}"
+ *         description: JWT token in "Bearer {token} format"
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
- *         description: Búsqueda global por múltiples campos
+ *         description: Global search by multiple fields
  *       - in: query
  *         name: username
  *         schema:
  *           type: string
- *         description: Filtrar por nombre de usuario exacto
+ *         description: Filter by exact username
  *       - in: query
  *         name: email
  *         schema:
  *           type: string
  *           format: email
- *         description: Filtrar por correo exacto
+ *         description: Filter by exact email
  *       - in: query
  *         name: role
  *         schema:
  *           type: string
  *           enum: ['superadmin', 'admin', 'user']
- *         description: Filtrar por rol exacto
+ *         description: Filter by exact role
  *       - in: query
  *         name: isActive
  *         schema:
  *           type: boolean
- *         description: Filtrar por estado de actividad
+ *         description: Filter by activity status
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Página a solicitar (paginación)
+ *         description: Page to request (pagination)
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
- *         description: Cantidad de resultados por página
+ *         description: Number of results per page
  *     responses:
  *       200:
  *         description: Userlist obtained successfully
@@ -171,8 +171,8 @@
  * @swagger
  * /users/{id}:
  *   get:
- *     summary: Obtener un usuario por ID
- *     description: Obtiene un usuario específico. Los administradores pueden ver cualquier usuario, los usuarios normales solo pueden ver su propio perfil.
+ *     summary: Get a user by ID
+ *     description: Gets a specific user. Administrators can see any user; regular users can only see their own profile
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -188,7 +188,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del usuario
+ *         description: User ID
  *     responses:
  *       200:
  *         description: User retrieved successfully
@@ -222,11 +222,11 @@
  * @swagger
  * /users/{id}:
  *   patch:
- *     summary: Actualizar un usuario
+ *     summary: Update a user
  *     description: >
- *       Actualiza un usuario.  
- *       - Los administradores pueden actualizar cualquier usuario (incluyendo rol).  
- *       - Los usuarios normales solo pueden actualizar su propio perfil, **excluyendo** los campos `role` y `email`.  
+ *       Update a user.  
+ *       - Administrators can update any user (including role)
+ *       - Regular users can only update their own profile, **excluding** the `role` and `email` fields
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -242,7 +242,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del usuario a actualizar
+ *         description: User ID to update
  *     requestBody:
  *       required: true
  *       content:
@@ -304,8 +304,8 @@
  * @swagger
  * /users/{id}:
  *   delete:
- *     summary: Eliminar un usuario
- *     description: Elimina un usuario. Los administradores pueden eliminar cualquier usuario, los usuarios normales solo pueden eliminar su propia cuenta.
+ *     summary: Delete a user
+ *     description: Delete a user. The superadmin can only delete any user.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -321,7 +321,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del usuario a eliminar
+ *         description: ID of the user to delete
  *     responses:
  *       200:
  *         description: User deleted successfully
@@ -356,11 +356,11 @@
  * @swagger
  * /users/change-password:
  *   post:
- *     summary: Cambiar la contraseña del usuario actual
+ *     summary: Change the current user's password
  *     description: >
- *       Permite al usuario autenticado cambiar su contraseña.
- *       Se requiere proporcionar la contraseña actual y la nueva contraseña.
- *       La nueva contraseña debe cumplir con los requisitos de seguridad.
+ *       Allows the authenticated user to change their password.
+ *       You are required to provide both your current password and your new password.
+ *       The new password must meet security requirements.
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -371,7 +371,7 @@
  *         schema:
  *           type: string
  *           example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *         description: Token JWT en formato "Bearer {token}"
+ *         description: JWT token in "Bearer {token} format"
  *     requestBody:
  *       required: true
  *       content:
@@ -381,10 +381,10 @@
  *             properties:
  *               currentPassword:
  *                 type: string
- *                 description: "Contraseña actual del usuario"
+ *                 description: "Current user password"
  *               newPassword:
  *                 type: string
- *                 description: "Nueva contraseña del usuario"
+ *                 description: "New user password"
  *             required:
  *               - currentPassword
  *               - newPassword
@@ -433,9 +433,9 @@
  * @swagger
  * /users/first-login/{id}:
  *   patch:
- *     summary: Actualizar estado de primer login
+ *     summary: Update first login status
  *     description: >
- *       Marca el campo isFirstLogin de un usuario como false después de cambiar la contraseña en su primer inicio de sesión.
+ *       Updates a user's isFirstLogin field after changing their password on their first login.
  *     tags: [Users]
  *     parameters:
  *       - in: path
@@ -443,7 +443,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del usuario que se actualizará
+ *         description: ID of the user to be updated
  *     responses:
  *       200:
  *         description: First login updated successfully

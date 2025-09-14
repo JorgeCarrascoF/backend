@@ -7,6 +7,6 @@ require("./connections/db");
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`📘 Documentación Swagger disponible en: http://localhost:${PORT}/api-docs`);
+  console.log(`🚀 Server running on: http://localhost:${PORT}`);
+  //console.log(`📘 Documentación Swagger disponible en: http://localhost:${PORT}/api-docs`);
 });

@@ -133,43 +133,6 @@ const updateUser = async (userId, updateData) => {
     return _formatUserData(user);
 };
 
-
-// /* -------------------------
-//    VERSIÓN QUE FORZA ERROR / TUMBA EL SERVIDOR 
-//    NOTA: Esto forzará un crash asíncrono del proceso.
-//    usarlo solo en desarrollo para probar el sdk de sentry SOLO en desarrollo. Para desactivar, reemplaza por la versión original arriba.
-// ------------------------- */
-// const updateUser = async (userId, updateData) => {
-//     // --- Validación previa (igual que la versión correcta) ---
-//     const { error } = updateUserSchema.validate(updateData);
-//     if (error) {
-//         const validationError = new Error('Error de validación');
-//         validationError.statusCode = 400;
-//         validationError.details = error.details.map((d) => ({
-//             message: d.message,
-//             path: d.path.join('.'),
-//             type: d.type,
-//         }));
-//         throw validationError;
-//     }
-
-//     // --- Forzar un crash asíncrono: esto no será atrapado por try/catch de controladores ---
-//     // Método 1: lanzar en nextTick -> uncaughtException -> crash
-//     process.nextTick(() => {
-//         throw new Error('Crash forzado desde updateUser (process.nextTick).');
-//     });
-
-//     // Alternativa (comentada): exit inmediato del proceso
-//     // setTimeout(() => process.exit(1), 100);
-
-//     // Por si acaso devuelvo algo (esto raramente llegará antes del crash)
-//     return {
-//         id: userId,
-//         username: updateData.username || 'test',
-//         note: 'Este return puede no llegar porque el proceso será crasheado asíncronamente'
-//     };
-// };
-
 /* -------------------------
    deleteUser (sin cambios)
 ------------------------- */
@@ -211,21 +174,21 @@ const updatePassword = async (userId, newPassword) => {
     return _formatUserData(user);
 };
 
-const FirstLoginFalse = async (userId) => {
-    if(!mongoose.Types.ObjectId.isValid(userId)){
+const FirstLoginStatus = async (userId, status = false) => {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw Boom.badRequest('Invalid userID');
     }
 
     const user = await User.findByIdAndUpdate(
         userId,
-        {isFirstLogin: false},
-        {new:true},
+        { isFirstLogin: status },
+        { new: true },
 
     )
-    .populate('roleId', 'name permission')
-    .select('-password');
+        .populate('roleId', 'name permission')
+        .select('-password');
 
-    if(!user){
+    if (!user) {
         throw Boom.notFound('User not found');
     }
     return _formatUserData(user);
@@ -238,5 +201,5 @@ module.exports = {
     deleteUser,
     comparePassword,
     updatePassword,
-    FirstLoginFalse
+    FirstLoginStatus
 };

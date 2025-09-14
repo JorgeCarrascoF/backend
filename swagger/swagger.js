@@ -7,22 +7,22 @@ const options = {
     openapi: '3.0.0',
     info: {
       customCssUrl: '/css/custom-swagger.css',
-      title: 'API Buggle - Equipo 2 Tarde',
-      description: 'Documentación de API con autenticación JWT + Cookies',
+      title: 'API Buggle',
+      description: 'API Documentation with JWT Authentication + Cookies',
       version: '1.0.0',
       contact: {
         name: 'Buggle',
-        email: 'buggle@example.com'
+        email: 'rootbuggle@gmail.com'
       }
     },
     servers: [
       {
         url: "https://backend-llwm.onrender.com/api",
-        description: 'Servidor de producción'
+        description: 'Production server'
       },
       {
         url: 'http://localhost:3000/api',
-        description: 'Servidor de desarrollo'
+        description: 'Development server'
       }
     ],
     components: {
@@ -137,11 +137,11 @@ const options = {
       }
     },
     tags: [
-      { name: 'Auth', description: 'Endpoints de autenticación' },
-      { name: 'Users', description: 'Gestión de usuarios' },
-      { name: 'Roles', description: 'Gestión de roles' },
-      { name: 'Logs', description: 'Gestión de logs' },
-      { name: 'General', description: 'Endpoints generales' }
+      { name: 'Auth', description: 'Authentication endpoints' },
+      { name: 'Users', description: 'User management' },
+      { name: 'Roles', description: 'Role management' },
+      { name: 'Logs', description: 'Log management' },
+      { name: 'General', description: 'General Endpoints' }
     ]
   },
   apis: [
@@ -158,7 +158,7 @@ function swaggerDocs(app) {
     explorer: true,
     //customCss: '.swagger-ui .topbar { display: none }',
     customCssUrl: '/css/custom-swagger.css',
-    customSiteTitle: 'API Buggle - Documentación',
+    customSiteTitle: 'API Buggle - Documentation',
   }));
 
   app.get('/api-docs.json', (req, res) => {
@@ -166,8 +166,8 @@ function swaggerDocs(app) {
     res.send(swaggerSpec);
   });
 
-  console.log('📘 Documentación Swagger disponible en: http://localhost:3000/api-docs');
-  console.log('📋 JSON Schema disponible en: http://localhost:3000/api-docs.json');
+  console.log('📘 Swagger documentation available at: http://localhost:3000/api-docs');
+  console.log('📋 JSON Schema available in: http://localhost:3000/api-docs.json');
 }
 
 module.exports = swaggerDocs;

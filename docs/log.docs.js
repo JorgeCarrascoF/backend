@@ -11,62 +11,62 @@
  *       properties:
  *         _id:
  *           type: string
- *           description: ID único del log
+ *           description: Log ID
  *         issue_id:
  *           type: string
- *           description: ID único del incidente (coincide con Sentry si aplica)
+ *           description: Unique incident ID (matches Sentry if applicable)
  *         message:
  *           type: string
- *           description: Mensaje del error
+ *           description: Error message
  *         description:
  *           type: string
- *           description: Descripción detallada, útil para logs manuales
+ *           description: Detailed description (useful for manual logs)
  *         culprit:
  *           type: string
- *           description: Causa principal del error
+ *           description: Main cause of the error
  *         error_type:
  *           type: string
  *           enum: ['error', 'warning', 'info']
- *           description: Tipo de error
+ *           description: Error type
  *         environment:
  *           type: string
  *           enum: ['testing', 'development', 'production']
- *           description: Entorno de ejecución
+ *           description: Execution environment
  *         status:
  *           type: string
  *           enum: ['unresolved', 'in review', 'solved']
- *           description: Estado del log
+ *           description: Log status
  *         priority:
  *           type: string
  *           enum: ['low', 'medium', 'high', 'critical']
- *           description: Nivel de prioridad del log
+ *           description: Log priority level
  *         assigned_to:
  *           type: string
- *           description: Usuario asignado para resolver el log
+ *           description: User assigned to resolve the log
  *         created_at:
  *           type: string
  *           format: date-time
- *           description: Fecha y hora en que se creó el log
+ *           description: Date and time the log was created
  *         last_seen_at:
  *           type: string
  *           format: date-time
- *           description: Última vez que se detectó este incidente (trazabilidad)
+ *           description: Last time this incident was detected (traceability)
  *         count:
  *           type: integer
- *           description: Número de veces que ha ocurrido este incidente (trazabilidad)
+ *           description: Number of times this incident has occurred (traceability)
  *         active:
  *           type: boolean
- *           description: Indica si el log está activo (para borrado lógico)
+ *           description: Indicates whether the log is active (for logical deletion)
  *         json_sentry:
  *           type: object
- *           description: Payload completo de Sentry
+ *           description: Sentry's full payload
  */
 
 /**
  * @swagger
  * /logs:
  *   get:
- *     summary: Obtener todos los logs (con filtros y paginación)
+ *     summary: Get all logs (with filters and pagination)
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -85,74 +85,74 @@
  *         name: search
  *         schema:
  *           type: string
- *         description: Búsqueda global por múltiples campos
+ *         description: Global search with multiple fields
  *       - in: query
  *         name: issue_id
  *         schema:
  *           type: string
- *         description: Filtrar por ID de incidente
+ *         description: Filter by incident ID
  *       - in: query
  *         name: message
  *         schema:
  *           type: string
- *         description: Filtrar por mensaje de log
+ *         description: Filter by log message
  *       - in: query
  *         name: error_type
  *         schema:
  *           type: string
  *           enum: ['error', 'warning', 'info']
- *         description: Tipo de error
+ *         description: Error type
  *       - in: query
  *         name: environment
  *         schema:
  *           type: string
  *           enum: ['testing', 'development', 'production']
- *         description: Entorno de ejecución
+ *         description: Execution environment
  *       - in: query
  *         name: status
  *         schema:
  *           type: string
  *           enum: ['unresolved', 'in review', 'solved']
- *         description: Estado del log
+ *         description: Log status
  *       - in: query
  *         name: priority
  *         schema:
  *           type: string
  *           enum: ['low', 'medium', 'high', 'critical']
- *         description: Prioridad del log
+ *         description: Log priority
  *       - in: query
  *         name: assigned_to
  *         schema:
  *           type: string
- *         description: Usuario asignado
+ *         description: Assigned user
  *       - in: query
  *         name: active
  *         schema:
  *           type: boolean
- *         description: Filtrar por logs activos/inactivos
+ *         description: Filter by active/inactive logs
  *       - in: query
  *         name: hash
  *         schema:
  *           type: string
- *         description: Identificador único generado por culprit, error_type, y environment
+ *         description: Unique identifier generated by culprit, error_type, and environment
  *       - in: query
  *         name: error_signature
  *         schema:
  *           type: string
- *         description: Filtrar por firma de error
+ *         description: Filter by error signature
  *       - in: query
  *         name: date
  *         schema:
  *           type: string
  *           format: date
- *         description: "Filtrar logs por fecha específica (formato: YYYY-MM-DD)"
+ *         description: "Filter logs by specific date (format: YYYY-MM-DD)"
  *       - in: query
  *         name: sortOrder
  *         schema:
  *           type: string
  *           enum: [asc, desc]
  *           default: desc
- *         description: Orden de clasificación (ascendente o descendente)
+ *         description: Sort order (ascending or descending)
 
  *     responses:
  *       200:
@@ -186,7 +186,7 @@
  * @swagger
  * /logs/{id}:
  *   get:
- *     summary: Obtener un log por ID
+ *     summary: Get a log by ID
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -211,7 +211,7 @@
  * @swagger
  * /logs:
  *   post:
- *     summary: Crear un nuevo log
+ *     summary: Create a new log
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -232,7 +232,7 @@
  * @swagger
  * /logs/{id}:
  *   patch:
- *     summary: Actualizar un log existente
+ *     summary: Update an existing log
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []
@@ -259,7 +259,7 @@
  * @swagger
  * /logs/{id}:
  *   delete:
- *     summary: Eliminar un log
+ *     summary: Delete a log
  *     tags: [Logs]
  *     security:
  *       - bearerAuth: []

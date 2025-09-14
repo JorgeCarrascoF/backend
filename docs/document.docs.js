@@ -2,7 +2,7 @@
  * @swagger
  * tags:
  *   name: Documents
- *   description: Endpoints para gestión de documentos
+ *   description: Endpoints for document management.
  */
 
 /**
@@ -14,35 +14,35 @@
  *       properties:
  *         id:
  *           type: string
- *           description: ID único del documento
+ *           description: Document ID
  *         title:
  *           type: string
- *           description: Título del documento
+ *           description: Document title
  *         content:
  *           type: string
- *           description: Contenido del documento
+ *           description: Contents of the document
  *         date:
  *           type: string
  *           format: date-time
- *           description: Fecha de creación del documento
+ *           description: Document creation date
  *         log:
  *           type: object
- *           description: Log asociado al documento
+ *           description: Log associated with the document
  *           properties:
  *             id:
  *               type: string
- *               description: ID del log
+ *               description: Log ID
  *             message:
  *               type: string
- *               description: Mensaje del log
+ *               description: Log message
  *         createdAt:
  *           type: string
  *           format: date-time
- *           description: Fecha de creación del registro
+ *           description: Record creation date
  *         updatedAt:
  *           type: string
  *           format: date-time
- *           description: Fecha de última actualización del registro
+ *           description: Date of last update of the record
  *     DocumentInput:
  *       type: object
  *       required:
@@ -52,15 +52,15 @@
  *       properties:
  *         title:
  *           type: string
- *           description: Título del documento
+ *           description: Document title
  *           example: "Título del Documento"
  *         content:
  *           type: string
- *           description: Contenido del documento
+ *           description: Contents of the document
  *           example: "Contenido del documento..."
  *         log:
  *           type: string
- *           description: ID del log asociado
+ *           description: Associated log ID
  *           example: "60d5ec9f8c3da2b348d27e4a"
  */
 
@@ -68,7 +68,7 @@
  * @swagger
  * /documents:
  *   post:
- *     summary: Crear un nuevo documento
+ *     summary: Create a new document
  *     tags: [Documents]
  *     security:
  *       - bearerAuth: []
@@ -88,7 +88,7 @@
  *       400:
  *         description: Error in data validation
  *   get:
- *     summary: Obtener todos los documentos
+ *     summary: Get all documents
  *     tags: [Documents]
  *     security:
  *       - bearerAuth: []
@@ -98,23 +98,23 @@
  *         schema:
  *           type: integer
  *           example: 5
- *         description: Número de registros por página
+ *         description: Number of records per page
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           example: 1
- *         description: Número de página
+ *         description: Page number
  *       - in: query
  *         name: sortOrder
  *         schema:
  *           type: string
  *           enum: [asc, desc]
  *           example: desc
- *         description: Orden de clasificación (ascendente o descendente)
+ *         description: Sort order (ascending or descending)
  *     responses:
  *       200:
- *         description: Lista de documentos
+ *         description: List of documents
  *         content:
  *           application/json:
  *             schema:
@@ -127,7 +127,7 @@
  * @swagger
  * /documents/{id}:
  *   get:
- *     summary: Obtener un documento por ID
+ *     summary: Obtain a document by ID
  *     tags: [Documents]
  *     security:
  *       - bearerAuth: []
@@ -137,7 +137,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del documento
+ *         description: Document ID
  *     responses:
  *       200:
  *         description: Document found
@@ -148,7 +148,7 @@
  *       404:
  *         description: Document not found
  *   patch:
- *     summary: Actualizar un documento
+ *     summary: Update a document
  *     tags: [Documents]
  *     security:
  *       - bearerAuth: []
@@ -158,7 +158,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del documento
+ *         description: Document ID
  *     requestBody:
  *       required: true
  *       content:
@@ -175,7 +175,7 @@
  *       404:
  *         description: Document not found
  *   delete:
- *     summary: Eliminar un documento
+ *     summary: Delete a document
  *     tags: [Documents]
  *     security:
  *       - bearerAuth: []
@@ -185,7 +185,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del documento
+ *         description: Document ID
  *     responses:
  *       200:
  *         description: Document deleted successfully

@@ -3,34 +3,6 @@
 // ============================================
 const Role = require('../models/role');
 
-/**
- * @swagger
- * /roles:
- *   post:
- *     summary: Crear nuevo rol
- *     tags: [Roles]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - permission
- *             properties:
- *               name:
- *                 type: string
- *               permission:
- *                 type: array
- *                 items:
- *                   type: string
- *     responses:
- *       201:
- *         description: Rol creado exitosamente
- *       400:
- *         description: Datos inválidos
- */
 const createRole = async (req, res) => {
     const { name, permission } = req.body;
 
@@ -56,16 +28,7 @@ const createRole = async (req, res) => {
     }
 };
 
-/**
- * @swagger
- * /roles:
- *   get:
- *     summary: Obtener todos los roles
- *     tags: [Roles]
- *     responses:
- *       200:
- *         description: Lista de roles
- */
+
 const getAllRoles = async (req, res) => {
     try {
         const limit =  parseInt(req.query.limit) || 10;
