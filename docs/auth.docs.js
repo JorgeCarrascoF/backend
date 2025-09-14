@@ -2,14 +2,14 @@
  * @swagger
  * tags:
  *   name: Auth
- *   description: Endpoints de autenticación
+ *   description: Authentication endpoints.
  */
 
 /**
  * @swagger
  * /auth/register:
  *   post:
- *     summary: Registrar nuevo usuario
+ *     summary: Register new user
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -25,7 +25,7 @@
  *             properties:
  *               fullName:
  *                 type: string
- *                 description: "Nombre completo del usuario"
+ *                 description: "User's full name"
  *                 example: "Juan Pérez"
  *               username:
  *                 type: string
@@ -53,7 +53,7 @@
  * @swagger
  * /auth/login:
  *   post:
- *     summary: Iniciar sesión
+ *     summary: Login
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -67,8 +67,8 @@
  *             properties:
  *               email:
  *                 type: string
- *                 description: "Puede ser username o email (el campo acepta ambos)"
- *                 example: "usuario123"
+ *                 description: "It can be username or email (the field accepts both)"
+ *                 example: "usuario123@gmail.com"
  *                 x-examples:
  *                   - "usuario123"
  *                   - "usuario@example.com"
@@ -112,7 +112,7 @@
  * @swagger
  * /auth/logout:
  *   post:
- *     summary: Cerrar sesión
+ *     summary: Logout
  *     tags: [Auth]
  *     responses:
  *       200:
@@ -123,7 +123,7 @@
  * @swagger
  * /auth/me:
  *   get:
- *     summary: Obtener perfil del usuario actual
+ *     summary: Get current user profile
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []

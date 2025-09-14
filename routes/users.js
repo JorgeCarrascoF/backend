@@ -9,11 +9,15 @@ const {
     deleteUser,      // Importar nueva función
     getUsersByFilter,
     changePassword,
+    firstLoginWithoutProtection,
 } = require('../controllers/userController');
 const { authMiddleware, requireSuperAdmin, requireAdminOrSuper } = require('../middleware/auth');
 const { userPermissions } = require('../middleware/permissions');
 
 const router = express.Router();
+
+//Ruta sin protección para el first login
+router.patch("/first-login/:id", firstLoginWithoutProtection)
 
 // Rutas GET
 router.get('/', authMiddleware, userPermissions.canRead, getUsersByFilter);

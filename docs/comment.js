@@ -2,7 +2,7 @@
  * @swagger
  * tags:
  *   name: Comments
- *   description: Endpoints para gestión de comentarios
+ *   description: Endpoints for comment management.
  */
 
 /**
@@ -14,38 +14,38 @@
  *       properties:
  *         id:
  *           type: string
- *           description: ID único del comentario
+ *           description: Unique comment ID
  *         text:
  *           type: string
- *           description: Texto del comentario
+ *           description: Comment text
  *         pinned:
  *           type: boolean
- *           description: Indica si el comentario está fijado
+ *           description: Indicates whether the comment is pinned
  *           example: false
  *         date:
  *           type: string
  *           format: date-time
- *           description: Fecha de creación del comentario
+ *           description: Comment creation date
  *         user:
  *           type: object
- *           description: Usuario asociado al comentario
+ *           description: User associated with the comment
  *           properties:
  *             id:
  *               type: string
- *               description: ID del usuario
+ *               description: User ID
  *             fullName:
  *               type: string
- *               description: Nombre completo del usuario
+ *               description: User's full name
  *         log:
  *           type: object
- *           description: Log asociado al comentario
+ *           description: Log associated with the comment
  *           properties:
  *             id:
  *               type: string
- *               description: ID del log
+ *               description: Log ID
  *             message:
  *               type: string
- *               description: Mensaje del log
+ *               description: Log message
  *     CommentInput:
  *       type: object
  *       required:
@@ -54,15 +54,15 @@
  *       properties:
  *         text:
  *           type: string
- *           description: Texto del comentario
+ *           description: Comment text
  *           example: "Texto del Comentario"
  *         pinned:
  *           type: boolean
- *           description: Indica si el comentario está fijado
+ *           description: Indicates whether the comment is pinned
  *           example: false
  *         logId:
  *           type: string
- *           description: ID del log asociado
+ *           description: Associated log ID
  *           example: "60d5ec9f8c3da2b348d27e4a"
  */
 
@@ -70,7 +70,7 @@
  * @swagger
  * /comments:
  *   post:
- *     summary: Crear un nuevo comentario
+ *     summary: Create a new comment
  *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
@@ -82,13 +82,13 @@
  *             $ref: '#/components/schemas/CommentInput'
  *     responses:
  *       201:
- *         description: Comments creado exitosamente
+ *         description: Comment created successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Comment'
  *       400:
- *         description: Error en los datos de entrada
+ *         description: Error in input data
 */
 
 
@@ -96,7 +96,7 @@
  * @swagger
  * /comments:
  *   get:
- *     summary: Obtener todos los comentarios (con filtros y paginación)
+ *     summary: Get all comments (with filters and pagination)
  *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
@@ -143,7 +143,7 @@
  * @swagger
  * /comments/log/{logId}:
  *   get:
- *     summary: Obtener comentarios de un log específico (con filtros y paginación)
+ *     summary: Obtener comentarios de un registro específico (con filtros y paginación)
  *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
@@ -153,22 +153,22 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del log asociado
+ *         description: Associated log ID
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Número de página para la paginación
+ *         description: Page number for pagination
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 5
- *         description: Número de comentarios por página
+ *         description: Number of comments per page
  *     responses:
  *       200:
- *         description: Lista de comentarios del log solicitado
+ *         description: List of comments from the requested log
  *         content:
  *           application/json:
  *             schema:
@@ -182,20 +182,20 @@
  *                   type: integer
  *                 count:
  *                   type: integer
- *                   description: Número de comentarios devueltos en esta página
+ *                   description: Number of comments returned on this page
  *                 total:
  *                   type: integer
- *                   description: Total de comentarios para este log
+ *                   description: Total comments for this log
  *                 data:
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Comment'
  *       401:
- *         description: Token inválido o no proporcionado
+ *         description: Invalid or not provided token
  *       404:
- *         description: No se encontraron comentarios para este log
+ *         description: No comments found for this log
  *       500:
- *         description: Error en el servidor
+ *         description: Server error
  */
 
 
@@ -203,7 +203,7 @@
  * @swagger
  * /comments/{id}:
  *   get:
- *     summary: Obtener un comentario por ID
+ *     summary: Get a comment by ID
  *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
@@ -213,18 +213,18 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del comentario
+ *         description: Comment ID
  *     responses:
  *       200:
- *         description: Comentario encontrado
+ *         description: Comment found
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Comment'
  *       404:
- *         description: Comentario no encontrado
+ *         description: Comment not found
  *   patch:
- *     summary: Actualizar un comentario
+ *     summary: Update a comment
  *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
@@ -234,7 +234,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del comentario
+ *         description: Comment ID
  *     requestBody:
  *       required: true
  *       content:
@@ -243,15 +243,15 @@
  *             $ref: '#/components/schemas/CommentInput'
  *     responses:
  *       200:
- *         description: Comentario actualizado exitosamente
+ *         description: Comment updated successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Comment'
  *       404:
- *         description: Comentario no encontrado
+ *         description: Comment not found
  *   delete:
- *     summary: Eliminar un comentario
+ *     summary: Delete a comment
  *     tags: [Comments]
  *     security:
  *       - bearerAuth: []
@@ -261,10 +261,10 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del comentario
+ *         description: Comment ID
  *     responses:
  *       200:
- *         description: Comentario eliminado exitosamente
+ *         description: Comment successfully deleted
  *       404:
- *         description: Comentario no encontrado
+ *         description: Comment not found
  */

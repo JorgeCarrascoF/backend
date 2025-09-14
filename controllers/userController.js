@@ -228,10 +228,33 @@ const changePassword = async (req, res) => {
   }
 };
 
+const firstLoginWithoutProtection = async (req, res) => {
+  try{
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const updatedUser = await userService.FirstLoginStatus(id, status ?? false);
+
+    if (!updatedUser){
+      return res.status(404).json({message: "User not found"});
+    }
+
+    res.status(200).json({
+      message: "First Login updated successfully",
+      user: updatedUser
+    });
+  }
+  catch(err){
+    console.error("Error first login", err);
+    res.status(500).json({message: "Server error", error: err.message});
+  }
+};
+
 module.exports = {
   getUsersByFilter,
   getUserById,
   updateUser,
   deleteUser,
   changePassword,
+  firstLoginWithoutProtection
 };

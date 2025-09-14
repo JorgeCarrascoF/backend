@@ -2,7 +2,7 @@
  * @swagger
  * tags:
  *   name: StatusRegister
- *   description: Endpoints para gestión del historial de cambios de estado de los logs
+ *   description: Endpoints for managing log status change history.
  */
 
 /**
@@ -14,22 +14,22 @@
  *       properties:
  *         id:
  *           type: string
- *           description: ID único del registro de estado
+ *           description: Unique ID of the state record
  *         status:
  *           type: string
  *           enum: [unresolved, in review, solved]
- *           description: Estado asignado al log
+ *           description: Status assigned to the log
  *           example: "in review"
  *         userId:
  *           type: string
- *           description: ID del usuario que realizó el cambio
+ *           description: ID of the user who made the change
  *         logId:
  *           type: string
- *           description: ID del log afectado
+ *           description: ID of the affected log
  *         created_at:
  *           type: string
  *           format: date-time
- *           description: Fecha en que se realizó el cambio
+ *           description: Date the change was made
  *
  *     StatusRegisterInput:
  *       type: object
@@ -39,12 +39,12 @@
  *       properties:
  *         logId:
  *           type: string
- *           description: ID del log al que se actualiza el estado
+ *           description: ID of the log whose status is updated
  *           example: "64a9f2c2e1a9b3f5a7d12345"
  *         status:
  *           type: string
  *           enum: [unresolved, in review, solved]
- *           description: Nuevo estado a asignar al log
+ *           description: New status to assign to the log
  *           example: "in review"
  */
 
@@ -52,7 +52,7 @@
  * @swagger
  * /status-register:
  *   post:
- *     summary: Cambiar el estado de un log y registrar el cambio
+ *     summary: Change the status of a log and record the change
  *     tags: [StatusRegister]
  *     security:
  *       - bearerAuth: []
@@ -89,7 +89,7 @@
  *         description: Server error
  *
  *   get:
- *     summary: Obtener todos los registros de cambios de estado
+ *     summary: Get all status change records
  *     tags: [StatusRegister]
  *     security:
  *       - bearerAuth: []
@@ -99,20 +99,20 @@
  *         schema:
  *           type: integer
  *           example: 5
- *         description: Número de registros por página
+ *         description: Number of records per page
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           example: 1
- *         description: Número de página
+ *         description: Page number
  *       - in: query
  *         name: sortOrder
  *         schema:
  *           type: string
  *           enum: [asc, desc]
  *           example: desc
- *         description: Orden de clasificación (ascendente o descendente)
+ *         description: Sort order (ascending or descending)
  *     responses:
  *       200:
  *         description: List of status change record obtained successfully
@@ -152,7 +152,7 @@
  * @swagger
  * /status-register/log/{logId}:
  *   get:
- *     summary: Obtener registro de cambio de estado de un log específico
+ *     summary: Get a status change record for a specific log
  *     tags: [StatusRegister]
  *     security:
  *       - bearerAuth: []
@@ -162,7 +162,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del log asociado
+ *         description: Associated log ID
  *     responses:
  *       200:
  *         description: List of status change record requested
@@ -203,7 +203,7 @@
  * @swagger
  * /status-register/{id}:
  *   get:
- *     summary: Obtener registro de cambio de estado por ID
+ *     summary: Get status change record by ID
  *     tags: [StatusRegister]
  *     security:
  *       - bearerAuth: []
@@ -213,7 +213,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: ID del registro de estado a obtener
+ *         description: ID of the status record to obtain
  *     responses:
  *       200:
  *         description: Status change record obtained successfully

@@ -2,14 +2,14 @@
  * @swagger
  * tags:
  *   name: Suggested-user
- *   description: Endpoints para sugerencias de responsables en base a históricos de resolución
+ *   description: Endpoints for suggestions from responsible parties based on resolution history.
  */
 
 /**
  * @swagger
  * /suggested-user/{error_signature}:
  *   get:
- *     summary: Obtener sugerencias de usuarios responsables para un tipo de error
+ *     summary: Get suggestions from responsible users for a type of error
  *     tags: [Suggested-user]
  *     security:
  *       - bearerAuth: []
@@ -19,7 +19,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: Firma del error (error_signature)
+ *         description: Error Signature
  *     responses:
  *       200:
  *         description: List of suggested users
