@@ -104,7 +104,9 @@ app.post('/api/:projectId/envelope', (req, res) => {
     const payload = JSON.parse(lines[2]); // tercera línea (evento)
     console.log('Header:', header);
     console.log('Item header:', itemHeader);
-    console.log('Payload:', payload);
+    console.log("Payload:");
+    console.dir(payload, { depth: null, colors: false, maxArrayLength: null });
+
 
     // TODO: validar public_key de header.dsn vs tu DB
     // TODO: guardar evento en tu DB
