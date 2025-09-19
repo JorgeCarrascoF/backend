@@ -28,6 +28,7 @@ var suggestedUserRoutes = require('./routes/suggested-user');
 var swaggerDocs = require('./swagger/swagger');
 // const { credentials } = require('amqplib');
 var urlRoutes = require('./routes/urlRoutes');
+const bodyParser = require('body-parser');
 
 var app = express();
 
@@ -86,11 +87,33 @@ app.use('/api/webhook', sentryRoutes);
 app.use("/css", express.static("css"));
 app.use("/images", express.static("images"));
 
-// TODO: Hacer el endpoint funcional
-app.post('/webhook/sentry', (req, res) => {
-  console.log('🎯 Webhook recibido de Sentry:');
-  console.log(JSON.stringify(req.body, null, 2)); // Muestra bonito
-  res.status(200).send('OK');
+
+app.use('/api/:projectId/envelope', bodyParser.text({ type: '*/*' }));
+
+app.post('/api/:projectId/envelope', (req, res) => {
+  const projectId = req.params.projectId;
+
+  console.log('🎯 Envelope recibido del SDK Sentry:', projectId);
+
+  // El body es texto con varias líneas
+  const lines = req.body.split('\n').filter(Boolean);
+
+  try {
+    const header = JSON.parse(lines[0]); // primera línea
+    const itemHeader = JSON.parse(lines[1]); // segunda línea
+    const payload = JSON.parse(lines[2]); // tercera línea (evento)
+    console.log('Header:', header);
+    console.log('Item header:', itemHeader);
+    console.log('Payload:', payload);
+
+    // TODO: validar public_key de header.dsn vs tu DB
+    // TODO: guardar evento en tu DB
+
+    res.status(200).send('OK');
+  } catch (err) {
+    console.error('Error parseando envelope:', err);
+    res.status(400).send('Bad Request');
+  }
 });
 
 // Configurar Swagger
