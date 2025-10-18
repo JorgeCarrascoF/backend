@@ -90,32 +90,123 @@ app.use("/images", express.static("images"));
 
 app.use('/api/:projectId/envelope', bodyParser.text({ type: '*/*' }));
 
+
 app.post('/api/:projectId/envelope', (req, res) => {
   const projectId = req.params.projectId;
 
   console.log('🎯 Envelope recibido del SDK Sentry:', projectId);
 
-  // El body es texto con varias líneas
-  const lines = req.body.split('\n').filter(Boolean);
+  // // El body es texto con varias líneas
+  // const lines = req.body.split('\n').filter(Boolean);
 
+  // try {
+  //   const header = JSON.parse(lines[0]); // primera línea
+  //   const itemHeader = JSON.parse(lines[1]); // segunda línea
+  //   const payload = JSON.parse(lines[2]); // tercera línea (evento)
+  //   console.log('Header:', header);
+  //   console.log('Item header:', itemHeader);
+  //   console.log("Payload:");
+  //   console.dir(payload, { depth: null, colors: false, maxArrayLength: null });
+
+
+  //   // TODO: validar public_key de header.dsn vs tu DB
+  //   // TODO: guardar evento en tu DB
+
+  //   res.status(200).send('OK');
+  // } catch (err) {
+  //   console.error('Error parseando envelope:', err);
+  //   res.status(400).send('Bad Request');
+  // }
   try {
-    const header = JSON.parse(lines[0]); // primera línea
-    const itemHeader = JSON.parse(lines[1]); // segunda línea
-    const payload = JSON.parse(lines[2]); // tercera línea (evento)
-    console.log('Header:', header);
-    console.log('Item header:', itemHeader);
-    console.log("Payload:");
-    console.dir(payload, { depth: null, colors: false, maxArrayLength: null });
-
-
-    // TODO: validar public_key de header.dsn vs tu DB
-    // TODO: guardar evento en tu DB
-
-    res.status(200).send('OK');
-  } catch (err) {
-    console.error('Error parseando envelope:', err);
-    res.status(400).send('Bad Request');
-  }
+      // console.log(JSON.stringify(req.body, null, 2));
+  
+      const eventPayload = req.body?.data?.event || req.body.event;
+      const issuePayload = req.body?.data?.issue || req.body.issue;
+  
+      if (!eventPayload && !issuePayload) {
+        console.log("Webhook received without issue or event data");
+        console.log(JSON.stringify(req.body?.data, null, 2));
+        return res.status(400).json({ msg: "Data missing in Sentry payload" });
+      }
+  
+      const payload = eventPayload || issuePayload;
+      const isEvent = Boolean(eventPayload);
+  
+      const environment = normalizeEnvironment(payload.environment);
+      const errorType = normalizeErrorType(payload.level);
+      const priority = normalizePriority(payload.priority);
+  
+      const errorSignature = payload.metadata.type;
+  
+      const logHash = generateHash({
+        culprit: payload.culprit,
+        error_type: errorType,
+        environment: environment,
+        errorSignature: errorSignature,
+        description: "",
+      });
+  
+      let log = await Log.findOne({ hash: logHash });
+  
+      if (!log) {
+        log = await Log.create({
+          message: payload.title || "",
+          issue_id: payload.issue_id || payload.id || payload.event_id,
+          description: "",
+          culprit: payload.culprit || "",
+          error_type: errorType,
+          environment: environment,
+          priority: isEvent ? "medium" : priority,
+          error_signature: errorSignature || "",
+          assigned_to: "",
+          status: "unresolved",
+          created_at: new Date(),
+          last_seen_at: new Date(),
+          count: 1,
+          active: true,
+          userId: null,
+          hash: generateHash({
+            culprit: payload.culprit,
+            error_type: errorType,
+            environment: environment,
+            errorSignature: errorSignature,
+            description: "",
+          }),
+          json_sentry: req.body,
+        });
+        console.log(`Log created: ${log._id}: ${log.message}`);
+        console.log(
+          `Hash: ${log.hash} (${log.culprit}, "", ${log.error_type}, ${log.environment}, ${log.error_signature})`
+        );
+  
+        return res.status(201).json({
+          msg: "Log created from Sentry webhook",
+          log: log,
+        });
+      }
+  
+      log = await Log.findOneAndUpdate(
+        { hash: logHash },
+        {
+          $set: { last_seen_at: new Date() },
+          $inc: { count: 1 },
+        },
+        { new: true }
+      );
+      console.log(`Log updated: ${log._id}: ${log.message} (${log.count})`);
+      console.log(
+        `Hash: ${log.hash} (${log.culprit}, "", ${log.error_type}, ${log.environment}, ${log.error_signature})`
+      );
+      return res.status(200).json({
+        msg: "Log updated from Sentry webhook",
+        log: log,
+      });
+    } catch (err) {
+      console.error("Error processing Sentry webhook:", err);
+      res
+        .status(500)
+        .json({ msg: "Error processing Sentry webhook", error: err.message });
+    }
 });
 
 // Configurar Swagger
