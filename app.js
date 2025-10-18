@@ -91,7 +91,7 @@ app.use("/images", express.static("images"));
 app.use('/api/:projectId/envelope', bodyParser.text({ type: '*/*' }));
 
 
-app.post('/api/:projectId/envelope', (req, res) => {
+app.post('/api/:projectId/envelope', async (req, res) => {
   const projectId = req.params.projectId;
 
   console.log('🎯 Envelope recibido del SDK Sentry:', projectId);
