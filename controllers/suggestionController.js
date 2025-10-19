@@ -4,10 +4,10 @@ const logService = require("../services/logService");
 
 const getReportById = async (req, res) => {
   try {
-    const { logId, owner, repo, branch } = req.body;
+    const { logId } = req.body;
 
-    // 1. Validar que el log exista
     const log = await logService.getLogById(logId);
+
     if (!log) {
       return res.status(404).json({ msg: "Log not found." });
     }
@@ -20,14 +20,9 @@ const getReportById = async (req, res) => {
       });
     }
 
-    const report = await suggestionService.suggestionReport(
-      logId,
-      owner,
-      repo,
-      branch
-    );
-    const suggestion = new Suggestion({ report, logId });
-    await suggestion.save();
+    const report = await suggestionService.suggestionReport(logId);
+    // const suggestion = new Suggestion({ report, logId });
+    // await suggestion.save();
 
     res.status(200).json({
       message: "Suggestion created successfully",

@@ -196,6 +196,7 @@ class AuthService {
 
     // Actualizar la contraseña del usuario
     user.password = await bcrypt.hash(newPassword, 10);
+    user.isFirstLogin = true; // Forzar cambio de contraseña en el próximo inicio de sesión
     await user.save();
 
     // Enviar correo con la nueva contraseña

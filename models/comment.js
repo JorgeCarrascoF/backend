@@ -14,7 +14,8 @@ const commentSchema = new mongoose.Schema({
   logId: { type: mongoose.Schema.Types.ObjectId, ref: 'Log' },
   created_at: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    immutable: true
   }
 });
 
