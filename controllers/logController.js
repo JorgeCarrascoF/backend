@@ -137,7 +137,7 @@ const createLog = async (req, res) => {
         const newLog = await logService.createLog(req.body);
 
         if (newLog.update) {
-            return res.status(200).json({
+            return res.status(409).json({
                 msg: 'Log updated - duplicated found',
                 log: newLog
             });
